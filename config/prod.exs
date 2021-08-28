@@ -10,8 +10,20 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :cryptor, CryptorWeb.Endpoint,
-  url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  load_from_system_env: true,
+  http: [port: {:system, "PORT"}],
+  secret_key_base: "${SECRET_KEY_BASE}",
+  url: [host: "${APP_NAME}.gigalixirapp.com", port: 433]
+
+config :cryptor, Cryptor.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  url: "${DATABASE_URL}",
+  database: "",
+  ssl: true,
+  show_sensitive_data_on_connection_error: true,
+  # Free tier db only allows 4 connections. Rolling deploys need pool_size*(n+1) connections where n is the number of app replicas.
+  pool_size: 2
 
 # Do not print debug messages in production
 config :logger, level: :info

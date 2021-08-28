@@ -20,3 +20,9 @@ config :cryptor, CryptorWeb.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+config :miner, Miner.Requests,
+  trade_api_base_url: "https://www.mercadobitcoin.net/tapi/v3/",
+  data_api_base_url: "https://www.mercadobitcoin.net/api/",
+  tapi_id: "",
+  tapi_id_secret_key: ""

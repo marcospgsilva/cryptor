@@ -26,6 +26,14 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :appsignal, :config,
+  active: true,
+  otp_app: :miner,
+  name: System.get_env("APPSIGNAL_APP_NAME"),
+  push_api_key: System.get_env("APPSIGNAL_PUSH_API_KEY"),
+  env: System.get_env("APPSIGNAL_APP_ENV"),
+  debug: System.get_env("APPSIGNAL_DEBUG")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
