@@ -18,6 +18,8 @@ defmodule CryptorWeb.Router do
     pipe_through :browser
 
     live "/", PageLive, :index
+    get "/orders", AnalysisController, :index
+    get "/infos", TraderController, :index
   end
 
   # Other scopes may use custom stacks.

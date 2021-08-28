@@ -28,7 +28,7 @@ config :phoenix, :json_library, Jason
 
 config :appsignal, :config,
   active: true,
-  otp_app: :miner,
+  otp_app: :cryptor,
   name: System.get_env("APPSIGNAL_APP_NAME"),
   push_api_key: System.get_env("APPSIGNAL_PUSH_API_KEY"),
   env: System.get_env("APPSIGNAL_APP_ENV"),
