@@ -1,0 +1,15 @@
+<section class="phx-hero">
+  <h1>Bem vindo ao Cryptor, o bot responsável por compras e vendas de moedas digitais.</h1>
+
+  <div>
+    <%= for order <- @orders do %>
+      <div>
+        numero_do_pedido: <%= order.order_id %>
+        Moeda: <%= order.coin %>
+        quantidade: <%= order.quantity %>
+        tipo_do_pedido: <%= order.type %>
+        pedido_concluido: <%= order.finished %>
+      </div>
+    <% end %>
+  </div>
+</section>

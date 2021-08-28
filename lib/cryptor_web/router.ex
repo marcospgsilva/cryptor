@@ -17,7 +17,7 @@ defmodule CryptorWeb.Router do
   scope "/", CryptorWeb do
     pipe_through :browser
 
-    live "/", PageLive, :index
+    live "/", OrdersLive, :index
     get "/orders", AnalysisController, :index
     get "/infos", TraderController, :index
   end
