@@ -1,13 +1,14 @@
 <section class="phx-hero">
-  <h1>Bem vindo ao Cryptor, o bot responsável por compras e vendas de moedas digitais.</h1>
+  <div class="welcome-box">
+    <h1>Olá! Eu sou o Cryptor.</h1>
+    <h3>O bot responsável por compras e vendas de moedas digitais.</h3>
+  </div>
 
-  <div>
+  <div class="order-container">
+  <p>Aqui você irá acompanhar em tempo real a variação de valor entre o momento da sua compra e o valor atual.</p>
     <%= for order <- @orders do %>
-      <div>
-        Moeda: <%= order.coin %>
-        Comprada por: <%= order.price %>
-        Valor atual: <%= order.current_value %>
-        Variação: <%= order.variation %>
+      <div class="order-box">
+        <p class="data">Moeda: <%= order.coin %> | Comprada por: <%= order.bought_value %> | Valor atual: <%= order.current_value %> | Variação: <%= order.variation %></p>
       </div>
     <% end %>
   </div>

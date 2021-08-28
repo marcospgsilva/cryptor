@@ -35,10 +35,10 @@ defmodule CryptorWeb.AnalysisView do
       orders
       |> Enum.map(fn order ->
         %{
-          moeda: order.coin,
-          comprada_por: order.price,
-          valor_atual: current_value,
-          variacao: calculate_variation(order.price, current_value)
+          coin: order.coin,
+          bought_value: order.price,
+          current_value: current_value,
+          variation: calculate_variation(order.price, current_value)
         }
       end)
     end)
