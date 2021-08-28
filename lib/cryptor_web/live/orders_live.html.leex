@@ -1,15 +1,19 @@
-<section class="phx-hero">
-  <div class="welcome-box">
-    <h1>Olá! Eu sou o Cryptor.</h1>
-    <h3>O bot responsável por compras e vendas de moedas digitais.</h3>
+  <div class="text-white text-center mb-10">
+    <h1 class="text-5xl font-bold mb-5">- Cryptor -</h1>
+    <h3 class="text-xl">O bot responsável por compras e vendas de moedas digitais.</h3>
   </div>
 
-  <div class="order-container">
-  <p>Aqui você irá acompanhar em tempo real a variação de valor entre o momento da sua compra e o valor atual.</p>
+  <div class="flex-col shadow-2xl m-10 bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5">
     <%= for order <- @orders do %>
-      <div class="order-box">
-        <p class="data">Moeda: <%= order.coin %> | Comprada por: <%= order.bought_value %> | Valor atual: <%= order.current_value %> | Variação: <%= order.variation %></p>
+      <div class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
+        <div class="flex-1">
+          <p class="text-white font-bold text-xl"><%= order.coin %></p>
+          <p class="text-white font-light text-sm"><%= order.variation %></p>
+        </div>
+        <div class="flex-1 text-right">
+          <p class="text-white">Comprada por <%= order.bought_value %></p>
+          <p class="text-white">Valor atual <%= order.current_value %></p>
+        </div>
       </div>
     <% end %>
   </div>
-</section>
