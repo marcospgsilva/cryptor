@@ -17,8 +17,8 @@ defmodule Cryptor.Application do
       CryptorWeb.Endpoint,
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
       # {Cryptor.Worker, arg}
-      Cryptor.DynamicSupervisor
-      # Cryptor.Trader.Server
+      Cryptor.DynamicSupervisor,
+      Cryptor.Trader.Server
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
