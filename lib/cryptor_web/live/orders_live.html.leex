@@ -4,11 +4,10 @@
   <div>
     <%= for order <- @orders do %>
       <div>
-        numero_do_pedido: <%= order.order_id %>
         Moeda: <%= order.coin %>
-        quantidade: <%= order.quantity %>
-        tipo_do_pedido: <%= order.type %>
-        pedido_concluido: <%= order.finished %>
+        Comprada por: <%= order.price %>
+        Valor atual: <%= order.current_value %>
+        Variação: <%= order.variation %>
       </div>
     <% end %>
   </div>
