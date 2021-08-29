@@ -18,6 +18,10 @@ module.exports = {
         'light-blue': colors.lightBlue,
         cyan: colors.cyan,
       },
+      backgroundImage: _theme => ({
+        'XRP': "url('/images/XRP.png')",
+        'LTC': "url('/images/LTC.png')",
+      })
     },
     backgroundColor: theme => ({
       ...theme('colors'),

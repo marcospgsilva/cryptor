@@ -3,11 +3,19 @@
     <h3 class="text-xl">O bot responsável por compras e vendas de moedas digitais.</h3>
   </div>
 
-  <div class="flex-col shadow-2xl m-10 bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5">
+<div class="flex items-center justify-center w-28 m-auto h-10 mb-8">
+  <div class="flex items-center justify-center shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl w-28 m-auto h-10 mb-8">
+   <p class="font-extrabold text-2xl text-gray-800">Saldo: </p>
+  </div>
+   <p class="font-extrabold text-2xl text-green-500 ml-5">R$<%= @available_brl%></p>
+</div>
+
+  <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-lg m-auto">
     <%= for order <- @orders do %>
       <div x-data="{ profit: '<%=order.variation > 0%>' }" class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
         <div class="flex-1 flex-grow self-center">
-          <p class="text-white font-black text-xl"><%= order.coin %></p>
+          <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-3 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
+          <p class="text-white font-black text-xl -mt-5"><%= order.coin %></p>
           <p :class="[profit === 'true' ? 'font-light text-xl text-green-500' : 'font-light text-xl text-red-500']"><%= order.variation %>%</p>
         </div>
         <div class="flex-1 text-right self-center">
