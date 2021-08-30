@@ -68,21 +68,25 @@ defmodule Cryptor.Trader.Server do
 
   @impl true
   def handle_continue(:start_process_coin, %{order_list: order_list} = state) do
-    pid_list =
-      @currencies
-      |> Enum.map(fn coin ->
-        DynamicSupervisor.start_child(
-          OrdersSupervisor,
-          {Analysis, %{state: %Analysis{coin: coin}, name: String.to_atom(coin <> "Server")}}
-        )
-        |> elem(1)
-      end)
-
-    order_list
-    |> Enum.each(&add_order_to_server/1)
+    pid_list = start_currencies_analysis(@currencies)
+    add_orders_to_analysis(order_list)
+    add_virtual_orders_to_analysis(pid_list)
 
     {:noreply, %{state | pid_list: pid_list}}
   end
+
+  def start_currencies_analysis(currencies) do
+    currencies
+    |> Enum.map(fn coin ->
+      DynamicSupervisor.start_child(
+        OrdersSupervisor,
+        {Analysis, %{state: %Analysis{coin: coin}, name: String.to_atom(coin <> "Server")}}
+      )
+      |> elem(1)
+    end)
+  end
+
+  def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
 
   def add_order_to_server(%Order{} = order) do
     GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:add_order, order})
@@ -90,5 +94,33 @@ defmodule Cryptor.Trader.Server do
 
   def remove_order_from_server(%Order{} = order) do
     GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
+  end
+
+  def add_virtual_orders_to_analysis(pid_list) do
+    pid_list
+    |> Enum.filter(fn pid ->
+      %{orders: orders} = :sys.get_state(pid)
+      orders === []
+    end)
+    |> create_virtual_order()
+  end
+
+  defp create_virtual_order([]), do: nil
+
+  defp create_virtual_order(pid_list) do
+    pid_list
+    |> Enum.each(fn pid ->
+      %{coin: coin, current_value: current_value} = :sys.get_state(pid)
+
+      order = %Order{
+        order_id: :rand.uniform(50),
+        coin: coin,
+        quantity: 0.0,
+        price: current_value,
+        type: "buy"
+      }
+
+      add_order_to_server(order)
+    end)
   end
 end

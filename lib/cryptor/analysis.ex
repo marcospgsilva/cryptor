@@ -7,7 +7,7 @@ defmodule Cryptor.Analysis do
   alias Cryptor.Trader
   alias Cryptor.Order
 
-  defstruct orders: [], current_value: nil, coin: nil
+  defstruct orders: [], current_value: 0.0, coin: nil
 
   # CLIENT
   def start_link(%{state: state, name: name}),
