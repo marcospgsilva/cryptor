@@ -70,7 +70,8 @@ defmodule Cryptor.Trader.Server do
   def handle_continue(:start_process_coin, %{order_list: order_list} = state) do
     pid_list = start_currencies_analysis(@currencies)
     add_orders_to_analysis(order_list)
-    add_virtual_orders_to_analysis(pid_list)
+
+    Process.send_after(self(), {:start_virtual_orders, pid_list}, 10_000)
 
     {:noreply, %{state | pid_list: pid_list}}
   end
@@ -84,6 +85,13 @@ defmodule Cryptor.Trader.Server do
       )
       |> elem(1)
     end)
+  end
+
+  @impl true
+  def handle_info({:start_virtual_orders, pid_list}, state) do
+    add_virtual_orders_to_analysis(pid_list)
+
+    {:noreply, state}
   end
 
   def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
