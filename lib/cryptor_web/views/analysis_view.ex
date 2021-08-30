@@ -46,5 +46,5 @@ defmodule CryptorWeb.AnalysisView do
   end
 
   defp calculate_variation(bought_price, current_price),
-    do: (current_price / bought_price - 1) |> Float.round(8)
+    do: (current_price / bought_price - 1) |> Float.round(4)
 end
