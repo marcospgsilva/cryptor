@@ -41,9 +41,16 @@ defmodule Cryptor.Analysis do
   end
 
   @impl true
-  def handle_info(:get_currency_price, %__MODULE__{orders: []} = state) do
-    analisys()
-    {:noreply, state}
+  def handle_info(:get_currency_price, %__MODULE__{orders: [], coin: coin} = state) do
+    case Trader.get_currency_price(coin) do
+      nil ->
+        analisys()
+        {:noreply, state}
+
+      current_value ->
+        analisys()
+        {:noreply, %{state | current_value: current_value}}
+    end
   end
 
   @impl true
