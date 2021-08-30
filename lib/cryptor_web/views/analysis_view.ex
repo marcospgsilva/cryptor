@@ -45,6 +45,9 @@ defmodule CryptorWeb.AnalysisView do
     |> Enum.concat()
   end
 
+  defp calculate_variation(_bought_price, 0.0),
+    do: 0.0
+
   defp calculate_variation(bought_price, current_price),
     do: (current_price / bought_price - 1) |> Float.round(8)
 end
