@@ -24,7 +24,8 @@ defmodule CryptorWeb.Endpoint do
     at: "/",
     from: :cryptor,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only:
+      ~w(css fonts images js favicon.ico apple-touch-icon.png apple-touch-icon-120x120.png robots.txt)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
