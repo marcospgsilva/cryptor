@@ -73,6 +73,7 @@ defmodule Cryptor.Trader.Server do
 
     Process.send_after(self(), {:start_virtual_orders, pid_list}, 10_000)
 
+    update_account_info()
     {:noreply, %{state | pid_list: pid_list}}
   end
 
@@ -92,6 +93,19 @@ defmodule Cryptor.Trader.Server do
     add_virtual_orders_to_analysis(pid_list)
 
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:update_account_info, state) do
+    case Trader.get_account_info() do
+      nil ->
+        update_account_info()
+        {:noreply, state}
+
+      account_info ->
+        update_account_info()
+        {:noreply, %{state | account_info: account_info}}
+    end
   end
 
   def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
@@ -130,5 +144,9 @@ defmodule Cryptor.Trader.Server do
 
       add_order_to_server(order)
     end)
+  end
+
+  def update_account_info() do
+    Process.send_after(self(), :update_account_info, 20_000)
   end
 end
