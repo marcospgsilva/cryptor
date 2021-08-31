@@ -14,6 +14,9 @@ defmodule Cryptor.Trader.AmountControl do
   @enj_minimum_value 3.00
   @chz_maximum_value 25.00
   @chz_minimum_value 10.00
+  @btc_maximum_value 0.0002
+  @btc_minimum_value 0.0002
+
 
   def get_quantity(:sell, _newer_price, %Order{quantity: 0.00000000}), do: nil
 
@@ -39,6 +42,7 @@ defmodule Cryptor.Trader.AmountControl do
       "BAT" -> @bat_maximum_value
       "ENJ" -> @enj_maximum_value
       "CHZ" -> @chz_maximum_value
+      "BTC" -> @btc_maximum_value
     end
   end
 
@@ -51,6 +55,7 @@ defmodule Cryptor.Trader.AmountControl do
       "BAT" -> @bat_minimum_value
       "ENJ" -> @enj_minimum_value
       "CHZ" -> @chz_minimum_value
+      "BTC" -> @btc_minimum_value
     end
   end
 end
