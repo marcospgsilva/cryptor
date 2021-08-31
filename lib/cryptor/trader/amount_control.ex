@@ -27,8 +27,8 @@ defmodule Cryptor.Trader.AmountControl do
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity}),
     do: quantity |> Float.round(8)
 
-  def get_quantity(:buy, newer_price, %Order{coin: "AXS"}),
-    do: newer_price / 50
+  def get_quantity(:buy, _newer_price, %Order{coin: "BAT"}),
+    do: nil
 
   def get_quantity(:buy, _newer_price, %Order{quantity: 0.00000000, coin: coin}) do
     case coin do

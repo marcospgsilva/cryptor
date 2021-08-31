@@ -8,7 +8,7 @@ defmodule Cryptor.Trader.Server do
   alias Cryptor.Trader
   alias Cryptor.Order
 
-  @currencies ["LTC", "XRP", "ETH", "USDC", "AXS", "BAT", "ENJ", "CHZ"]
+  @currencies ["LTC", "XRP", "ETH", "BAT", "CHZ"]
 
   def start_link(_attrs) do
     GenServer.start_link(
@@ -22,17 +22,21 @@ defmodule Cryptor.Trader.Server do
     )
   end
 
-  def add_order(order) do
+  def add_order(%Order{} = order) do
     add_order_to_server(order)
 
     GenServer.cast(self(), {:put_order, order})
   end
 
-  def remove_order(order) do
+  def add_order(_ = error), do: IO.inspect(error)
+
+  def remove_order(%Order{} = order) do
     remove_order_from_server(order)
 
     GenServer.cast(self(), {:pop_order, order})
   end
+
+  def remove_order(_ = error), do: IO.inspect(error)
 
   @impl true
   def init(attrs) do

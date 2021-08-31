@@ -1,7 +1,7 @@
 defmodule CryptorWeb.TraderView do
   use CryptorWeb, :view
 
-  @currencies ["LTC", "XRP", "ETH", "USDC", "AXS", "BAT", "ENJ", "CHZ", "BRL"]
+  @currencies ["LTC", "XRP", "ETH", "BAT", "CHZ", "BRL"]
 
   def render("trader.json", %{trader: %{account_info: account_info}}) do
     %{
