@@ -89,10 +89,10 @@ defmodule Cryptor.Trader do
         async: true
       })
 
-  def process_order({:ok, %{"response_data" => new_order}}, order) do
+  def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order) do
     attrs = %{
       order_id: new_order["order_id"],
-      quantity: new_order["executed_quantity"] |> String.to_float(),
+      quantity: new_order["quantity"] |> String.to_float(),
       price: new_order["limit_price"] |> String.to_float(),
       coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
       type: Utils.get_order_type(new_order["order_type"])
