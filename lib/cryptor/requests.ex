@@ -42,8 +42,11 @@ defmodule Cryptor.Requests do
 
   def handle_response({:ok, %HTTPoison.Response{status_code: 100, body: body}}) do
     case Jason.decode(body) do
-      {:ok, _body} = response ->
+      {:ok, %{"response_data" => %{"balances" => _balances}}} = response ->
         response
+
+      {:ok, _} = response ->
+        IO.inspect(response)
 
       {:error, reason} ->
         IO.inspect(reason)
@@ -53,8 +56,11 @@ defmodule Cryptor.Requests do
 
   def handle_response({:ok, %HTTPoison.Response{status_code: 200, body: body}}) do
     case Jason.decode(body) do
-      {:ok, _body} = response ->
+      {:ok, %{"response_data" => %{"balances" => _balances}}} = response ->
         response
+
+      {:ok, _} = response ->
+        IO.inspect(response)
 
       {:error, reason} ->
         IO.inspect(reason)
