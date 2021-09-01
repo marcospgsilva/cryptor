@@ -39,15 +39,11 @@ defmodule Cryptor.Trader.Server do
     GenServer.cast(self(), {:put_order, order})
   end
 
-  def add_order(_ = error), do: IO.inspect(error)
-
   def remove_order(%Order{} = order) do
     remove_order_from_server(order)
 
     GenServer.cast(self(), {:pop_order, order})
   end
-
-  def remove_order(_ = error), do: IO.inspect(error)
 
   @impl true
   def init(attrs) do
