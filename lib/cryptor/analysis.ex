@@ -74,7 +74,7 @@ defmodule Cryptor.Analysis do
             latest_order =
               orders
               |> Enum.reject(&(&1.quantity == 0.0))
-              |> Enum.sort(&(&1.quantity < &2.quantity))
+              |> Enum.sort(&(&1.price < &2.price))
               |> List.first()
 
             start_transaction(current_value, latest_order)
