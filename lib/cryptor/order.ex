@@ -43,7 +43,8 @@ defmodule Cryptor.Order do
   def get_orders() do
     Repo.all(
       from order in Order,
-        where: order.finished == false
+        where: order.finished == false,
+        order_by: [desc: order.id]
     )
   end
 end

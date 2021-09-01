@@ -32,7 +32,7 @@ defmodule Cryptor.Analysis do
        state
        | orders:
            Enum.reject(
-             state.order_list,
+             state.orders,
              fn %Order{order_id: id} ->
                id == order.order_id
              end
@@ -64,9 +64,8 @@ defmodule Cryptor.Analysis do
         {:noreply, state}
 
       current_value ->
-        orders
-        |> Enum.each(&start_transaction(current_value, &1))
-
+        latest_order = List.last(orders)
+        start_transaction(current_value, latest_order)
         analisys()
         {:noreply, %{state | current_value: current_value}}
     end
