@@ -23,14 +23,18 @@ defmodule Cryptor.Trader.Server do
   end
 
   def init_orders() do
+
     Order.get_orders()
-    |> Enum.filter(fn  %Order{} = order ->
-    order.order_id in [88_775_417, 88_722_964, 2, 1]
+    |> Enum.filter(fn %Order{} = order ->
+      order.order_id in [88775417, 88722964, 2, 1]
     end)
     |> Enum.each(&Order.update_order(&1, %{finished: true}))
 
 
     Order.get_orders()
+    |> Enum.reject(fn %Order{} = order ->
+    order.order_id in [88775417, 88722964, 2, 1]
+    end)
   end
 
   def add_order(%Order{} = order) do
