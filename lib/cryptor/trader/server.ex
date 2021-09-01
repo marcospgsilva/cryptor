@@ -34,6 +34,7 @@ defmodule Cryptor.Trader.Server do
     Process.send(TradeServer, {:put_order, order}, [])
   end
 
+
   def remove_order(nil), do: nil
 
   def remove_order(%Order{} = order) do
@@ -50,22 +51,6 @@ defmodule Cryptor.Trader.Server do
   @impl true
   def handle_info({:put_order, order}, state) do
     {:noreply, %{state | order_list: [order | state.order_list]}}
-  end
-
-  @impl true
-  def handle_info({:get_order_status, order}, state) do
-    case Trader.get_order_status(order) do
-      4 ->
-        Order.create_order(order) |> add_order()
-
-      3 ->
-        nil
-
-      _ ->
-        Trader.schedule_order_status(order)
-    end
-
-    {:noreply, state}
   end
 
   @impl true
