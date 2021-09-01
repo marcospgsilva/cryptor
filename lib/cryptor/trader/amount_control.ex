@@ -14,8 +14,8 @@ defmodule Cryptor.Trader.AmountControl do
   @enj_minimum_value 3.00
   @chz_maximum_value 25.00
   @chz_minimum_value 25.00
-  @btc_maximum_value 0.0002
-  @btc_minimum_value 0.0002
+  @btc_maximum_value 0.0003
+  @btc_minimum_value 0.0003
 
   def get_quantity(:sell, _newer_price, %Order{quantity: 0.00000000}), do: nil
 
@@ -25,6 +25,9 @@ defmodule Cryptor.Trader.AmountControl do
       _ -> nil
     end
   end
+
+  def get_quantity(:sell, _newer_price, %Order{quantity: quantity, coin: "BTC"}),
+    do: quantity * 0.997
 
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity}),
     do: quantity |> Float.round(8)
