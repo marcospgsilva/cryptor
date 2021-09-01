@@ -15,10 +15,16 @@ defmodule Cryptor.Utils do
     end
   end
 
-  def get_available_value(account_info, coin),
-    do:
-      account_info["response_data"]["balance"][coin]["available"]
-      |> String.to_float()
+  def get_available_value(account_info, coin) do
+    case account_info["response_data"]["balance"][coin]["available"] do
+      nil ->
+        get_available_value(nil, coin)
+
+      available ->
+        String.to_float(available)
+    end
+  end
+
 
   def get_tapi_method(:buy), do: "place_buy_order"
 
