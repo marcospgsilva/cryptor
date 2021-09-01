@@ -58,21 +58,8 @@ defmodule Cryptor.Trader do
     quantity = AmountControl.get_quantity(method, newer_price, order)
 
     validate_available_money(method, quantity, newer_price, account_info)
-    |> validate_available_quantity(account_info, coin, quantity)
     |> place_order(quantity, method, coin_pair, newer_price)
     |> process_order(order)
-  end
-
-  def validate_available_quantity(nil, _account_info, _coin, _quantity), do: nil
-
-  def validate_available_quantity(:ok, account_info, coin, quantity) do
-    case Utils.get_available_value(account_info, coin) do
-      nil ->
-        nil
-
-      available_value ->
-        if available_value >= quantity, do: :ok, else: nil
-    end
   end
 
   def validate_available_money(_, nil, _, _), do: nil
