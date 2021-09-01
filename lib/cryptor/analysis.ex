@@ -64,10 +64,23 @@ defmodule Cryptor.Analysis do
         {:noreply, state}
 
       current_value ->
-        latest_order = List.last(orders)
-        start_transaction(current_value, latest_order)
-        analisys()
-        {:noreply, %{state | current_value: current_value}}
+        case Enum.count(orders) <= 1 do
+          true ->
+            start_transaction(current_value, orders |> List.first())
+            analisys()
+            {:noreply, %{state | current_value: current_value}}
+
+          _ ->
+            latest_order =
+              orders
+              |> Enum.reject(&(&1.quantity == 0.0))
+              |> Enum.sort(&(&1.quantity < &2.quantity))
+              |> List.first()
+
+            start_transaction(current_value, latest_order)
+            analisys()
+            {:noreply, %{state | current_value: current_value}}
+        end
     end
   end
 

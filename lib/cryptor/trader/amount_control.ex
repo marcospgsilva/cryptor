@@ -17,7 +17,6 @@ defmodule Cryptor.Trader.AmountControl do
   @btc_maximum_value 0.0002
   @btc_minimum_value 0.0002
 
-
   def get_quantity(:sell, _newer_price, %Order{quantity: 0.00000000}), do: nil
 
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity, coin: "CHZ"}) do

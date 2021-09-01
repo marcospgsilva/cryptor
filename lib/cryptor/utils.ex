@@ -25,7 +25,6 @@ defmodule Cryptor.Utils do
     end
   end
 
-
   def get_tapi_method(:buy), do: "place_buy_order"
 
   def get_tapi_method(:sell), do: "place_sell_order"

@@ -35,7 +35,6 @@ defmodule CryptorWeb.OrdersLive do
         schedule_event()
         {:noreply, assign(socket, orders: orders)}
 
-
       available_brl ->
         schedule_event()
         {:noreply, assign(socket, orders: orders, available_brl: available_brl)}

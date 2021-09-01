@@ -110,8 +110,8 @@ defmodule Cryptor.Trader do
   end
 
   def process_order(%{type: _}, order) do
-    Order.update_order(order, %{finished: true})
     Server.remove_order(order)
+    Order.update_order(order, %{finished: true})
   end
 
   def get_account_info_data do
