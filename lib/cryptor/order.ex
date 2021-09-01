@@ -10,6 +10,8 @@ defmodule Cryptor.Order do
 
   @required_fields [:order_id, :coin, :quantity, :price, :type]
 
+  @fields @required_fields ++ [:finished]
+
   schema "orders" do
     field :order_id, :integer
     field :coin, :string
@@ -23,7 +25,7 @@ defmodule Cryptor.Order do
 
   def changeset(order, attrs) do
     order
-    |> cast(attrs, @required_fields)
+    |> cast(attrs, @fields)
     |> validate_required(@required_fields)
   end
 
