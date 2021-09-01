@@ -14,8 +14,8 @@
     <%= for order <- @orders do %>
       <div x-data="{ profit: '<%=order.variation > 0%>' }" class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
         <div class="flex-1 flex-grow self-center">
-          <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-5 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
-          <p class="text-white font-black text-xl -mt-5"><%= order.coin %></p>
+          <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-12 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
+          <p class="text-white font-black text-xl"><%= order.coin %></p>
           <p :class="[profit === 'true' ? 'font-light text-xl text-green-500' : 'font-light text-xl text-red-500']"><%= order.variation %>%</p>
         </div>
         <div class="flex-1 text-right self-center">
