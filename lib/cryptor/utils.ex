@@ -25,6 +25,20 @@ defmodule Cryptor.Utils do
     end
   end
 
+  def get_open_order(account_info, coin) do
+    case account_info["response_data"]["balance"][coin]["amount_open_orders"] do
+      nil ->
+        account_info = Trader.get_account_info()
+        get_open_order(account_info, coin)
+
+      0 ->
+        :ok
+
+      _ ->
+        nil
+    end
+  end
+
   def get_tapi_method(:buy), do: "place_buy_order"
 
   def get_tapi_method(:sell), do: "place_sell_order"

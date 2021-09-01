@@ -52,21 +52,38 @@ defmodule Cryptor.Trader do
     end
   end
 
+  def get_order_status(order) do
+    case Requests.request(:post, %{
+           tapi_method: "get_order",
+           coin_pair: "BRL" <> order.coin,
+           order_id: order.order_id
+         }) do
+      {:ok, %{"response_data" => %{"order" => %{"status" => order_status}}}} ->
+        order_status
+
+      _ ->
+        get_order_status(order)
+    end
+  end
+
   def place_order(method, newer_price, %Order{coin: coin} = order) do
     coin_pair = "BRL#{coin}"
     account_info = get_account_info_data()
     quantity = AmountControl.get_quantity(method, newer_price, order)
 
-    validate_available_money(method, quantity, newer_price, account_info)
+    Utils.get_open_order(account_info, coin)
+    |> validate_available_money(method, quantity, newer_price, account_info)
     |> place_order(quantity, method, coin_pair, newer_price)
     |> process_order(order)
   end
 
-  def validate_available_money(_, nil, _, _), do: nil
+  def validate_available_money(nil, _, nil, _, _), do: nil
 
-  def validate_available_money(:sell, _, _, _), do: :ok
+  def validate_available_money(_, _, nil, _, _), do: nil
 
-  def validate_available_money(:buy, quantity, newer_price, account_info) do
+  def validate_available_money(_, :sell, _, _, _), do: :ok
+
+  def validate_available_money(:ok, :buy, quantity, newer_price, account_info) do
     brl_available = Utils.get_available_value(account_info, "brl")
     order_value = quantity * newer_price
 
@@ -106,7 +123,7 @@ defmodule Cryptor.Trader do
   def process_order(nil, _), do: nil
 
   def process_order(%{type: "buy"} = attrs, _order) do
-    Order.create_order(attrs) |> Server.add_order()
+    Process.send(TradeServer, {:get_order_status, attrs}, [])
   end
 
   def process_order(%{type: _}, order) do
@@ -124,5 +141,9 @@ defmodule Cryptor.Trader do
   def get_account_info_data do
     %{account_info: account_info} = :sys.get_state(TradeServer)
     account_info
+  end
+
+  def schedule_order_status(attrs) do
+    Process.send_after(TradeServer, {:get_order_status, attrs}, 8000)
   end
 end
