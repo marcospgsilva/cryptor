@@ -17,7 +17,13 @@ defmodule Cryptor.Requests do
 
     headers = get_headers(body)
 
-    IO.inspect(body)
+    case trade_body do
+      %{tapi_method: "get_account_info"} ->
+        nil
+
+      _ ->
+        IO.inspect(body)
+    end
 
     get_trade_api_base_url()
     |> HTTPoison.post(body, headers)
