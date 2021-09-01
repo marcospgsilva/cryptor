@@ -42,7 +42,7 @@ defmodule Cryptor.Trader.Server do
   def add_order(%Order{} = order) do
     add_order_to_server(order)
 
-    GenServer.cast(self(), {:put_order, order})
+    Process.send(TradeServer, {:put_order, order}, [])
   end
 
 
@@ -51,7 +51,7 @@ defmodule Cryptor.Trader.Server do
   def remove_order(%Order{} = order) do
     remove_order_from_server(order)
 
-    GenServer.cast(self(), {:pop_order, order})
+    Process.send(TradeServer, {:pop_order, order}, [])
   end
 
   @impl true
@@ -60,12 +60,12 @@ defmodule Cryptor.Trader.Server do
   end
 
   @impl true
-  def handle_cast({:put_order, order}, state) do
+  def handle_info({:put_order, order}, state) do
     {:noreply, %{state | order_list: [order | state.order_list]}}
   end
 
   @impl true
-  def handle_cast({:pop_order, order}, state) do
+  def handle_info({:pop_order, order}, state) do
     {:noreply,
      %{
        state
@@ -77,6 +77,26 @@ defmodule Cryptor.Trader.Server do
              end
            )
      }}
+  end
+
+  @impl true
+  def handle_info({:start_virtual_orders, pid_list}, state) do
+    add_virtual_orders_to_analysis(pid_list)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:update_account_info, state) do
+    case Trader.get_account_info() do
+      nil ->
+        update_account_info()
+        {:noreply, state}
+
+      account_info ->
+        update_account_info()
+        {:noreply, %{state | account_info: account_info}}
+    end
   end
 
   @impl true
@@ -106,26 +126,6 @@ defmodule Cryptor.Trader.Server do
       )
       |> elem(1)
     end)
-  end
-
-  @impl true
-  def handle_info({:start_virtual_orders, pid_list}, state) do
-    add_virtual_orders_to_analysis(pid_list)
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info(:update_account_info, state) do
-    case Trader.get_account_info() do
-      nil ->
-        update_account_info()
-        {:noreply, state}
-
-      account_info ->
-        update_account_info()
-        {:noreply, %{state | account_info: account_info}}
-    end
   end
 
   def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
