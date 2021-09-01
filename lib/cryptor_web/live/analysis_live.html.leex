@@ -1,0 +1,35 @@
+  <div class="text-white text-center mb-10">
+    <h1 class="text-5xl font-bold mb-5">- Cryptor -</h1>
+    <h3 class="text-xl">O bot responsável por compras e vendas de moedas digitais.</h3>
+  </div>
+
+<div class="flex items-center justify-center m-auto h-10 mb-8">
+  <div class="flex items-center justify-center shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl m-auto h-10 mb-8">
+   <p class="font-extrabold text-lg text-gray-800">Informações sobre os servidores de análise</p>
+  </div>
+</div>
+
+  <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-lg m-auto">
+    <%= for server <- @analysis do %>
+      <div class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
+        <div class="flex-1 flex-grow self-center">
+          <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-16 ml-2" style="background-image: url('/images/<%= server.coin %>.png')"></div>
+          <p class="text-white font-black text-xl mt-5"><%= server.coin %></p>
+        </div>
+        <div class="flex-1 text-right self-center">
+          <div>
+            <p class="text-gray-400 font-light">Estado atual do servidor</p>
+            <p class="text-green-400 font-extrabold">Running</p>
+          </div>
+          <div>
+            <p class="text-gray-400 font-light">Quantidade de ordens em análise</p>
+            <p class="text-green-400 font-extrabold"><%= server.orders %></p>
+          </div>
+          <div>
+            <p class="text-gray-400 font-light">Valor mais recente da moeda</p>
+            <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(server.current_value) %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
