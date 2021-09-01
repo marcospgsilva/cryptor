@@ -32,11 +32,16 @@ defmodule CryptorWeb.AnalysisView do
     |> Enum.map(fn pid ->
       %{orders: orders, current_value: current_value} = :sys.get_state(pid)
 
-      orders
+      order_list =
+        orders
+        |> Enum.filter(fn order -> order.quantity != 0.0 end)
+
+      order_list
       |> Enum.map(fn order ->
         %{
           coin: order.coin,
           bought_value: order.price,
+          quantity: order.quantity,
           current_value: current_value,
           variation: calculate_variation(order.price, current_value)
         }

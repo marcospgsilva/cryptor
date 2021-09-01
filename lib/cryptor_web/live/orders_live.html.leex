@@ -20,6 +20,10 @@
         </div>
         <div class="flex-1 text-right self-center">
           <div>
+            <p class="text-gray-400 font-light">Quantidade</p>
+            <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(order.quantity) %></p>
+          </div>
+          <div>
             <p class="text-gray-400 font-light">Valor inicial</p>
             <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(order.bought_value) %></p>
           </div>
