@@ -84,7 +84,7 @@ defmodule Cryptor.Trader do
       Requests.request(:post, %{
         tapi_method: Utils.get_tapi_method(method),
         coin_pair: coin_pair,
-        quantity: quantity,
+        quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
         limit_price: newer_price,
         async: true
       })
