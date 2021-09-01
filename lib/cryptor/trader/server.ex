@@ -37,11 +37,16 @@ defmodule Cryptor.Trader.Server do
     end)
   end
 
+  def add_order(nil), do: nil
+
   def add_order(%Order{} = order) do
     add_order_to_server(order)
 
     GenServer.cast(self(), {:put_order, order})
   end
+
+
+  def remove_order(nil), do: nil
 
   def remove_order(%Order{} = order) do
     remove_order_from_server(order)

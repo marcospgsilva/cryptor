@@ -114,6 +114,13 @@ defmodule Cryptor.Trader do
     Order.update_order(order, %{finished: true})
   end
 
+  def delete_order(id) do
+    order = Order.get_order(id)
+
+    Server.remove_order(order)
+    Order.update_order(order, %{finished: true})
+  end
+
   def get_account_info_data do
     %{account_info: account_info} = :sys.get_state(TradeServer)
     account_info

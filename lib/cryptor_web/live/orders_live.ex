@@ -41,5 +41,11 @@ defmodule CryptorWeb.OrdersLive do
     end
   end
 
+  @impl true
+  def handle_event("delete_order", %{"order_id" => id}, socket) do
+    Cryptor.Trader.delete_order(id |> String.to_integer())
+    {:noreply, socket}
+  end
+
   defp schedule_event(), do: Process.send_after(self(), "update_state", 3000)
 end

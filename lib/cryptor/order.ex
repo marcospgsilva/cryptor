@@ -27,12 +27,21 @@ defmodule Cryptor.Order do
     |> validate_required(@required_fields)
   end
 
+  def get_order(id) do
+    Repo.one(
+      from order in Order,
+      where: order.id == ^id
+    )
+  end
+
   def create_order(attrs),
     do:
       %__MODULE__{}
       |> changeset(attrs)
       |> Repo.insert()
       |> elem(1)
+
+  def update_order(nil, _attrs), do: nil
 
   def update_order(order, attrs) do
     order
