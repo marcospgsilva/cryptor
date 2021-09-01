@@ -45,7 +45,7 @@ defmodule Cryptor.Trader do
   def get_account_info do
     case Requests.request(:post, %{tapi_method: "get_account_info"}) do
       nil ->
-        nil
+        get_account_info()
 
       {:ok, response} ->
         response

@@ -29,10 +29,17 @@ defmodule CryptorWeb.OrdersLive do
     %{pid_list: pid_list, account_info: account_info} = :sys.get_state(TradeServer)
 
     orders = AnalysisView.render_currencies(pid_list)
-    available_brl = Utils.get_available_value(account_info, "brl")
 
-    schedule_event()
-    {:noreply, assign(socket, orders: orders, available_brl: available_brl)}
+    case Utils.get_available_value(account_info, "brl") do
+      nil ->
+        schedule_event()
+        {:noreply, assign(socket, orders: orders)}
+
+
+      available_brl ->
+        schedule_event()
+        {:noreply, assign(socket, orders: orders, available_brl: available_brl)}
+    end
   end
 
   defp schedule_event(), do: Process.send_after(self(), "update_state", 3000)

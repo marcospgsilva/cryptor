@@ -13,7 +13,7 @@ defmodule Cryptor.Trader.AmountControl do
   @enj_maximum_value 6.00
   @enj_minimum_value 3.00
   @chz_maximum_value 25.00
-  @chz_minimum_value 10.00
+  @chz_minimum_value 25.00
   @btc_maximum_value 0.0002
   @btc_minimum_value 0.0002
 
@@ -35,7 +35,6 @@ defmodule Cryptor.Trader.AmountControl do
 
   def get_quantity(:buy, newer_price, %Order{coin: "AXS"}),
     do: newer_price / 50
-
 
   def get_quantity(:buy, _newer_price, %Order{quantity: 0.00000000, coin: coin}) do
     case coin do

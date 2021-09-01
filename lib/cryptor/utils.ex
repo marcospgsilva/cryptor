@@ -4,14 +4,14 @@ defmodule Cryptor.Utils do
   """
   alias Cryptor.Trader
 
-  def get_available_value(nil, _) do
+  def get_available_value(nil, coin) do
     case Trader.get_account_info() do
       nil ->
         nil
 
       _ = response ->
         GenServer.cast(TradeServer, {:update_account_info, response})
-        response
+        get_available_value(response, coin)
     end
   end
 
