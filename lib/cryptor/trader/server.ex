@@ -23,18 +23,7 @@ defmodule Cryptor.Trader.Server do
   end
 
   def init_orders() do
-
     Order.get_orders()
-    |> Enum.filter(fn %Order{} = order ->
-      order.order_id == 397409190
-    end)
-    |> Enum.each(&Order.update_order(&1, %{finished: true}))
-
-
-    Order.get_orders()
-    |> Enum.reject(fn %Order{} = order ->
-    order.order_id == 397409190
-    end)
   end
 
   def add_order(nil), do: nil
