@@ -48,8 +48,16 @@ defmodule Cryptor.Analysis do
         {:noreply, state}
 
       current_value ->
+        order = %{
+          order_id: 0,
+          coin: coin,
+          quantity: 0.0,
+          price: current_value,
+          type: "buy"
+        }
+
         analisys()
-        {:noreply, %{state | current_value: current_value}}
+        {:noreply, %{state | current_value: current_value, orders: [order]}}
     end
   end
 

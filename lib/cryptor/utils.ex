@@ -2,23 +2,11 @@ defmodule Cryptor.Utils do
   @moduledoc """
    Cryptor Utils
   """
-  alias Cryptor.Trader
-
-  def get_available_value(nil, coin) do
-    case Trader.get_account_info() do
-      nil ->
-        nil
-
-      _ = response ->
-        GenServer.cast(TradeServer, {:update_account_info, response})
-        get_available_value(response, coin)
-    end
-  end
 
   def get_available_value(account_info, coin) do
     case account_info["response_data"]["balance"][coin]["available"] do
       nil ->
-        get_available_value(nil, coin)
+        nil
 
       available ->
         String.to_float(available)

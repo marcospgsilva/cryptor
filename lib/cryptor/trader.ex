@@ -62,15 +62,17 @@ defmodule Cryptor.Trader do
     |> process_order(order)
   end
 
+  def validate_available_money(_, _, _, nil), do: nil
+
   def validate_available_money(_, nil, _, _), do: nil
 
   def validate_available_money(:sell, _, _, _), do: :ok
 
   def validate_available_money(:buy, quantity, newer_price, account_info) do
-    brl_available = Utils.get_available_value(account_info, "brl")
+    available_brl = Utils.get_available_value(account_info, "brl")
     order_value = quantity * newer_price
 
-    case brl_available > order_value do
+    case available_brl > order_value do
       true -> :ok
       _ -> nil
     end
