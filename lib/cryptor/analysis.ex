@@ -48,7 +48,7 @@ defmodule Cryptor.Analysis do
         {:noreply, state}
 
       current_value ->
-        order = %{
+        order = %Order{
           order_id: 0,
           coin: coin,
           quantity: 0.0,
