@@ -8,7 +8,9 @@ defmodule Cryptor.Trader.Server do
   alias Cryptor.Trader
   alias Cryptor.Order
 
-  @currencies ["BTC", "LTC", "XRP", "ETH", "BAT", "CHZ", "USDC", "AXS", "ENJ"]
+  @currencies ["BTC", "LTC", "XRP", "ETH", "USDC"]
+
+  def get_currencies, do: @currencies
 
   def start_link(_attrs) do
     GenServer.start_link(

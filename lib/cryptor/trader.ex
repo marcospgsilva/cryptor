@@ -88,7 +88,7 @@ defmodule Cryptor.Trader do
         coin_pair: coin_pair,
         quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
         limit_price: newer_price,
-        async: false
+        async: true
       })
 
   def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order) do

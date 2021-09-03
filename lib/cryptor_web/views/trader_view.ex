@@ -1,7 +1,6 @@
 defmodule CryptorWeb.TraderView do
   use CryptorWeb, :view
-
-  @currencies ["BTC", "LTC", "XRP", "ETH", "BAT", "CHZ", "BRL", "USDC", "AXS", "ENJ"]
+  alias Cryptor.Trader.Server
 
   def render("trader.json", %{trader: %{account_info: account_info}}) do
     %{
@@ -13,7 +12,7 @@ defmodule CryptorWeb.TraderView do
 
   def treat_account_info(account_info),
     do:
-      @currencies
+      (Server.get_currencies() ++ ["BRL"])
       |> Enum.map(&treat_account_info(&1, account_info))
 
   def treat_account_info("BRL" = currency, account_info) do
