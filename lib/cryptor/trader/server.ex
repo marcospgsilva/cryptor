@@ -104,8 +104,10 @@ defmodule Cryptor.Trader.Server do
 
   def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
 
-  def add_order_to_server(%Order{} = order),
+  def add_order_to_server(%Order{} = order) when order.coin in @currencies,
     do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:add_order, order})
+
+  def add_order_to_server(_), do: :ok
 
   def remove_order_from_server(%Order{} = order),
     do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
