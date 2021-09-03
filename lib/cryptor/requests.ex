@@ -2,17 +2,20 @@ defmodule Cryptor.Requests do
   @moduledoc """
    Requests
   """
+  alias Cryptor.Utils
+
+  @default_request_options [timeout: :infinity, recv_timeout: :infinity]
 
   def request(:get, path),
     do:
       get_data_api_base_url(path)
-      |> HTTPoison.get()
+      |> HTTPoison.get(@default_request_options)
       |> handle_get_response()
 
   def request(:post, trade_body) do
     body =
       trade_body
-      |> Map.put(:tapi_nonce, get_date_time() + 1)
+      |> Map.put(:tapi_nonce, Utils.get_date_time())
       |> URI.encode_query()
 
     headers = get_headers(body)
@@ -26,13 +29,9 @@ defmodule Cryptor.Requests do
     end
 
     get_trade_api_base_url()
-    |> HTTPoison.post(body, headers)
+    |> HTTPoison.post(body, headers, @default_request_options)
     |> handle_response()
   end
-
-  def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix()
-
-  def handle_get_response({:error, _reason}), do: nil
 
   def handle_get_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
@@ -41,10 +40,7 @@ defmodule Cryptor.Requests do
     end
   end
 
-  def handle_response({:error, reason}) do
-    IO.inspect(reason)
-    nil
-  end
+  def handle_get_response(_), do: nil
 
   def handle_response({:ok, %HTTPoison.Response{status_code: 100, body: body}}) do
     case Jason.decode(body) do
@@ -74,7 +70,7 @@ defmodule Cryptor.Requests do
     end
   end
 
-  def handle_response({:ok, response}) do
+  def handle_response(_ = response) do
     IO.inspect(response)
     nil
   end

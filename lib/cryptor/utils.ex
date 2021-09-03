@@ -28,4 +28,6 @@ defmodule Cryptor.Utils do
       |> String.replace(".", ",")
 
   def format_for_brl(value), do: value
+
+  def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix()
 end
