@@ -7,6 +7,7 @@ defmodule Cryptor.Trader.Server do
   alias Cryptor.Analysis
   alias Cryptor.Trader
   alias Cryptor.Order
+  alias Cryptor.Currency
 
   @currencies ["BTC", "LTC", "XRP", "ETH", "USDC"]
 
@@ -25,6 +26,9 @@ defmodule Cryptor.Trader.Server do
   end
 
   def init_orders() do
+    # @currencies
+    # |> Enum.each(fn coin -> Currency.create_currency(%{coin: coin}) end)
+
     Order.get_orders()
   end
 
