@@ -33,5 +33,27 @@ defmodule CryptorWeb.AnalysisLive do
     end)
   end
 
+  @impl true
+  def handle_event(
+        "update_percentages",
+        %{
+          "coin" => coin,
+          "sell_percentage" => sell_percentage,
+          "buy_percentage" => buy_percentage
+        },
+        socket
+      ) do
+    sell_percentage = String.to_float(sell_percentage)
+    buy_percentage = String.to_float(buy_percentage)
+
+    Process.send(
+      String.to_existing_atom(coin <> "Server"),
+      {:update_transaction_limit_percentage, sell_percentage, buy_percentage},
+      []
+    )
+
+    {:noreply, socket}
+  end
+
   defp schedule_event(), do: Process.send_after(self(), "update_state", 9000)
 end

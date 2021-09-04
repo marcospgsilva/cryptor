@@ -9,26 +9,40 @@
   </div>
 </div>
 
-  <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-lg m-auto">
+  <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-2xl m-auto">
     <%= for server <- @analysis do %>
-      <div class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
-        <div class="flex-1 flex-grow self-center">
-          <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-16 ml-2" style="background-image: url('/images/<%= server.coin %>.png')"></div>
-          <p class="text-white font-black text-xl mt-5"><%= server.coin %></p>
+      <div class="w-full flex-col min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
+        <div class="flex flex-1 justify-center items-center self-center flex-grow">
+          <div class="bg-contain bg-no-repeat h-9 w-9 relative mr-3" style="background-image: url('/images/<%= server.coin %>.png')"></div>
+          <p class="text-white font-black text-xl"><%= server.coin %></p>
         </div>
-        <div class="flex-1 text-right self-center">
-          <div>
-            <p class="text-gray-400 font-light">Estado</p>
-            <p class="text-green-400 font-extrabold">Running</p>
+        <div class="flex flex-col flex-1 text-right self-center">
+        <div class="flex flex-1 flex-wrap mt-2 mb-2">
+          <div class="flex flex-1 mr-3">
+            <p class="text-gray-400 font-light mr-2">Estado</p>
+            <p class="text-green-400 font-extrabold mr-2">Running</p>
+            <p class="text-gray-400 font-extrabold">|</p>
           </div>
-          <div>
-            <p class="text-gray-400 font-light">Em análise</p>
-            <p class="text-green-400 font-extrabold"><%= server.orders %></p>
+          <div class="flex flex-1 mr-3">
+            <p class="text-gray-400 font-light mr-2">Análise</p>
+            <p class="text-green-400 font-extrabold mr-2"><%= server.orders %></p>
+            <p class="text-gray-400 font-extrabold">|</p>
           </div>
-          <div>
-            <p class="text-gray-400 font-light">Valor atual</p>
-            <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(server.current_value) %></p>
+          <div class="flex flex-1 mr-3 text-center">
+            <p class="text-gray-400 font-light mr-2">Valor</p>
+            <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(server.current_value) %></p>
           </div>
+        </div>
+        <div class="flex flex-1 flex-col self-center text-center">
+        <form phx-submit="update_percentages">
+          <label class="text-white font-light">Percentage to sell:</label>
+          <input name="sell_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value=".0001" step=".0001"><br><br>
+          <label class="text-white font-light mt-2">Percentage to buy:</label>
+          <input name="buy_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value=".0001" step=".0001">
+          <input name="coin" class="hidden" type="text" value="<%= server.coin %>">
+        <button type="submit" class="flex flex-1 rounded-lg bg-green-400 p-4 mt-5 m-auto" >Salvar alterações</button>
+        </form>
+        </div>
         </div>
       </div>
     <% end %>

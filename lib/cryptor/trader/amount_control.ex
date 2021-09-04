@@ -18,16 +18,9 @@ defmodule Cryptor.Trader.AmountControl do
   @btc_maximum_value 0.0003
   @btc_minimum_value 0.0003
 
-  @currencies ["BTC", "USDC"]
+  @currencies ["BTC", "USDC", "LTC", "XRP"]
 
   def get_quantity(:sell, _newer_price, %Order{quantity: 0.00000000}), do: nil
-
-  def get_quantity(:sell, _newer_price, %Order{quantity: quantity, coin: "CHZ"}) do
-    case quantity < 25 do
-      false -> quantity |> Float.round(8)
-      _ -> nil
-    end
-  end
 
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity, coin: coin})
       when coin in @currencies,
@@ -35,9 +28,6 @@ defmodule Cryptor.Trader.AmountControl do
 
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity}),
     do: quantity |> Float.round(8)
-
-  def get_quantity(:buy, newer_price, %Order{coin: "AXS"}),
-    do: newer_price / 50
 
   def get_quantity(:buy, _newer_price, %Order{quantity: 0.00000000, coin: coin}) do
     case coin do

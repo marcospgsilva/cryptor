@@ -49,6 +49,25 @@ defmodule Cryptor.Analysis do
   end
 
   @impl true
+  def handle_info(
+        {:update_transaction_limit_percentage, sell_percentage_limit, buy_percentage_limit},
+        %Analysis{coin: coin} = state
+      ) do
+    Currency.get_currency(coin)
+    |> Currency.update_currency(%{
+      sell_percentage_limit: sell_percentage_limit,
+      buy_percentage_limit: buy_percentage_limit
+    })
+
+    {:noreply,
+     %{
+       state
+       | sell_percentage_limit: sell_percentage_limit,
+         buy_percentage_limit: buy_percentage_limit
+     }}
+  end
+
+  @impl true
   def handle_info(:get_currency_price, %__MODULE__{orders: [], coin: coin} = state) do
     case Trader.get_currency_price(coin) do
       nil ->
