@@ -15,7 +15,7 @@ defmodule Cryptor.Order do
   schema "orders" do
     field :order_id, :integer
     field :coin, :string
-    field :quantity, :float
+    field :quantity, :float, default: 0.0
     field :price, :float
     field :type, :string
     field :finished, :boolean, default: false
@@ -32,7 +32,7 @@ defmodule Cryptor.Order do
   def get_order(id) do
     Repo.one(
       from order in Order,
-      where: order.id == ^id
+        where: order.id == ^id
     )
   end
 

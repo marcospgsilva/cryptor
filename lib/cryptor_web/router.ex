@@ -19,6 +19,7 @@ defmodule CryptorWeb.Router do
 
     live "/", OrdersLive, :index
     live "/analysis", AnalysisLive, :index
+    live "/currency", CurrencyLive, :index
     get "/orders", AnalysisController, :index
     get "/infos", TraderController, :index
   end

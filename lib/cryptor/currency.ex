@@ -23,6 +23,7 @@ defmodule Cryptor.Currency do
       currency
       |> cast(attrs, @fields)
       |> validate_required(@fields)
+      |> unique_constraint([:coin])
 
   def create_currency(attrs),
     do:
