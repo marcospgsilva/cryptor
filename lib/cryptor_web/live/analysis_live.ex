@@ -23,12 +23,20 @@ defmodule CryptorWeb.AnalysisLive do
 
     pid_list
     |> Enum.map(fn pid ->
-      %Analysis{coin: coin, orders: orders, current_value: current_value} = :sys.get_state(pid)
+      %Analysis{
+        coin: coin,
+        orders: orders,
+        current_value: current_value,
+        sell_percentage_limit: sell_percentage_limit,
+        buy_percentage_limit: buy_percentage_limit
+      } = :sys.get_state(pid)
 
       %{
         coin: coin,
         orders: Enum.count(orders),
-        current_value: current_value
+        current_value: current_value,
+        sell_percentage_limit: sell_percentage_limit,
+        buy_percentage_limit: buy_percentage_limit
       }
     end)
   end
