@@ -8,28 +8,28 @@ defmodule Cryptor.Trader do
   alias Cryptor.Trader.AmountControl
   alias Cryptor.Order
   alias Cryptor.Utils
+  alias Cryptor.Analysis
 
-  def analyze_transaction(current_value, %Order{coin: "LTC", price: price} = order)
-      when current_value >= price * 1.01,
-      do: place_order(:sell, current_value, order)
+  def analyze_transaction(current_value, %Order{price: price, coin: coin} = order) do
+    %Analysis{
+      sell_percentage_limit: sell_percentage_limit,
+      buy_percentage_limit: buy_percentage_limit
+    } = :sys.get_state(String.to_existing_atom(coin <> "Server"))
 
-  def analyze_transaction(current_value, %Order{coin: "ETH", price: price} = order)
-      when current_value >= price * 1.0005,
-      do: place_order(:sell, current_value, order)
+    IO.inspect(sell_percentage_limit, label: "sell_percentage_limit")
+    IO.inspect(buy_percentage_limit, label: "buy_percentage_limit")
 
-  def analyze_transaction(current_value, %Order{price: price} = order)
-      when current_value >= price * 1.008,
-      do: place_order(:sell, current_value, order)
+    cond do
+      current_value >= price * sell_percentage_limit ->
+        place_order(:sell, current_value, order)
 
-  def analyze_transaction(current_value, %Order{coin: "ETH", price: price} = order)
-      when current_value <= price * 0.995,
-      do: place_order(:buy, current_value, order)
+      current_value <= price * buy_percentage_limit ->
+        place_order(:buy, current_value, order)
 
-  def analyze_transaction(current_value, %Order{price: price} = order)
-      when current_value <= price * 0.985,
-      do: place_order(:buy, current_value, order)
-
-  def analyze_transaction(_, _), do: nil
+      true ->
+        nil
+    end
+  end
 
   def get_currency_price(coin) do
     case Requests.request(:get, "#{coin}/ticker/") do

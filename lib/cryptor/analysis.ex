@@ -6,8 +6,14 @@ defmodule Cryptor.Analysis do
   use GenServer
   alias Cryptor.Trader
   alias Cryptor.Order
+  alias Cryptor.Currency
+  alias __MODULE__
 
-  defstruct orders: [], current_value: 0.0, coin: nil
+  defstruct orders: [],
+            current_value: 0.0,
+            coin: nil,
+            sell_percentage_limit: 1.008,
+            buy_percentage_limit: 0.985
 
   # CLIENT
   def start_link(%{state: state, name: name}),
@@ -16,27 +22,29 @@ defmodule Cryptor.Analysis do
   # SERVER
   @impl true
   def init(%__MODULE__{} = state) do
+    {:ok, state, {:continue, :get_transaction_limit_percentage}}
+  end
+
+  @impl true
+  def handle_continue(:get_transaction_limit_percentage, state) do
+    # Process.send(self(), :get_transaction_limit_precentage, [])
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:get_transaction_limit_precentage, %Analysis{coin: coin} = state) do
+    %Currency{
+      sell_percentage_limit: sell_percentage_limit,
+      buy_percentage_limit: buy_percentage_limit
+    } = Currency.get_currency(coin)
+
     analisys()
-    {:ok, state}
-  end
 
-  @impl true
-  def handle_cast({:add_order, order}, state) do
-    {:noreply, %{state | orders: [order | state.orders]}}
-  end
-
-  @impl true
-  def handle_cast({:remove_order, order}, state) do
     {:noreply,
      %{
        state
-       | orders:
-           Enum.reject(
-             state.orders,
-             fn %Order{order_id: id} ->
-               id == order.order_id
-             end
-           )
+       | sell_percentage_limit: sell_percentage_limit,
+         buy_percentage_limit: buy_percentage_limit
      }}
   end
 
@@ -92,7 +100,27 @@ defmodule Cryptor.Analysis do
     end
   end
 
-  def start_transaction(current_value, order) do
+  @impl true
+  def handle_cast({:add_order, order}, state) do
+    {:noreply, %{state | orders: [order | state.orders]}}
+  end
+
+  @impl true
+  def handle_cast({:remove_order, order}, state) do
+    {:noreply,
+     %{
+       state
+       | orders:
+           Enum.reject(
+             state.orders,
+             fn %Order{order_id: id} ->
+               id == order.order_id
+             end
+           )
+     }}
+  end
+
+  def start_transaction(current_value, %Order{} = order) do
     Task.start(fn -> Trader.analyze_transaction(current_value, order) end)
   end
 
