@@ -12,6 +12,7 @@ defmodule Cryptor.Trader.Server do
 
   def get_currencies, do: @currencies
 
+  # CLIENT
   def start_link(_attrs) do
     GenServer.start_link(
       __MODULE__,
@@ -44,6 +45,28 @@ defmodule Cryptor.Trader.Server do
     Process.send(TradeServer, {:pop_order, order}, [])
   end
 
+  def start_currencies_analysis(currencies) do
+    currencies
+    |> Enum.map(fn coin ->
+      DynamicSupervisor.start_child(
+        OrdersSupervisor,
+        {Analysis, %{state: %Analysis{coin: coin}, name: String.to_atom(coin <> "Server")}}
+      )
+      |> elem(1)
+    end)
+  end
+
+  def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
+
+  def add_order_to_server(%Order{} = order) when order.coin in @currencies,
+    do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:add_order, order})
+
+  def add_order_to_server(_), do: :ok
+
+  def remove_order_from_server(%Order{} = order),
+    do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
+
+  # SERVER
   @impl true
   def init(attrs) do
     {:ok, attrs, {:continue, :start_process_coin}}
@@ -90,27 +113,6 @@ defmodule Cryptor.Trader.Server do
     schedule_update_account_info()
     {:noreply, %{state | pid_list: pid_list}}
   end
-
-  def start_currencies_analysis(currencies) do
-    currencies
-    |> Enum.map(fn coin ->
-      DynamicSupervisor.start_child(
-        OrdersSupervisor,
-        {Analysis, %{state: %Analysis{coin: coin}, name: String.to_atom(coin <> "Server")}}
-      )
-      |> elem(1)
-    end)
-  end
-
-  def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
-
-  def add_order_to_server(%Order{} = order) when order.coin in @currencies,
-    do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:add_order, order})
-
-  def add_order_to_server(_), do: :ok
-
-  def remove_order_from_server(%Order{} = order),
-    do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
 
   def schedule_update_account_info(),
     do: Process.send_after(TradeServer, :update_account_info, 10_000)

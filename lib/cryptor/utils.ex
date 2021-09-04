@@ -29,5 +29,8 @@ defmodule Cryptor.Utils do
 
   def format_for_brl(value), do: value
 
+  def calculate_variation(bought_price, current_price),
+    do: (current_price / bought_price - 1) |> Float.round(4)
+
   def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix()
 end

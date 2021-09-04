@@ -2,15 +2,16 @@ defmodule CryptorWeb.CurrencyLive do
   @moduledoc """
    Currency Live
   """
+
   use CryptorWeb, :live_view
   alias Cryptor.Currency
   alias Cryptor.Trader.Server
   alias Ecto.Changeset
 
+  # SERVER
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, error: false)}
-  end
+  def mount(_params, _session, socket),
+    do: {:ok, assign(socket, error: false)}
 
   @impl true
   def handle_event("create_currency", %{"currency" => currency}, socket) do

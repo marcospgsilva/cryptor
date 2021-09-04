@@ -3,43 +3,23 @@ defmodule CryptorWeb.AnalysisLive do
    Analysis Live
   """
   use CryptorWeb, :live_view
-  alias Cryptor.Analysis
 
+  # CLIENT
+  def get_analysis_server_data() do
+    %{pid_list: pid_list} = :sys.get_state(TradeServer)
+    Enum.map(pid_list, &build_server_analysis_data/1)
+  end
+
+  # SERVER
   @impl true
   def mount(_params, _session, socket) do
-    analysis = get_analysis_servers()
     schedule_event()
-    {:ok, assign(socket, analysis: analysis)}
+    {:ok, assign(socket, analysis: get_analysis_server_data())}
   end
 
   @impl true
-  def handle_info("update_state", socket) do
-    analysis = get_analysis_servers()
-    {:noreply, assign(socket, analysis: analysis)}
-  end
-
-  def get_analysis_servers() do
-    %{pid_list: pid_list} = :sys.get_state(TradeServer)
-
-    pid_list
-    |> Enum.map(fn pid ->
-      %Analysis{
-        coin: coin,
-        orders: orders,
-        current_value: current_value,
-        sell_percentage_limit: sell_percentage_limit,
-        buy_percentage_limit: buy_percentage_limit
-      } = :sys.get_state(pid)
-
-      %{
-        coin: coin,
-        orders: Enum.count(orders),
-        current_value: current_value,
-        sell_percentage_limit: sell_percentage_limit,
-        buy_percentage_limit: buy_percentage_limit
-      }
-    end)
-  end
+  def handle_info("update_state", socket),
+    do: {:noreply, assign(socket, analysis: get_analysis_server_data())}
 
   @impl true
   def handle_event(
@@ -51,17 +31,24 @@ defmodule CryptorWeb.AnalysisLive do
         },
         socket
       ) do
-    sell_percentage = String.to_float(sell_percentage)
-    buy_percentage = String.to_float(buy_percentage)
-
     Process.send(
       String.to_existing_atom(coin <> "Server"),
-      {:update_transaction_limit_percentage, sell_percentage, buy_percentage},
+      {
+        :update_transaction_limit_percentage,
+        String.to_float(sell_percentage),
+        String.to_float(buy_percentage)
+      },
       []
     )
 
     {:noreply, socket}
   end
+
+  defp build_server_analysis_data(pid),
+    do:
+      pid
+      |> :sys.get_state()
+      |> Map.from_struct()
 
   defp schedule_event(), do: Process.send_after(self(), "update_state", 9000)
 end

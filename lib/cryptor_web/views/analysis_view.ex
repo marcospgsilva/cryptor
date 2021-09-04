@@ -1,6 +1,7 @@
 defmodule CryptorWeb.AnalysisView do
   use CryptorWeb, :view
   alias Cryptor.Order
+  alias Cryptor.Utils
 
   def render("analysis.json", %{analysis: %{pid_list: pid_list, order_list: order_list}}) do
     %{
@@ -44,13 +45,10 @@ defmodule CryptorWeb.AnalysisView do
           bought_value: order.price,
           quantity: order.quantity,
           current_value: current_value,
-          variation: calculate_variation(order.price, current_value)
+          variation: Utils.calculate_variation(order.price, current_value)
         }
       end)
     end)
     |> Enum.concat()
   end
-
-  defp calculate_variation(bought_price, current_price),
-    do: (current_price / bought_price - 1) |> Float.round(4)
 end

@@ -75,13 +75,7 @@ defmodule Cryptor.Analysis do
         {:noreply, state}
 
       current_value ->
-        order = %Order{
-          order_id: 0,
-          coin: coin,
-          quantity: 0.0,
-          price: current_value,
-          type: "buy"
-        }
+        order = Order.create_base_order(coin, current_value)
 
         analisys()
         {:noreply, %{state | current_value: current_value, orders: [order]}}
@@ -106,12 +100,7 @@ defmodule Cryptor.Analysis do
             {:noreply, %{state | current_value: current_value}}
 
           _ ->
-            latest_order =
-              orders
-              |> Enum.reject(&(&1.quantity == 0.0))
-              |> Enum.sort(&(&1.price < &2.price))
-              |> List.first()
-
+            latest_order = get_latest_order(orders)
             start_transaction(current_value, latest_order)
             analisys()
             {:noreply, %{state | current_value: current_value}}
@@ -139,9 +128,15 @@ defmodule Cryptor.Analysis do
      }}
   end
 
-  def start_transaction(current_value, %Order{} = order) do
-    Task.start(fn -> Trader.analyze_transaction(current_value, order) end)
-  end
+  def start_transaction(current_value, %Order{} = order),
+    do: Task.start(fn -> Trader.analyze_transaction(current_value, order) end)
+
+  defp get_latest_order(orders),
+    do:
+      orders
+      |> Enum.reject(&(&1.quantity == 0.0))
+      |> Enum.sort(&(&1.price < &2.price))
+      |> List.first()
 
   defp analisys, do: Process.send_after(self(), :get_currency_price, Enum.random(7_000..8_000))
 end

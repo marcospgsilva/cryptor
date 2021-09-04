@@ -30,32 +30,34 @@ defmodule Cryptor.Trader do
 
   def get_currency_price(coin) do
     case Requests.request(:get, "#{coin}/ticker/") do
-      nil ->
-        nil
+      {:ok, %{"ticker" => %{"last" => last}}} ->
+        String.to_float(last)
 
-      {:ok, response} ->
-        response["ticker"]["last"]
-        |> String.to_float()
+      _ ->
+        nil
     end
   end
 
   def get_account_info do
     case Requests.request(:post, %{tapi_method: "get_account_info"}) do
-      nil ->
-        get_account_info()
-
       {:ok, response} ->
         response
+
+      _ ->
+        get_account_info()
     end
   end
 
   def place_order(method, newer_price, %Order{coin: coin} = order) do
-    coin_pair = "BRL#{coin}"
-    account_info = get_account_info_data()
     quantity = AmountControl.get_quantity(method, newer_price, order)
 
-    validate_available_money(method, quantity, newer_price, account_info)
-    |> place_order(quantity, method, coin_pair, newer_price)
+    validate_available_money(
+      method,
+      quantity,
+      newer_price,
+      get_account_info_data()
+    )
+    |> place_order(quantity, method, "BRL#{coin}", newer_price)
     |> process_order(order)
   end
 

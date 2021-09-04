@@ -18,12 +18,12 @@ defmodule Cryptor.Trader.AmountControl do
   @btc_maximum_value 0.0003
   @btc_minimum_value 0.0003
 
-  @currencies ["BTC", "USDC", "LTC", "XRP"]
+  @currencies_with_platform_fee ["BTC", "USDC", "LTC", "XRP"]
 
   def get_quantity(:sell, _newer_price, %Order{quantity: 0.00000000}), do: nil
 
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity, coin: coin})
-      when coin in @currencies,
+      when coin in @currencies_with_platform_fee,
       do: (quantity * 0.997) |> Float.round(8)
 
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity}),
