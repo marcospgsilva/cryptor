@@ -16,9 +16,6 @@ defmodule Cryptor.Trader do
       buy_percentage_limit: buy_percentage_limit
     } = :sys.get_state(String.to_existing_atom(coin <> "Server"))
 
-    IO.inspect(sell_percentage_limit, label: "sell_percentage_limit")
-    IO.inspect(buy_percentage_limit, label: "buy_percentage_limit")
-
     cond do
       current_value >= price * sell_percentage_limit ->
         place_order(:sell, current_value, order)
