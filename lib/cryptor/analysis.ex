@@ -27,7 +27,7 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_continue(:get_transaction_limit_percentage, state) do
-    # Process.send(self(), :get_transaction_limit_precentage, [])
+    Process.send(self(), :get_transaction_limit_precentage, [])
     {:noreply, state}
   end
 

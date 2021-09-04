@@ -26,8 +26,8 @@ defmodule Cryptor.Trader.Server do
   end
 
   def init_orders() do
-    # @currencies
-    # |> Enum.each(fn coin -> Currency.create_currency(%{coin: coin}) end)
+    @currencies
+    |> Enum.each(fn coin -> Currency.create_currency(%{coin: coin}) end)
 
     Order.get_orders()
   end
