@@ -78,6 +78,7 @@ defmodule Cryptor.Analysis do
         order = Order.create_base_order(coin, current_value)
 
         analisys()
+        schedule_reset_virtual_order_price()
         {:noreply, %{state | current_value: current_value, orders: [order]}}
     end
   end
@@ -106,6 +107,22 @@ defmodule Cryptor.Analysis do
             {:noreply, %{state | current_value: current_value}}
         end
     end
+  end
+
+  @impl true
+  def handle_info(
+        :reset_virtual_order_price,
+        %Analysis{orders: [%Order{quantity: 0.0} = order], current_value: current_value} = state
+      ) do
+    updated_order = %{order | price: current_value}
+    schedule_reset_virtual_order_price()
+    {:noreply, %{state | orders: [updated_order]}}
+  end
+
+  @impl true
+  def handle_info(:reset_virtual_order_price, state) do
+    schedule_reset_virtual_order_price()
+    {:noreply, state}
   end
 
   @impl true
@@ -139,4 +156,7 @@ defmodule Cryptor.Analysis do
       |> List.first()
 
   defp analisys, do: Process.send_after(self(), :get_currency_price, Enum.random(7_000..8_000))
+
+  def schedule_reset_virtual_order_price(),
+    do: Process.send_after(self(), :reset_virtual_order_price, 24 * 60 * 60)
 end
