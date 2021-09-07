@@ -17,6 +17,10 @@ defmodule Cryptor.Trader.AmountControl do
   @chz_minimum_value 25.00
   @btc_maximum_value 0.0003
   @btc_minimum_value 0.0003
+  @bch_maximum_value 0.01
+  @bch_minimum_value 0.01
+  @paxg_maximum_value 0.003
+  @paxg_minimum_value 0.003
 
   @currencies_with_platform_fee ["BTC", "USDC", "LTC", "XRP", "PAXG", "ETH", "BCH"]
 
@@ -39,6 +43,8 @@ defmodule Cryptor.Trader.AmountControl do
       "ENJ" -> @enj_maximum_value
       "CHZ" -> @chz_maximum_value
       "BTC" -> @btc_maximum_value
+      "PAXG" -> @paxg_maximum_value
+      "BCH" -> @bch_maximum_value
     end
   end
 
@@ -52,6 +58,8 @@ defmodule Cryptor.Trader.AmountControl do
       "ENJ" -> @enj_minimum_value
       "CHZ" -> @chz_minimum_value
       "BTC" -> @btc_minimum_value
+      "PAXG" -> @paxg_minimum_value
+      "BCH" -> @bch_minimum_value
     end
   end
 end
