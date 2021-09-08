@@ -2,6 +2,19 @@ defmodule Cryptor.Utils do
   @moduledoc """
    Cryptor Utils
   """
+  alias Cryptor.Trader
+
+  def get_open_order(coin) do
+    account_info = Trader.get_account_info_data()
+
+    case account_info["response_data"]["balance"][coin]["amount_open_orders"] do
+      0 ->
+        :ok
+
+      _ ->
+        nil
+    end
+  end
 
   def get_available_value(account_info, coin) do
     case account_info["response_data"]["balance"][coin]["available"] do

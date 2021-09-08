@@ -24,8 +24,6 @@ defmodule Cryptor.Trader.AmountControl do
 
   @currencies_with_platform_fee ["BTC", "USDC", "LTC", "XRP", "PAXG", "ETH", "BCH"]
 
-  def get_quantity(:sell, _newer_price, %Order{quantity: 0.00000000}), do: nil
-
   def get_quantity(:sell, _newer_price, %Order{quantity: quantity, coin: coin})
       when coin in @currencies_with_platform_fee,
       do: (quantity * 0.997) |> Float.round(8)

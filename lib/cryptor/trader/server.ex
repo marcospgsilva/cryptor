@@ -106,6 +106,22 @@ defmodule Cryptor.Trader.Server do
   end
 
   @impl true
+  def handle_info({:get_order_status, order}, state) do
+    case Trader.get_order_status(order) do
+      4 ->
+        Order.create_order(order) |> add_order()
+
+      3 ->
+        nil
+
+      _ ->
+        schedule_order_status(order)
+    end
+
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_continue(:start_process_coin, %{order_list: order_list} = state) do
     pid_list = start_currencies_analysis(@currencies)
     add_orders_to_analysis(order_list)
@@ -116,4 +132,7 @@ defmodule Cryptor.Trader.Server do
 
   def schedule_update_account_info(),
     do: Process.send_after(TradeServer, :update_account_info, 10_000)
+
+  def schedule_order_status(attrs),
+    do: Process.send_after(TradeServer, {:get_order_status, attrs}, 8000)
 end
