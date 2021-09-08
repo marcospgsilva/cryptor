@@ -8,7 +8,7 @@ defmodule Cryptor.Trader.Server do
   alias Cryptor.Trader
   alias Cryptor.Order
 
-  @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "PAXG", "BCH"]
+  @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH"]
 
   def get_currencies, do: @currencies
 
