@@ -4,6 +4,16 @@ defmodule Cryptor.Utils do
   """
   alias Cryptor.Trader
 
+  def build_valid_order(new_order) do
+    %{
+      order_id: new_order["order_id"],
+      quantity: new_order["quantity"] |> String.to_float(),
+      price: new_order["limit_price"] |> String.to_float(),
+      coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
+      type: get_order_type(new_order["order_type"])
+    }
+  end
+
   def get_open_order(coin) do
     account_info = Trader.get_account_info_data()
 

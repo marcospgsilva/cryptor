@@ -107,15 +107,20 @@ defmodule Cryptor.Trader do
     })
   end
 
+  def process_order(
+        {:ok, %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}}},
+        order
+      ) do
+    process_order(
+      Utils.build_valid_order(new_order)
+      |> Map.put(:buy_order_id, order.id),
+      order
+    )
+  end
+
   def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order) do
     process_order(
-      %{
-        order_id: new_order["order_id"],
-        quantity: new_order["quantity"] |> String.to_float(),
-        price: new_order["limit_price"] |> String.to_float(),
-        coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
-        type: Utils.get_order_type(new_order["order_type"])
-      },
+      Utils.build_valid_order(new_order),
       order
     )
   end
@@ -124,12 +129,14 @@ defmodule Cryptor.Trader do
 
   def process_order(nil, _), do: nil
 
-  def process_order(%{type: "buy"} = attrs, _order),
-    do: Process.send(TradeServer, {:get_order_status, attrs}, [])
+  def process_order(attrs, _order), do: Server.add_pending_status_order(attrs)
 
-  def process_order(%{type: _}, order) do
-    Server.remove_order(order)
-    Order.update_order(order, %{finished: true})
+  def create_and_add_order(order), do: Order.create_order(order) |> Server.add_order()
+
+  def remove_and_update_order(order) do
+    buy_order = Order.get_order(order.buy_order_id)
+    Server.remove_order(buy_order)
+    Order.update_order(buy_order, %{finished: true})
   end
 
   def delete_order(id) do
