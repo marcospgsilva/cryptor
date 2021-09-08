@@ -41,6 +41,7 @@ defmodule Cryptor.Trader do
   def get_account_info do
     case Requests.request(:post, %{tapi_method: "get_account_info"}) do
       {:ok, response} ->
+        IO.inspect(response)
         response
 
       _ ->
@@ -77,9 +78,9 @@ defmodule Cryptor.Trader do
     |> process_order(order)
   end
 
-  def validate_available_money(nil, _, _, _, _), do: nil
+  def validate_available_money(nil, _, _, _), do: nil
 
-  def validate_available_money(_, :sell, _, _, _), do: :ok
+  def validate_available_money(_, :sell, _, _), do: :ok
 
   def validate_available_money(:ok, :buy, quantity, newer_price) do
     available_brl =
