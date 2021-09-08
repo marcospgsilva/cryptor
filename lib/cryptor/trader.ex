@@ -48,27 +48,44 @@ defmodule Cryptor.Trader do
     end
   end
 
+  def get_order_status(order) do
+    case Requests.request(:post, %{
+           tapi_method: "get_order",
+           coin_pair: "BRL" <> order.coin,
+           order_id: order.order_id
+         }) do
+      {:ok, %{"response_data" => %{"order" => %{"status" => order_status}}}} ->
+        order_status
+
+      _ ->
+        nil
+    end
+  end
+
+  def place_order(:sell, _, %Order{quantity: 0.0}), do: nil
+
   def place_order(method, newer_price, %Order{coin: coin} = order) do
     quantity = AmountControl.get_quantity(method, newer_price, order)
 
-    validate_available_money(
+    Utils.get_open_order(coin)
+    |> validate_available_money(
       method,
       quantity,
-      newer_price,
-      get_account_info_data()
+      newer_price
     )
     |> place_order(quantity, method, "BRL#{coin}", newer_price)
     |> process_order(order)
   end
 
-  def validate_available_money(_, _, _, nil), do: nil
+  def validate_available_money(nil, _, _, _, _), do: nil
 
-  def validate_available_money(_, nil, _, _), do: nil
+  def validate_available_money(_, :sell, _, _, _), do: :ok
 
-  def validate_available_money(:sell, _, _, _), do: :ok
+  def validate_available_money(:ok, :buy, quantity, newer_price) do
+    available_brl =
+      get_account_info_data()
+      |> Utils.get_available_value("brl")
 
-  def validate_available_money(:buy, quantity, newer_price, account_info) do
-    available_brl = Utils.get_available_value(account_info, "brl")
     order_value = quantity * newer_price
 
     case available_brl > order_value do
@@ -80,39 +97,46 @@ defmodule Cryptor.Trader do
   def place_order(nil, _, _, _, _),
     do: nil
 
-  def place_order(:ok, quantity, method, coin_pair, newer_price),
-    do:
-      Requests.request(:post, %{
-        tapi_method: Utils.get_tapi_method(method),
-        coin_pair: coin_pair,
-        quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
-        limit_price: newer_price,
-        async: true
-      })
+  def place_order(:ok, quantity, method, coin_pair, newer_price) do
+    Requests.request(:post, %{
+      tapi_method: Utils.get_tapi_method(method),
+      coin_pair: coin_pair,
+      quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
+      limit_price: newer_price,
+      async: true
+    })
+  end
+
+  def process_order(
+        {:ok, %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}}},
+        order
+      ) do
+    process_order(
+      Utils.build_valid_order(new_order)
+      |> Map.put(:buy_order_id, order.id),
+      order
+    )
+  end
 
   def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order) do
-    attrs = %{
-      order_id: new_order["order_id"],
-      quantity: new_order["quantity"] |> String.to_float(),
-      price: new_order["limit_price"] |> String.to_float(),
-      coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
-      type: Utils.get_order_type(new_order["order_type"])
-    }
-
-    process_order(attrs, order)
+    process_order(
+      Utils.build_valid_order(new_order),
+      order
+    )
   end
 
   def process_order({:ok, _}, _), do: nil
 
   def process_order(nil, _), do: nil
 
-  def process_order(%{type: "buy"} = attrs, _order) do
-    Order.create_order(attrs) |> Server.add_order()
-  end
+  def process_order(attrs, _order), do: Server.add_pending_status_order(attrs)
 
-  def process_order(%{type: _}, order) do
-    Server.remove_order(order)
-    Order.update_order(order, %{finished: true})
+  def create_and_add_order(order), do: Order.create_order(order) |> Server.add_order()
+
+  def remove_and_update_order(order) do
+    buy_order = Order.get_order(order.buy_order_id)
+    Server.remove_order(buy_order)
+    Order.update_order(buy_order, %{finished: true})
   end
 
   def delete_order(id) do
