@@ -1,6 +1,5 @@
 # Cryptor
-An bot for buy and sell cryptocurrencies made with Elixir.
-You can visualize all the bot transactions infos in https://cryptor.gigalixirapp.com/
+An bot  made with Elixir, for buy and sell cryptocurrencies.
 
 ## Follow me
 
