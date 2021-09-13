@@ -67,8 +67,8 @@ defmodule Cryptor.Trader do
   def place_order(method, newer_price, %Order{coin: coin} = order) do
     quantity = AmountControl.get_quantity(method, newer_price, order)
 
-    Utils.get_open_order(coin)
-    |> validate_available_money(
+    # Utils.get_open_order(coin)
+    validate_available_money(
       method,
       quantity,
       newer_price
@@ -77,11 +77,11 @@ defmodule Cryptor.Trader do
     |> process_order(order)
   end
 
-  def validate_available_money(nil, _, _, _), do: nil
+  def validate_available_money(_, _, _), do: nil
 
-  def validate_available_money(_, :sell, _, _), do: :ok
+  def validate_available_money(:sell, _, _), do: :ok
 
-  def validate_available_money(:ok, :buy, quantity, newer_price) do
+  def validate_available_money(:buy, quantity, newer_price) do
     available_brl =
       get_account_info_data()
       |> Utils.get_available_value("brl")
