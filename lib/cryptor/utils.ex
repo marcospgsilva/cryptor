@@ -17,6 +17,8 @@ defmodule Cryptor.Utils do
   def get_open_order(coin) do
     account_info = Trader.get_account_info_data()
 
+    IO.inspect(account_info["response_data"]["balance"][coin]["amount_open_orders"])
+
     case account_info["response_data"]["balance"][coin]["amount_open_orders"] do
       0 ->
         :ok
