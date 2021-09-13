@@ -17,12 +17,12 @@ defmodule Cryptor.Utils do
   def get_open_order(coin) do
     account_info = Trader.get_account_info_data()
 
-    case account_info["response_data"]["balance"][coin]["amount_open_orders"] do
+    case account_info["response_data"]["balance"][String.downcase(coin)]["amount_open_orders"] do
       0 ->
         :ok
 
-      nil ->
-        :ok
+      _ ->
+        nil
     end
   end
 
