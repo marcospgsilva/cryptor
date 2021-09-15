@@ -92,7 +92,7 @@ defmodule Cryptor.Trader.Server do
            Enum.reject(
              pending_orders,
              fn order ->
-               order.id == order_to_remove.id
+               order.order_id == order_to_remove.order_id
              end
            )
      }}
