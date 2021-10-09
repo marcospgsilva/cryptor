@@ -32,7 +32,7 @@ defmodule Cryptor.Order do
   def get_order(id) do
     Repo.one(
       from order in Order,
-        where: order.id == ^id
+        where: order.order_id == ^id
     )
   end
 
