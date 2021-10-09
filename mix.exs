@@ -33,6 +33,7 @@ defmodule Cryptor.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bcrypt_elixir, "~> 2.0"},
       {:phoenix, "~> 1.5.9"},
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.4"},
@@ -51,7 +52,8 @@ defmodule Cryptor.MixProject do
       {:httpoison, "~> 1.8"},
       {:mock, "~> 0.3.0", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
-      {:appsignal_phoenix, "~> 2.0.0"}
+      {:appsignal_phoenix, "~> 2.0.0"},
+      {:phx_gen_auth, "~> 0.7", only: [:dev], runtime: false}
     ]
   end
 
