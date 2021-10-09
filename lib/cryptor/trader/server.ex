@@ -82,7 +82,7 @@ defmodule Cryptor.Trader.Server do
 
   @impl true
   def handle_info(
-        {:remove_pending_status_order, order_to_remove},
+        {:remove_pending_status_order, order_to_be_removed},
         %{pending_orders: pending_orders} = state
       ) do
     {:noreply,
@@ -92,7 +92,7 @@ defmodule Cryptor.Trader.Server do
            Enum.reject(
              pending_orders,
              fn order ->
-               order.order_id == order_to_remove.order_id
+               remove_pending_order(order_to_be_removed, order)
              end
            )
      }}
@@ -106,26 +106,14 @@ defmodule Cryptor.Trader.Server do
 
   @impl true
   def handle_info(:process_orders_status, %{pending_orders: pending_orders} = state) do
-    pending_orders
-    |> Enum.each(fn order ->
-      case Trader.get_order_status(order) do
-        4 ->
-          process_pending_order(order)
-          Process.send(TradeServer, {:remove_pending_status_order, order}, [])
-
-        _ ->
-          nil
-      end
-    end)
-
+    check_order_status(pending_orders)
     schedule_process_orders_status()
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:put_order, order}, state) do
-    {:noreply, %{state | order_list: [order | state.order_list]}}
-  end
+  def handle_info({:put_order, order}, state),
+    do: {:noreply, %{state | order_list: [order | state.order_list]}}
 
   @impl true
   def handle_info({:pop_order, order}, state) do
@@ -163,6 +151,26 @@ defmodule Cryptor.Trader.Server do
     schedule_update_account_info()
     schedule_process_orders_status()
     {:noreply, %{state | pid_list: pid_list}}
+  end
+
+  defp remove_pending_order(order_to_be_removed, order) do
+    case Map.get(order_to_be_removed, :buy_order_id) do
+      nil ->
+        order.order_id == order_to_be_removed.order_id
+
+      buy_order_id ->
+        buy_order_id == order_to_be_removed.order_id
+    end
+  end
+
+  defp check_order_status(peding_orders) do
+    peding_orders
+    |> Enum.each(fn order ->
+      with :done <- Trader.get_order_status(order) do
+        process_pending_order(order)
+        Process.send(TradeServer, {:remove_pending_status_order, order}, [])
+      end
+    end)
   end
 
   def schedule_update_account_info,

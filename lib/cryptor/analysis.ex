@@ -1,6 +1,6 @@
 defmodule Cryptor.Analysis do
   @moduledoc """
-   Server Analysis
+   Each currency has your own Analysis GenServer for trigger buy or sell orders based on the currency current price
   """
 
   use GenServer
@@ -21,9 +21,8 @@ defmodule Cryptor.Analysis do
 
   # SERVER
   @impl true
-  def init(%__MODULE__{} = state) do
-    {:ok, state, {:continue, :get_transaction_limit_percentage}}
-  end
+  def init(%__MODULE__{} = state),
+    do: {:ok, state, {:continue, :get_transaction_limit_percentage}}
 
   @impl true
   def handle_continue(:get_transaction_limit_percentage, state) do
@@ -76,7 +75,6 @@ defmodule Cryptor.Analysis do
 
       current_value ->
         order = Order.create_base_order(coin, current_value)
-
         analisys()
         schedule_reset_virtual_order_price()
         {:noreply, %{state | current_value: current_value, orders: [order]}}
@@ -126,9 +124,8 @@ defmodule Cryptor.Analysis do
   end
 
   @impl true
-  def handle_cast({:add_order, order}, state) do
-    {:noreply, %{state | orders: [order | state.orders]}}
-  end
+  def handle_cast({:add_order, order}, state),
+    do: {:noreply, %{state | orders: [order | state.orders]}}
 
   @impl true
   def handle_cast({:remove_order, order}, state) do

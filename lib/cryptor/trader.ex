@@ -10,6 +10,8 @@ defmodule Cryptor.Trader do
   alias Cryptor.Utils
   alias Cryptor.Analysis
 
+  @filled_order_status [4, 3]
+
   def analyze_transaction(current_value, %Order{price: price, coin: coin} = order) do
     %Analysis{
       sell_percentage_limit: sell_percentage_limit,
@@ -40,11 +42,8 @@ defmodule Cryptor.Trader do
 
   def get_account_info do
     case Requests.request(:post, %{tapi_method: "get_account_info"}) do
-      {:ok, response} ->
-        response
-
-      _ ->
-        get_account_info()
+      {:ok, response} -> response
+      _ -> get_account_info()
     end
   end
 
@@ -55,7 +54,7 @@ defmodule Cryptor.Trader do
            order_id: order.order_id
          }) do
       {:ok, %{"response_data" => %{"order" => %{"status" => order_status}}}} ->
-        order_status
+        if(order_status in @filled_order_status, do: :done, else: nil)
 
       _ ->
         nil
@@ -97,33 +96,33 @@ defmodule Cryptor.Trader do
   def place_order(nil, _, _, _, _),
     do: nil
 
-  def place_order(:ok, quantity, method, coin_pair, newer_price) do
-    Requests.request(:post, %{
-      tapi_method: Utils.get_tapi_method(method),
-      coin_pair: coin_pair,
-      quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
-      limit_price: newer_price,
-      async: true
-    })
-  end
+  def place_order(:ok, quantity, method, coin_pair, newer_price),
+    do:
+      Requests.request(:post, %{
+        tapi_method: Utils.get_tapi_method(method),
+        coin_pair: coin_pair,
+        quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
+        limit_price: newer_price,
+        async: true
+      })
 
   def process_order(
         {:ok, %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}}},
         order
-      ) do
-    process_order(
-      Utils.build_valid_order(new_order)
-      |> Map.put(:buy_order_id, order.id),
-      order
-    )
-  end
+      ),
+      do:
+        process_order(
+          Utils.build_valid_order(new_order)
+          |> Map.put(:buy_order_id, order.order_id),
+          order
+        )
 
-  def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order) do
-    process_order(
-      Utils.build_valid_order(new_order),
-      order
-    )
-  end
+  def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order),
+    do:
+      process_order(
+        Utils.build_valid_order(new_order),
+        order
+      )
 
   def process_order({:ok, _}, _), do: nil
 
@@ -141,7 +140,6 @@ defmodule Cryptor.Trader do
 
   def delete_order(id) do
     order = Order.get_order(id)
-
     Server.remove_order(order)
     Order.update_order(order, %{finished: true})
   end
