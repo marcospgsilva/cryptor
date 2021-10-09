@@ -34,7 +34,7 @@
           </div>
         </div>
         <div class="flex flex-1 flex-col self-center text-center">
-        <%= if @assings[:current_user] do %>
+        <%= if @current_user do %>
           <form phx-submit="update_percentages">
             <label class="text-white font-light">Percentage to sell:</label>
             <input name="sell_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value="<%= server.sell_percentage_limit %>" step=".0001"><br><br>

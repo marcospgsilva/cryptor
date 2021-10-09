@@ -10,8 +10,10 @@ defmodule CryptorWeb.CurrencyLive do
 
   # SERVER
   @impl true
-  def mount(_params, _session, socket),
-    do: {:ok, assign(socket, error: false)}
+  def mount(_params, session, socket) do
+    socket = assign_defaults(session, socket)
+    {:ok, assign(socket, error: false)}
+  end
 
   @impl true
   def handle_event("create_currency", %{"currency" => currency}, socket) do
