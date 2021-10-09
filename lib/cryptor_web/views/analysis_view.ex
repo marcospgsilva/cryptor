@@ -41,6 +41,7 @@ defmodule CryptorWeb.AnalysisView do
       |> Enum.map(fn order ->
         %{
           id: order.id,
+          order_id: order.order_id,
           coin: order.coin,
           bought_value: order.price,
           quantity: order.quantity,
