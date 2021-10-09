@@ -2,11 +2,10 @@ defmodule CryptorWeb.TraderView do
   use CryptorWeb, :view
   alias Cryptor.Trader.Server
 
-  def render("trader.json", %{trader: %{account_info: account_info}}) do
-    %{
+  def render("trader.json", %{trader: %{account_info: account_info}}),
+    do: %{
       infos: treat_account_info(account_info)
     }
-  end
 
   def treat_account_info(nil), do: nil
 
@@ -34,12 +33,11 @@ defmodule CryptorWeb.TraderView do
     render_info(currency, amount_open_orders, available, quantity)
   end
 
-  def render_info(moeda, pedidos_em_aberto, quantidade_disponível, quantidade) do
-    %{
-      moeda: moeda,
-      pedidos_em_aberto: pedidos_em_aberto,
-      quantidade_disponível: quantidade_disponível,
-      quantidade: quantidade
+  def render_info(currency, open_orders, avaiable_amount, amount),
+    do: %{
+      moeda: currency,
+      pedidos_em_aberto: open_orders,
+      quantidade_disponível: avaiable_amount,
+      quantidade: amount
     }
-  end
 end

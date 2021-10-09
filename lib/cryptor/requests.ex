@@ -13,11 +13,7 @@ defmodule Cryptor.Requests do
       |> handle_get_response()
 
   def request(:post, trade_body) do
-    body =
-      trade_body
-      |> Map.put(:tapi_nonce, Utils.get_date_time())
-      |> URI.encode_query()
-
+    body = build_body(trade_body)
     headers = get_headers(body)
 
     case trade_body do
@@ -90,6 +86,12 @@ defmodule Cryptor.Requests do
       "TAPI-MAC": crypto
     ]
   end
+
+  defp build_body(trade_body),
+    do:
+      trade_body
+      |> Map.put(:tapi_nonce, Utils.get_date_time())
+      |> URI.encode_query()
 
   def get_tapi_id,
     do: Application.get_env(:cryptor, Cryptor.Requests)[:tapi_id]
