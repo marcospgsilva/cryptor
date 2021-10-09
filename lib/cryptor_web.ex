@@ -49,6 +49,7 @@ defmodule CryptorWeb do
         layout: {CryptorWeb.LayoutView, "live.html"}
 
       unquote(view_helpers())
+      import CryptorWeb.LiveHelpers
     end
   end
 

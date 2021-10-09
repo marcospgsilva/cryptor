@@ -18,7 +18,7 @@
         <% end %>
           <label class="flex flex-1 flex-grow text-white font-black text-lg mb-6">Abreviação da moeda a ser adicionada</label>
           <input name="currency" class="rounded-lg bg-transparent text-white font-extrabold text-center mb-0" type="text"><br><br>
-        <%= if @assings[:current_user] do %>
+        <%= if @current_user do %>
           <button type="submit" class="flex flex-grow-1 rounded-lg bg-green-400 p-4 text-gray-800 font-black" >Adicionar moeda</button>
         <% end %>
         </form>

@@ -8,10 +8,10 @@ defmodule CryptorWeb.OrdersLive do
 
   # SERVER
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     %{pid_list: pid_list, account_info: account_info} = :sys.get_state(TradeServer)
-
     available_brl = Utils.get_available_value(account_info, "brl")
+    socket = assign_defaults(session, socket)
 
     case AnalysisView.render_currencies(pid_list) do
       nil ->

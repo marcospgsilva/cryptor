@@ -12,7 +12,8 @@ defmodule CryptorWeb.AnalysisLive do
 
   # SERVER
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
+    socket = assign_defaults(session, socket)
     schedule_event()
     {:ok, assign(socket, analysis: get_analysis_server_data())}
   end
