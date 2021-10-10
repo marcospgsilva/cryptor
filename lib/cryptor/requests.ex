@@ -45,6 +45,7 @@ defmodule Cryptor.Requests do
 
       {:ok, _} = response ->
         IO.inspect(response)
+        response
 
       {:error, reason} ->
         IO.inspect(reason)
@@ -59,6 +60,7 @@ defmodule Cryptor.Requests do
 
       {:ok, _} = response ->
         IO.inspect(response)
+        response
 
       {:error, reason} ->
         IO.inspect(reason)

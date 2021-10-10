@@ -48,16 +48,13 @@ defmodule Cryptor.Trader do
   end
 
   def get_order_status(order) do
-    case Requests.request(:post, %{
-           tapi_method: "get_order",
-           coin_pair: "BRL" <> order.coin,
-           order_id: order.order_id
-         }) do
-      {:ok, %{"response_data" => %{"order" => %{"status" => order_status}}}} ->
-        if(order_status in @filled_order_status, do: :done, else: nil)
-
-      _ ->
-        nil
+    with {:ok, %{"response_data" => %{"order" => %{"status" => order_status}}}} <-
+           Requests.request(:post, %{
+             tapi_method: "get_order",
+             coin_pair: "BRL" <> order.coin,
+             order_id: order.order_id
+           }) do
+      if(order_status in @filled_order_status, do: :done, else: nil)
     end
   end
 
