@@ -154,12 +154,14 @@ defmodule Cryptor.Trader.Server do
   end
 
   defp remove_pending_order(order_to_be_removed, order) do
+    order_id = order.order_id
+
     case Map.get(order_to_be_removed, :buy_order_id) do
       nil ->
-        order_to_be_removed.order_id == order.order_id
+        order_to_be_removed.order_id == order_id
 
       buy_order_id ->
-        buy_order_id == order.order_id
+        buy_order_id == order_id
     end
   end
 
