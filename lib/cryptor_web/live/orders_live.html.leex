@@ -17,7 +17,7 @@
         <div class="flex-1 flex-grow self-center">
           <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-12 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
           <p class="text-white font-black text-xl"><%= order.coin %></p>
-          <p class="text-gray-400 font-light text-sm"><%= order.order_id %></p>
+          <p class="text-gray-400 font-light text-sm">#<%= order.order_id %></p>
           <p :class="[profit === 'true' ? 'font-light text-xl text-green-500' : 'font-light text-xl text-red-500']"><%= order.variation %>%</p>
         </div>
         <div class="flex-1 text-right self-center">
