@@ -4,7 +4,7 @@ defmodule Cryptor.Trader.PendingOrdersAgent do
   """
   use Agent
 
-  def start_link(_), do: Agent.start_link(fn -> [] end)
+  def start_link(_), do: Agent.start_link(fn -> [] end, name: __MODULE__)
 
   @spec get_pending_orders_list() :: list(map())
   def get_pending_orders_list, do: Agent.get(__MODULE__, & &1)
