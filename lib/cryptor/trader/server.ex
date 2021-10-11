@@ -7,6 +7,7 @@ defmodule Cryptor.Trader.Server do
   alias Cryptor.Analysis
   alias Cryptor.Trader
   alias Cryptor.Order
+  alias Cryptor.Trader.PendingOrders
 
   @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH"]
 
@@ -19,7 +20,6 @@ defmodule Cryptor.Trader.Server do
       %{
         pid_list: [],
         order_list: init_orders(),
-        pending_orders: [],
         account_info: Trader.get_account_info()
       },
       name: TradeServer
@@ -48,9 +48,6 @@ defmodule Cryptor.Trader.Server do
   def process_pending_order(order),
     do: Trader.create_and_add_order(order)
 
-  def add_pending_status_order(order),
-    do: Process.send(TradeServer, {:add_pending_status_order, order}, [])
-
   def start_currencies_analysis(currencies) do
     currencies
     |> Enum.map(fn coin ->
@@ -74,38 +71,16 @@ defmodule Cryptor.Trader.Server do
 
   # SERVER
   @impl true
-  def init(attrs), do: {:ok, attrs, {:continue, :start_process_coin}}
+  def init(args), do: {:ok, args, {:continue, :start_process_coin}}
 
   @impl true
-  def handle_info({:add_pending_status_order, order}, %{pending_orders: pending_orders} = state),
-    do: {:noreply, %{state | pending_orders: [order | pending_orders]}}
-
-  @impl true
-  def handle_info(
-        {:remove_pending_status_order, order_to_be_removed},
-        %{pending_orders: pending_orders} = state
-      ) do
-    {:noreply,
-     %{
-       state
-       | pending_orders:
-           Enum.reject(
-             pending_orders,
-             fn order ->
-               remove_pending_order(order_to_be_removed, order)
-             end
-           )
-     }}
-  end
-
-  @impl true
-  def handle_info(:process_orders_status, %{pending_orders: []} = state) do
+  def handle_info({:process_orders_status, %{pending_orders: []}}, state) do
     schedule_process_orders_status()
     {:noreply, state}
   end
 
   @impl true
-  def handle_info(:process_orders_status, %{pending_orders: pending_orders} = state) do
+  def handle_info({:process_orders_status, %{pending_orders: pending_orders}}, state) do
     check_order_status(pending_orders)
     schedule_process_orders_status()
     {:noreply, state}
@@ -120,13 +95,7 @@ defmodule Cryptor.Trader.Server do
     {:noreply,
      %{
        state
-       | order_list:
-           Enum.reject(
-             state.order_list,
-             fn %Order{order_id: id} ->
-               id == order.order_id
-             end
-           )
+       | order_list: List.delete(state.order_list, order)
      }}
   end
 
@@ -153,24 +122,12 @@ defmodule Cryptor.Trader.Server do
     {:noreply, %{state | pid_list: pid_list}}
   end
 
-  defp remove_pending_order(order_to_be_removed, order) do
-    order_id = order.order_id
-
-    case Map.get(order_to_be_removed, :buy_order_id) do
-      nil ->
-        order_to_be_removed.order_id == order_id
-
-      buy_order_id ->
-        buy_order_id == order_id
-    end
-  end
-
   defp check_order_status(peding_orders) do
     peding_orders
     |> Enum.each(fn order ->
       with :done <- Trader.get_order_status(order) do
         process_pending_order(order)
-        Process.send(TradeServer, {:remove_pending_status_order, order}, [])
+        PendingOrders.remove_from_pending_orders_list(order)
       end
     end)
   end
@@ -182,5 +139,10 @@ defmodule Cryptor.Trader.Server do
     do: Process.send_after(TradeServer, {:get_order_status, attrs}, 8000)
 
   def schedule_process_orders_status,
-    do: Process.send_after(TradeServer, :process_orders_status, 8000)
+    do:
+      Process.send_after(
+        TradeServer,
+        {:process_orders_status, PendingOrders.get_pending_orders_list()},
+        8000
+      )
 end
