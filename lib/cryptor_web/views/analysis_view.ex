@@ -31,7 +31,7 @@ defmodule CryptorWeb.AnalysisView do
   def render_currencies(pid_list) do
     pid_list
     |> Enum.map(fn pid ->
-      %{orders: orders, current_value: current_value} = :sys.get_state(pid)
+      %{orders: orders, current_price: current_price} = :sys.get_state(pid)
 
       order_list =
         orders
@@ -45,8 +45,8 @@ defmodule CryptorWeb.AnalysisView do
           coin: order.coin,
           bought_value: order.price,
           quantity: order.quantity,
-          current_value: current_value,
-          variation: Utils.calculate_variation(order.price, current_value)
+          current_price: current_price,
+          variation: Utils.calculate_variation(order.price, current_price)
         }
       end)
     end)

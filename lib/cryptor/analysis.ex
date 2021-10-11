@@ -10,7 +10,7 @@ defmodule Cryptor.Analysis do
   alias __MODULE__
 
   defstruct orders: [],
-            current_value: 0.0,
+            current_price: 0.0,
             coin: nil,
             sell_percentage_limit: 1.008,
             buy_percentage_limit: 0.985
@@ -73,11 +73,11 @@ defmodule Cryptor.Analysis do
         analisys()
         {:noreply, state}
 
-      current_value ->
-        order = Order.create_base_order(coin, current_value)
+      current_price ->
+        order = Order.create_base_order(coin, current_price)
         analisys()
         schedule_reset_virtual_order_price()
-        {:noreply, %{state | current_value: current_value, orders: [order]}}
+        {:noreply, %{state | current_price: current_price, orders: [order]}}
     end
   end
 
@@ -91,28 +91,19 @@ defmodule Cryptor.Analysis do
         analisys()
         {:noreply, state}
 
-      current_value ->
-        case Enum.count(orders) <= 1 do
-          true ->
-            start_transaction(current_value, orders |> List.first())
-            analisys()
-            {:noreply, %{state | current_value: current_value}}
-
-          _ ->
-            latest_order = get_latest_order(orders)
-            start_transaction(current_value, latest_order)
-            analisys()
-            {:noreply, %{state | current_value: current_value}}
-        end
+      current_price ->
+        process_transaction(orders, current_price)
+        analisys()
+        {:noreply, %{state | current_price: current_price}}
     end
   end
 
   @impl true
   def handle_info(
         :reset_virtual_order_price,
-        %Analysis{orders: [%Order{quantity: 0.0} = order], current_value: current_value} = state
+        %Analysis{orders: [%Order{quantity: 0.0} = order], current_price: current_price} = state
       ) do
-    updated_order = %{order | price: current_value}
+    updated_order = %{order | price: current_price}
     schedule_reset_virtual_order_price()
     {:noreply, %{state | orders: [updated_order]}}
   end
@@ -136,8 +127,16 @@ defmodule Cryptor.Analysis do
      }}
   end
 
-  def start_transaction(current_value, %Order{} = order),
-    do: Task.start(fn -> Trader.analyze_transaction(current_value, order) end)
+  def process_transaction([first_order | []], current_price),
+    do: start_transaction(current_price, first_order)
+
+  def process_transaction(orders, current_price) do
+    latest_order = get_latest_order(orders)
+    start_transaction(current_price, latest_order)
+  end
+
+  def start_transaction(current_price, %Order{} = order),
+    do: Task.start(fn -> Trader.analyze_transaction(current_price, order) end)
 
   defp get_latest_order(orders),
     do:
