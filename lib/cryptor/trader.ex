@@ -13,18 +13,18 @@ defmodule Cryptor.Trader do
 
   @filled_order_status [4, 3]
 
-  def analyze_transaction(current_value, %Order{price: price, coin: coin} = order) do
+  def analyze_transaction(current_price, %Order{price: price, coin: coin} = order) do
     %Analysis{
       sell_percentage_limit: sell_percentage_limit,
       buy_percentage_limit: buy_percentage_limit
     } = :sys.get_state(String.to_existing_atom(coin <> "Server"))
 
     cond do
-      current_value >= price * sell_percentage_limit ->
-        place_order(:sell, current_value, order)
+      current_price >= price * sell_percentage_limit ->
+        place_order(:sell, current_price, order)
 
-      current_value <= price * buy_percentage_limit ->
-        place_order(:buy, current_value, order)
+      current_price <= price * buy_percentage_limit ->
+        place_order(:buy, current_price, order)
 
       true ->
         nil

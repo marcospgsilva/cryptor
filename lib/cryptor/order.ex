@@ -59,12 +59,12 @@ defmodule Cryptor.Order do
     )
   end
 
-  def create_base_order(coin, current_value) do
+  def create_base_order(coin, current_price) do
     %Order{
       order_id: 0,
       coin: coin,
       quantity: 0.0,
-      price: current_value,
+      price: current_price,
       type: "buy"
     }
   end
