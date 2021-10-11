@@ -3,12 +3,12 @@
     <h3 class="text-xl">O bot responsável por compras e vendas de moedas digitais.</h3>
   </div>
 
-<div class="flex items-center justify-center w-28 m-auto h-10 mb-8">
-  <div class="flex items-center justify-center shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl w-28 m-auto h-10 mb-8">
-   <p class="font-extrabold text-2xl text-gray-800">Saldo: </p>
+  <div class="flex items-center justify-center w-28 m-auto h-10 mb-8">
+    <div class="flex items-center justify-center shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl w-56 m-auto h-10 mb-8">
+    <p class="font-extrabold text-xl text-gray-800 whitespace-nowrap">Saldo Disponível: </p>
+    </div>
+    <p class="font-extrabold text-2xl text-green-500 ml-5">R$<%= Cryptor.Utils.format_for_brl(@available_brl)%></p>
   </div>
-   <p class="font-extrabold text-2xl text-green-500 ml-5">R$<%= Cryptor.Utils.format_for_brl(@available_brl)%></p>
-</div>
 
   <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-lg m-auto">
     <%= for order <- @orders do %>
@@ -17,6 +17,7 @@
         <div class="flex-1 flex-grow self-center">
           <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-12 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
           <p class="text-white font-black text-xl"><%= order.coin %></p>
+          <p class="text-gray-400 font-light text-sm"><%= order.order_id %></p>
           <p :class="[profit === 'true' ? 'font-light text-xl text-green-500' : 'font-light text-xl text-red-500']"><%= order.variation %>%</p>
         </div>
         <div class="flex-1 text-right self-center">

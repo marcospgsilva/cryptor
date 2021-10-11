@@ -7,7 +7,8 @@ defmodule Cryptor.Trader.Server do
   alias Cryptor.Analysis
   alias Cryptor.Trader
   alias Cryptor.Order
-  alias Cryptor.Trader.PendingOrders
+  alias Cryptor.Trader.PendingOrdersAgent
+  alias Cryptor.Trader.OrdersAgent
 
   @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH"]
 
@@ -19,27 +20,25 @@ defmodule Cryptor.Trader.Server do
       __MODULE__,
       %{
         pid_list: [],
-        order_list: init_orders(),
+        order_list: OrdersAgent.get_order_list(),
         account_info: Trader.get_account_info()
       },
       name: TradeServer
     )
   end
 
-  def init_orders, do: Order.get_orders()
-
   def add_order(nil), do: nil
 
   def add_order(%Order{} = order) do
-    add_order_to_server(order)
-    Process.send(TradeServer, {:put_order, order}, [])
+    add_order_to_analysis_server(order)
+    OrdersAgent.add_to_order_list(order)
   end
 
   def remove_order(nil), do: nil
 
   def remove_order(%Order{} = order) do
-    remove_order_from_server(order)
-    Process.send(TradeServer, {:pop_order, order}, [])
+    remove_order_from_analysis_server(order)
+    OrdersAgent.remove_from_order_list(order)
   end
 
   def process_pending_order(%{buy_order_id: _buy_order_id} = order),
@@ -52,21 +51,22 @@ defmodule Cryptor.Trader.Server do
     currencies
     |> Enum.map(fn coin ->
       DynamicSupervisor.start_child(
-        OrdersSupervisor,
+        AnalysisOrdersSupervisor,
         {Analysis, %{state: %Analysis{coin: coin}, name: String.to_atom(coin <> "Server")}}
       )
       |> elem(1)
     end)
   end
 
-  def add_orders_to_analysis(order_list), do: Enum.each(order_list, &add_order_to_server/1)
+  def add_orders_to_analysis(order_list),
+    do: Enum.each(order_list, &add_order_to_analysis_server/1)
 
-  def add_order_to_server(%Order{} = order) when order.coin in @currencies,
+  def add_order_to_analysis_server(%Order{} = order) when order.coin in @currencies,
     do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:add_order, order})
 
-  def add_order_to_server(_), do: :ok
+  def add_order_to_analysis_server(_), do: :ok
 
-  def remove_order_from_server(%Order{} = order),
+  def remove_order_from_analysis_server(%Order{} = order),
     do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
 
   # SERVER
@@ -84,19 +84,6 @@ defmodule Cryptor.Trader.Server do
     check_order_status(pending_orders)
     schedule_process_orders_status()
     {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:put_order, order}, state),
-    do: {:noreply, %{state | order_list: [order | state.order_list]}}
-
-  @impl true
-  def handle_info({:pop_order, order}, state) do
-    {:noreply,
-     %{
-       state
-       | order_list: List.delete(state.order_list, order)
-     }}
   end
 
   @impl true
@@ -127,7 +114,7 @@ defmodule Cryptor.Trader.Server do
     |> Enum.each(fn order ->
       with :done <- Trader.get_order_status(order) do
         process_pending_order(order)
-        PendingOrders.remove_from_pending_orders_list(order)
+        PendingOrdersAgent.remove_from_pending_orders_list(order)
       end
     end)
   end
@@ -142,7 +129,7 @@ defmodule Cryptor.Trader.Server do
     do:
       Process.send_after(
         TradeServer,
-        {:process_orders_status, PendingOrders.get_pending_orders_list()},
+        {:process_orders_status, PendingOrdersAgent.get_pending_orders_list()},
         8000
       )
 end

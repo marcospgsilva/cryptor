@@ -132,13 +132,7 @@ defmodule Cryptor.Analysis do
     {:noreply,
      %{
        state
-       | orders:
-           Enum.reject(
-             state.orders,
-             fn %Order{order_id: id} ->
-               id == order.order_id
-             end
-           )
+       | orders: List.delete(state.orders, order)
      }}
   end
 
