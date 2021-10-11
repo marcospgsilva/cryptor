@@ -6,6 +6,7 @@ defmodule Cryptor.Trader do
   alias Cryptor.Requests
   alias Cryptor.Trader.Server
   alias Cryptor.Trader.AmountControl
+  alias Cryptor.Trader.PendingOrders
   alias Cryptor.Order
   alias Cryptor.Utils
   alias Cryptor.Analysis
@@ -125,7 +126,8 @@ defmodule Cryptor.Trader do
 
   def process_order(nil, _), do: nil
 
-  def process_order(attrs, _order), do: Server.add_pending_status_order(attrs)
+  def process_order(pending_order, _order),
+    do: PendingOrders.add_to_pending_orders_list(pending_order)
 
   def create_and_add_order(order), do: Order.create_order(order) |> Server.add_order()
 
