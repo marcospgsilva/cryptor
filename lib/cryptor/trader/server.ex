@@ -74,13 +74,13 @@ defmodule Cryptor.Trader.Server do
   def init(args), do: {:ok, args, {:continue, :start_process_coin}}
 
   @impl true
-  def handle_info({:process_orders_status, %{pending_orders: []}}, state) do
+  def handle_info({:process_orders_status, []}, state) do
     schedule_process_orders_status()
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:process_orders_status, %{pending_orders: pending_orders}}, state) do
+  def handle_info({:process_orders_status, pending_orders}, state) do
     check_order_status(pending_orders)
     schedule_process_orders_status()
     {:noreply, state}
