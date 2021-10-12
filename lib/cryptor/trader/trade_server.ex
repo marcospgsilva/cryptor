@@ -1,14 +1,17 @@
-defmodule Cryptor.Trader.Server do
+defmodule Cryptor.Trader.TradeServer do
   @moduledoc """
-   Trader Server
+   Trade Server
   """
 
   use GenServer
-  alias Cryptor.Analysis
-  alias Cryptor.Trader
-  alias Cryptor.Order
-  alias Cryptor.Trader.PendingOrdersAgent
-  alias Cryptor.Trader.OrdersAgent
+
+  alias Cryptor.{
+    Analysis,
+    Order,
+    Orders.PendingOrdersAgent,
+    Orders.OrdersAgent,
+    Trader
+  }
 
   @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH"]
 

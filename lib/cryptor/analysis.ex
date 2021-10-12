@@ -4,9 +4,7 @@ defmodule Cryptor.Analysis do
   """
 
   use GenServer
-  alias Cryptor.Trader
-  alias Cryptor.Order
-  alias Cryptor.Currency
+  alias Cryptor.{Trader, Order, Currency}
   alias __MODULE__
 
   defstruct orders: [],

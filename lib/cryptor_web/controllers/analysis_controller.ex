@@ -1,6 +1,6 @@
 defmodule CryptorWeb.AnalysisController do
   use CryptorWeb, :controller
-  alias Cryptor.Trader.OrdersAgent
+  alias Cryptor.Orders.OrdersAgent
 
   def index(conn, _params) do
     %{pid_list: pid_list} = :sys.get_state(TradeServer)

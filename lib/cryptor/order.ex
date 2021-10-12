@@ -23,11 +23,11 @@ defmodule Cryptor.Order do
     timestamps(type: :utc_datetime)
   end
 
-  def changeset(order, attrs) do
-    order
-    |> cast(attrs, @fields)
-    |> validate_required(@required_fields)
-  end
+  def changeset(order, attrs),
+    do:
+      order
+      |> cast(attrs, @fields)
+      |> validate_required(@required_fields)
 
   def get_order(id) do
     Repo.one(

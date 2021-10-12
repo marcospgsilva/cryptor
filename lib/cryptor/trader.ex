@@ -3,13 +3,15 @@ defmodule Cryptor.Trader do
    Trader
   """
 
-  alias Cryptor.Requests
-  alias Cryptor.Trader.Server
-  alias Cryptor.Trader.AmountControl
-  alias Cryptor.Trader.PendingOrdersAgent
-  alias Cryptor.Order
-  alias Cryptor.Utils
-  alias Cryptor.Analysis
+  alias Cryptor.{
+    Analysis,
+    AmountControl,
+    Orders.PendingOrdersAgent,
+    Order,
+    Requests,
+    Trader.TradeServer,
+    Utils
+  }
 
   def analyze_transaction(current_price, %Order{price: price, coin: coin} = order) do
     %Analysis{sell_percentage_limit: sell_percentage_limit} =
@@ -95,20 +97,20 @@ defmodule Cryptor.Trader do
   def process_order(
         {:ok, %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}}},
         order
-      ),
-      do:
-        add_to_pending_orders(
-          Utils.build_valid_order(new_order)
-          |> Map.put(:buy_order_id, order.order_id),
-          order
-        )
+      ) do
+    add_to_pending_orders(
+      Utils.build_valid_order(new_order)
+      |> Map.put(:buy_order_id, order.order_id),
+      order
+    )
+  end
 
-  def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order),
-    do:
-      add_to_pending_orders(
-        Utils.build_valid_order(new_order),
-        order
-      )
+  def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order) do
+    add_to_pending_orders(
+      Utils.build_valid_order(new_order),
+      order
+    )
+  end
 
   def process_order({:ok, _}, _), do: {:error, :unexpected_response}
 
@@ -117,22 +119,22 @@ defmodule Cryptor.Trader do
   def add_to_pending_orders(pending_order, _order),
     do: PendingOrdersAgent.add_to_pending_orders_list(pending_order)
 
-  def create_and_add_order(order), do: Order.create_order(order) |> Server.add_order()
+  def create_and_add_order(order), do: Order.create_order(order) |> TradeServer.add_order()
 
   def remove_and_update_order(order) do
     buy_order = Order.get_order(order.buy_order_id)
-    Server.remove_order(buy_order)
+    TradeServer.remove_order(buy_order)
     Order.update_order(buy_order, %{finished: true})
   end
 
   def delete_order(id) do
     order = Order.get_order(id)
-    Server.remove_order(order)
+    TradeServer.remove_order(order)
     Order.update_order(order, %{finished: true})
   end
 
   def get_account_info_data do
-    %{account_info: account_info} = :sys.get_state(TradeServer)
-    account_info
+    state = :sys.get_state(TradeServer)
+    state[:account_info]
   end
 end
