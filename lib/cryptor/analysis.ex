@@ -11,7 +11,7 @@ defmodule Cryptor.Analysis do
 
   defstruct orders: [],
             current_price: 0.0,
-            coin: nil,
+            currency: nil,
             sell_percentage_limit: 1.008,
             buy_percentage_limit: 0.985
 
@@ -25,38 +25,37 @@ defmodule Cryptor.Analysis do
     do: {:ok, state, {:continue, :get_transaction_limit_percentage}}
 
   @impl true
-  def handle_continue(:get_transaction_limit_percentage, state) do
-    Process.send(self(), :get_transaction_limit_precentage, [])
-    {:noreply, state}
+  def handle_continue(:get_transaction_limit_precentage, %Analysis{currency: currency} = state) do
+    {sell_perc, buy_perc} = get_currency_percentages(currency)
+
+    {:ok,
+     %{
+       state
+       | sell_percentage_limit: sell_perc,
+         buy_percentage_limit: buy_perc
+     }, {:continue, :get_current_price}}
   end
 
   @impl true
-  def handle_info(:get_transaction_limit_precentage, %Analysis{coin: coin} = state) do
-    %Currency{
-      sell_percentage_limit: sell_percentage_limit,
-      buy_percentage_limit: buy_percentage_limit
-    } = Currency.get_currency(coin)
+  def handle_continue(:get_current_price, %Analysis{currency: currency} = state) do
+    case Trader.get_currency_price(currency) do
+      {:ok, current_price} ->
+        schedule_place_orders()
+        analisys()
+        {:noreply, %{state | current_price: current_price}}
 
-    analisys()
-
-    {:noreply,
-     %{
-       state
-       | sell_percentage_limit: sell_percentage_limit,
-         buy_percentage_limit: buy_percentage_limit
-     }}
+      _ ->
+        analisys()
+        {:noreply, state}
+    end
   end
 
   @impl true
   def handle_info(
         {:update_transaction_limit_percentage, sell_percentage_limit, buy_percentage_limit},
-        %Analysis{coin: coin} = state
+        %Analysis{currency: currency} = state
       ) do
-    Currency.get_currency(coin)
-    |> Currency.update_currency(%{
-      sell_percentage_limit: sell_percentage_limit,
-      buy_percentage_limit: buy_percentage_limit
-    })
+    update_currency_percentages(currency, sell_percentage_limit, buy_percentage_limit)
 
     {:noreply,
      %{
@@ -67,50 +66,35 @@ defmodule Cryptor.Analysis do
   end
 
   @impl true
-  def handle_info(:get_currency_price, %__MODULE__{orders: [], coin: coin} = state) do
-    case Trader.get_currency_price(coin) do
-      nil ->
-        analisys()
-        {:noreply, state}
-
-      current_price ->
-        order = Order.create_base_order(coin, current_price)
-        analisys()
-        schedule_reset_virtual_order_price()
-        {:noreply, %{state | current_price: current_price, orders: [order]}}
-    end
+  def handle_info(:analyze_orders, %Analysis{orders: []} = state) do
+    analisys()
+    {:noreply, state}
   end
 
   @impl true
   def handle_info(
-        :get_currency_price,
-        %__MODULE__{orders: orders, coin: coin} = state
+        :analyze_orders,
+        %Analysis{orders: orders, currency: currency} = state
       ) do
-    case Trader.get_currency_price(coin) do
-      nil ->
-        analisys()
-        {:noreply, state}
-
-      current_price ->
+    case Trader.get_currency_price(currency) do
+      {:ok, current_price} ->
         process_transaction(orders, current_price)
         analisys()
         {:noreply, %{state | current_price: current_price}}
+
+      _ ->
+        analisys()
+        {:noreply, state}
     end
   end
 
   @impl true
   def handle_info(
-        :reset_virtual_order_price,
-        %Analysis{orders: [%Order{quantity: 0.0} = order], current_price: current_price} = state
+        :place_order,
+        %Analysis{currency: currency, current_price: current_price} = state
       ) do
-    updated_order = %{order | price: current_price}
-    schedule_reset_virtual_order_price()
-    {:noreply, %{state | orders: [updated_order]}}
-  end
-
-  @impl true
-  def handle_info(:reset_virtual_order_price, state) do
-    schedule_reset_virtual_order_price()
+    Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
+    schedule_place_orders()
     {:noreply, state}
   end
 
@@ -127,26 +111,30 @@ defmodule Cryptor.Analysis do
      }}
   end
 
-  def process_transaction([first_order | []], current_price),
-    do: start_transaction(current_price, first_order)
-
-  def process_transaction(orders, current_price) do
-    latest_order = get_latest_order(orders)
-    start_transaction(current_price, latest_order)
-  end
+  def process_transaction(orders, current_price),
+    do: orders |> Enum.each(&start_transaction(current_price, &1))
 
   def start_transaction(current_price, %Order{} = order),
     do: Task.start(fn -> Trader.analyze_transaction(current_price, order) end)
 
-  defp get_latest_order(orders),
-    do:
-      orders
-      |> Enum.reject(&(&1.quantity == 0.0))
-      |> Enum.sort(&(&1.price < &2.price))
-      |> List.first()
+  defp get_currency_percentages(currency) do
+    %Currency{
+      sell_percentage_limit: sell_percentage_limit,
+      buy_percentage_limit: buy_percentage_limit
+    } = Currency.get_currency(currency)
 
-  defp analisys, do: Process.send_after(self(), :get_currency_price, Enum.random(7_000..8_000))
+    {sell_percentage_limit, buy_percentage_limit}
+  end
 
-  def schedule_reset_virtual_order_price(),
-    do: Process.send_after(self(), :reset_virtual_order_price, 24 * 60 * 60)
+  defp update_currency_percentages(currency, sell_percentage_limit, buy_percentage_limit) do
+    Currency.get_currency(currency)
+    |> Currency.update_currency(%{
+      sell_percentage_limit: sell_percentage_limit,
+      buy_percentage_limit: buy_percentage_limit
+    })
+  end
+
+  defp analisys, do: Process.send_after(self(), :analyze_orders, Enum.random(7_000..8_000))
+
+  def schedule_place_orders, do: Process.send_after(self(), :place_orders, 2000)
 end

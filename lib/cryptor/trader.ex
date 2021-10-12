@@ -14,30 +14,20 @@ defmodule Cryptor.Trader do
   @filled_order_status [4, 3]
 
   def analyze_transaction(current_price, %Order{price: price, coin: coin} = order) do
-    %Analysis{
-      sell_percentage_limit: sell_percentage_limit,
-      buy_percentage_limit: buy_percentage_limit
-    } = :sys.get_state(String.to_existing_atom(coin <> "Server"))
+    %Analysis{sell_percentage_limit: sell_percentage_limit} =
+      :sys.get_state(String.to_existing_atom(coin <> "Server"))
 
-    cond do
-      current_price >= price * sell_percentage_limit ->
-        place_order(:sell, current_price, order)
-
-      current_price <= price * buy_percentage_limit ->
-        place_order(:buy, current_price, order)
-
-      true ->
-        nil
-    end
+    if current_price >= price * sell_percentage_limit,
+      do: place_order(:sell, current_price, order)
   end
 
   def get_currency_price(coin) do
     case Requests.request(:get, "#{coin}/ticker/") do
       {:ok, %{"ticker" => %{"last" => last}}} ->
-        String.to_float(last)
+        {:ok, String.to_float(last)}
 
-      _ ->
-        nil
+      _ = error ->
+        error
     end
   end
 
@@ -64,8 +54,7 @@ defmodule Cryptor.Trader do
   def place_order(method, newer_price, %Order{coin: coin} = order) do
     quantity = AmountControl.get_quantity(method, newer_price, order)
 
-    Utils.get_open_order(coin)
-    |> validate_available_money(
+    validate_available_money(
       method,
       quantity,
       newer_price
@@ -74,42 +63,39 @@ defmodule Cryptor.Trader do
     |> process_order(order)
   end
 
-  def validate_available_money(nil, _, _, _), do: nil
+  def validate_available_money(:sell, _, _), do: :ok
 
-  def validate_available_money(_, :sell, _, _), do: :ok
-
-  def validate_available_money(:ok, :buy, quantity, newer_price) do
+  def validate_available_money(:buy, quantity, newer_price) do
     available_brl =
       get_account_info_data()
-      |> Utils.get_available_value("brl")
+      |> Utils.get_available_amount("brl")
 
     order_value = quantity * newer_price
 
-    case available_brl > order_value do
-      true -> :ok
-      _ -> nil
-    end
+    if available_brl > order_value,
+      do: :ok,
+      else: :no_money_enough
   end
 
-  def place_order(nil, _, _, _, _),
-    do: nil
+  def place_order(:no_money_enough = error, _, _, _, _),
+    do: error
 
-  def place_order(:ok, quantity, method, coin_pair, newer_price),
-    do:
-      Requests.request(:post, %{
-        tapi_method: Utils.get_tapi_method(method),
-        coin_pair: coin_pair,
-        quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
-        limit_price: newer_price,
-        async: true
-      })
+  def place_order(:ok, quantity, method, coin_pair, newer_price) do
+    Requests.request(:post, %{
+      tapi_method: Utils.get_tapi_method(method),
+      coin_pair: coin_pair,
+      quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
+      limit_price: newer_price,
+      async: true
+    })
+  end
 
   def process_order(
         {:ok, %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}}},
         order
       ),
       do:
-        process_order(
+        add_to_pending_orders(
           Utils.build_valid_order(new_order)
           |> Map.put(:buy_order_id, order.order_id),
           order
@@ -117,16 +103,16 @@ defmodule Cryptor.Trader do
 
   def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order),
     do:
-      process_order(
+      add_to_pending_orders(
         Utils.build_valid_order(new_order),
         order
       )
 
-  def process_order({:ok, _}, _), do: nil
+  def process_order({:ok, _}, _), do: {:error, :unexpected_response}
 
-  def process_order(nil, _), do: nil
+  def process_order({:error, _} = error, _), do: error
 
-  def process_order(pending_order, _order),
+  def add_to_pending_orders(pending_order, _order),
     do: PendingOrdersAgent.add_to_pending_orders_list(pending_order)
 
   def create_and_add_order(order), do: Order.create_order(order) |> Server.add_order()
