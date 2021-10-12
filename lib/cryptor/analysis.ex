@@ -40,7 +40,6 @@ defmodule Cryptor.Analysis do
   def handle_continue(:get_current_price, %Analysis{currency: currency} = state) do
     case Trader.get_currency_price(currency) do
       {:ok, current_price} ->
-        schedule_place_orders()
         analisys()
         {:noreply, %{state | current_price: current_price}}
 
@@ -67,6 +66,7 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_info(:analyze_orders, %Analysis{orders: []} = state) do
+    schedule_place_orders()
     analisys()
     {:noreply, state}
   end

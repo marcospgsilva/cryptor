@@ -11,8 +11,6 @@ defmodule Cryptor.Trader do
   alias Cryptor.Utils
   alias Cryptor.Analysis
 
-  @filled_order_status [4, 3]
-
   def analyze_transaction(current_price, %Order{price: price, coin: coin} = order) do
     %Analysis{sell_percentage_limit: sell_percentage_limit} =
       :sys.get_state(String.to_existing_atom(coin <> "Server"))
@@ -45,7 +43,11 @@ defmodule Cryptor.Trader do
              coin_pair: "BRL" <> order.coin,
              order_id: order.order_id
            }) do
-      if(order_status in @filled_order_status, do: :done, else: nil)
+      case order_status do
+        4 -> :filled
+        3 -> :canceled
+        _ -> nil
+      end
     end
   end
 

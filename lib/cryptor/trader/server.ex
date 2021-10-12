@@ -112,15 +112,22 @@ defmodule Cryptor.Trader.Server do
   defp check_order_status(peding_orders) do
     peding_orders
     |> Enum.each(fn order ->
-      with :done <- Trader.get_order_status(order) do
-        process_pending_order(order)
-        PendingOrdersAgent.remove_from_pending_orders_list(order)
+      case Trader.get_order_status(order) do
+        :filled ->
+          process_pending_order(order)
+          PendingOrdersAgent.remove_from_pending_orders_list(order)
+
+        :canceled ->
+          PendingOrdersAgent.remove_from_pending_orders_list(order)
+
+        _ ->
+          nil
       end
     end)
   end
 
   def schedule_update_account_info,
-    do: Process.send_after(TradeServer, :update_account_info, 10_000)
+    do: Process.send_after(TradeServer, :update_account_info, 1000)
 
   def schedule_order_status(attrs),
     do: Process.send_after(TradeServer, {:get_order_status, attrs}, 8000)
