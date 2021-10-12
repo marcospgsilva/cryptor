@@ -90,7 +90,7 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_info(
-        :place_order,
+        :place_orders,
         %Analysis{currency: currency, current_price: current_price} = state
       ) do
     Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
