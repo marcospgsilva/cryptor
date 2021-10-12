@@ -28,7 +28,7 @@ defmodule Cryptor.Analysis do
   def handle_continue(:get_transaction_limit_percentage, %Analysis{currency: currency} = state) do
     {sell_perc, buy_perc} = get_currency_percentages(currency)
 
-    {:ok,
+    {:noreply,
      %{
        state
        | sell_percentage_limit: sell_perc,
