@@ -4,6 +4,7 @@ defmodule CryptorWeb.OrdersLive do
   """
   use CryptorWeb, :live_view
   alias CryptorWeb.AnalysisView
+  alias Cryptor.Trader
   alias Cryptor.Utils
 
   # SERVER
@@ -43,7 +44,7 @@ defmodule CryptorWeb.OrdersLive do
 
   @impl true
   def handle_event("delete_order", %{"order_id" => id}, socket) do
-    Cryptor.Trader.delete_order(id |> String.to_integer())
+    Trader.delete_order(id |> String.to_integer())
     {:noreply, socket}
   end
 

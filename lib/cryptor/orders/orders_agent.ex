@@ -1,4 +1,4 @@
-defmodule Cryptor.Trader.OrdersAgent do
+defmodule Cryptor.Orders.OrdersAgent do
   @moduledoc """
   Orders Agent
   """

@@ -1,6 +1,6 @@
-defmodule Cryptor.Trader.AmountControl do
+defmodule Cryptor.AmountControl do
   @moduledoc """
-  Trader Amount Control
+  Amount Control
   """
 
   alias Cryptor.Order

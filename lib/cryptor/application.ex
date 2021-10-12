@@ -17,10 +17,10 @@ defmodule Cryptor.Application do
       CryptorWeb.Endpoint,
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
       # {Cryptor.Worker, arg}
-      Cryptor.Trader.OrdersAgent,
-      Cryptor.Trader.PendingOrdersAgent,
+      Cryptor.Orders.OrdersAgent,
+      Cryptor.Orders.PendingOrdersAgent,
       Cryptor.DynamicSupervisor,
-      Cryptor.Trader.Server
+      Cryptor.Trader.TradeServer
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

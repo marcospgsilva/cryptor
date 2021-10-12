@@ -2,7 +2,6 @@ defmodule Cryptor.Utils do
   @moduledoc """
    Cryptor Utils
   """
-  alias Cryptor.Trader
 
   def build_valid_order(new_order),
     do: %{
