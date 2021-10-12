@@ -74,10 +74,10 @@ defmodule Cryptor.Trader do
 
     if available_brl > order_value,
       do: :ok,
-      else: :no_money_enough
+      else: {:error, :no_enough_money}
   end
 
-  def place_order(:no_money_enough = error, _, _, _, _),
+  def place_order({:error, _} = error, _, _, _, _),
     do: error
 
   def place_order(:ok, quantity, method, coin_pair, newer_price) do
