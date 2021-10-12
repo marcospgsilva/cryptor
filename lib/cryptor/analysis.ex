@@ -25,7 +25,7 @@ defmodule Cryptor.Analysis do
     do: {:ok, state, {:continue, :get_transaction_limit_percentage}}
 
   @impl true
-  def handle_continue(:get_transaction_limit_precentage, %Analysis{currency: currency} = state) do
+  def handle_continue(:get_transaction_limit_percentage, %Analysis{currency: currency} = state) do
     {sell_perc, buy_perc} = get_currency_percentages(currency)
 
     {:ok,
