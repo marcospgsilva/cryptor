@@ -32,11 +32,11 @@ defmodule Cryptor.Requests do
   def handle_get_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
       {:ok, _body} = response -> response
-      _ -> nil
+      _ = error -> error
     end
   end
 
-  def handle_get_response(_), do: nil
+  def handle_get_response(_), do: {:error, :unexpected_response}
 
   def handle_response({:ok, %HTTPoison.Response{status_code: 100, body: body}}) do
     case Jason.decode(body) do
@@ -47,9 +47,9 @@ defmodule Cryptor.Requests do
         IO.inspect(response)
         response
 
-      {:error, reason} ->
+      {:error, reason} = error ->
         IO.inspect(reason)
-        nil
+        error
     end
   end
 
@@ -62,15 +62,15 @@ defmodule Cryptor.Requests do
         IO.inspect(response)
         response
 
-      {:error, reason} ->
+      {:error, reason} = error ->
         IO.inspect(reason)
-        nil
+        error
     end
   end
 
   def handle_response(_ = response) do
     IO.inspect(response)
-    nil
+    {:error, :unexpected_response}
   end
 
   def get_headers(body) do

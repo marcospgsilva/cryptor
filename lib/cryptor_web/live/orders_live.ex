@@ -10,7 +10,7 @@ defmodule CryptorWeb.OrdersLive do
   @impl true
   def mount(_params, session, socket) do
     %{pid_list: pid_list, account_info: account_info} = :sys.get_state(TradeServer)
-    available_brl = Utils.get_available_value(account_info, "brl")
+    available_brl = Utils.get_available_amount(account_info, "brl")
     socket = assign_defaults(session, socket)
 
     case AnalysisView.render_currencies(pid_list) do
@@ -30,7 +30,7 @@ defmodule CryptorWeb.OrdersLive do
 
     orders = AnalysisView.render_currencies(pid_list)
 
-    case Utils.get_available_value(account_info, "brl") do
+    case Utils.get_available_amount(account_info, "brl") do
       nil ->
         schedule_event()
         {:noreply, assign(socket, orders: orders)}

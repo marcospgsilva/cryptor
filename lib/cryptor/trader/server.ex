@@ -27,19 +27,19 @@ defmodule Cryptor.Trader.Server do
     )
   end
 
-  def add_order(nil), do: nil
-
   def add_order(%Order{} = order) do
     add_order_to_analysis_server(order)
     OrdersAgent.add_to_order_list(order)
   end
 
-  def remove_order(nil), do: nil
+  def add_order(_), do: {:error, :invalid_order}
 
   def remove_order(%Order{} = order) do
     remove_order_from_analysis_server(order)
     OrdersAgent.remove_from_order_list(order)
   end
+
+  def remove_order(_), do: {:error, :invalid_order}
 
   def process_pending_order(%{buy_order_id: _buy_order_id} = order),
     do: Trader.remove_and_update_order(order)
@@ -49,10 +49,11 @@ defmodule Cryptor.Trader.Server do
 
   def start_currencies_analysis(currencies) do
     currencies
-    |> Enum.map(fn coin ->
+    |> Enum.map(fn currency ->
       DynamicSupervisor.start_child(
         AnalysisOrdersSupervisor,
-        {Analysis, %{state: %Analysis{coin: coin}, name: String.to_atom(coin <> "Server")}}
+        {Analysis,
+         %{state: %Analysis{currency: currency}, name: String.to_atom(currency <> "Server")}}
       )
       |> elem(1)
     end)
@@ -103,7 +104,6 @@ defmodule Cryptor.Trader.Server do
   def handle_continue(:start_process_coin, %{order_list: order_list} = state) do
     pid_list = start_currencies_analysis(@currencies)
     add_orders_to_analysis(order_list)
-
     schedule_update_account_info()
     schedule_process_orders_status()
     {:noreply, %{state | pid_list: pid_list}}
@@ -125,11 +125,11 @@ defmodule Cryptor.Trader.Server do
   def schedule_order_status(attrs),
     do: Process.send_after(TradeServer, {:get_order_status, attrs}, 8000)
 
-  def schedule_process_orders_status,
-    do:
-      Process.send_after(
-        TradeServer,
-        {:process_orders_status, PendingOrdersAgent.get_pending_orders_list()},
-        8000
-      )
+  def schedule_process_orders_status do
+    Process.send_after(
+      TradeServer,
+      {:process_orders_status, PendingOrdersAgent.get_pending_orders_list()},
+      8000
+    )
+  end
 end

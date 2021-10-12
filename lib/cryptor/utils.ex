@@ -13,19 +13,7 @@ defmodule Cryptor.Utils do
       type: get_order_type(new_order["order_type"])
     }
 
-  def get_open_order(coin) do
-    account_info = Trader.get_account_info_data()
-    no_opened_orders = 0
-
-    if(
-      account_info["response_data"]["balance"][String.downcase(coin)]["amount_open_orders"] ==
-        no_opened_orders,
-      do: :ok,
-      else: nil
-    )
-  end
-
-  def get_available_value(account_info, coin) do
+  def get_available_amount(account_info, coin) do
     case account_info["response_data"]["balance"][coin]["available"] do
       nil -> nil
       available -> String.to_float(available)
