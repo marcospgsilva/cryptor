@@ -5,12 +5,13 @@ defmodule CryptorWeb.OrdersLive do
   use CryptorWeb, :live_view
   alias CryptorWeb.AnalysisView
   alias Cryptor.Trader
+  alias Cryptor.Trader.TradeServer
   alias Cryptor.Utils
 
   # SERVER
   @impl true
   def mount(_params, session, socket) do
-    %{pid_list: pid_list, account_info: account_info} = :sys.get_state(TradeServer)
+    %{pid_list: pid_list, account_info: account_info} = TradeServer.get_state()
     available_brl = Utils.get_available_amount(account_info, "brl")
     socket = assign_defaults(session, socket)
 
@@ -27,7 +28,7 @@ defmodule CryptorWeb.OrdersLive do
 
   @impl true
   def handle_info("update_state", socket) do
-    %{pid_list: pid_list, account_info: account_info} = :sys.get_state(TradeServer)
+    %{pid_list: pid_list, account_info: account_info} = TradeServer.get_state()
 
     orders = AnalysisView.render_currencies(pid_list)
 

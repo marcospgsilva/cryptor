@@ -30,6 +30,8 @@ defmodule Cryptor.Trader.TradeServer do
     )
   end
 
+  def get_state, do: :sys.get_state(TradeServer)
+
   def add_order(%Order{} = order) do
     add_order_to_analysis_server(order)
     OrdersAgent.add_to_order_list(order)

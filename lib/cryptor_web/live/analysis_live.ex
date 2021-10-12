@@ -3,10 +3,11 @@ defmodule CryptorWeb.AnalysisLive do
    Analysis Live
   """
   use CryptorWeb, :live_view
+  alias Cryptor.Trader.TradeServer
 
   # CLIENT
   def get_analysis_server_data() do
-    %{pid_list: pid_list} = :sys.get_state(TradeServer)
+    %{pid_list: pid_list} = TradeServer.get_state()
     Enum.map(pid_list, &build_server_analysis_data/1)
   end
 

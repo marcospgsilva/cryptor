@@ -134,7 +134,7 @@ defmodule Cryptor.Trader do
   end
 
   def get_account_info_data do
-    state = :sys.get_state(TradeServer)
+    state = TradeServer.get_state()
     state[:account_info]
   end
 end
