@@ -29,15 +29,16 @@ config :cryptor, Cryptor.Repo,
 config :logger, level: :info
 
 config :libcluster,
-topologies: [
-  ks8_cryptor: [
-    strategy: Cluster.Strategy.Kubernetes,
-    config: [
-      kubernetes_selector: System.get_env("LIBCLUSTER_KUBERNETES_SELECTOR"),
-      kubernetes_node_basename: System.get_env("LIBCLUSTER_KUBERNETES_NODE_BASENAME")]]]
+  topologies: [
+    ks8_cryptor: [
+      strategy: Cluster.Strategy.Kubernetes,
+      config: [
+        kubernetes_selector: System.get_env("LIBCLUSTER_KUBERNETES_SELECTOR"),
+        kubernetes_node_basename: System.get_env("LIBCLUSTER_KUBERNETES_NODE_BASENAME")
+      ]
     ]
   ]
-]
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key
