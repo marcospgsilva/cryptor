@@ -19,9 +19,9 @@ defmodule Cryptor.AmountControl do
 
   @currencies_with_platform_fee ["BTC", "USDC", "LTC", "XRP", "ETH", "BCH"]
 
-  def get_quantity(:sell, _newer_price, %Order{quantity: quantity, fee: fee})
-      when not is_nil(fee),
-      do: (quantity - String.to_float(fee)) |> Float.round(8)
+  # def get_quantity(:sell, _newer_price, %Order{quantity: quantity, fee: fee})
+  #     when not is_nil(fee),
+  #     do: (quantity - String.to_float(fee)) |> Float.round(8)
 
   def get_quantity(:sell, _newer_price, %Order{coin: coin, quantity: quantity})
       when coin in @currencies_with_platform_fee,

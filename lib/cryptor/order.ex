@@ -23,7 +23,7 @@ defmodule Cryptor.Order do
     field :quantity, :float, default: 0.0
     field :price, :float
     field :type, :string
-    field :fee, :string
+    # field :fee, :string
     field :finished, :boolean, default: false
 
     timestamps(type: :utc_datetime)
