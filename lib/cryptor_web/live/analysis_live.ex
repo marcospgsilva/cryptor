@@ -7,8 +7,8 @@ defmodule CryptorWeb.AnalysisLive do
 
   # CLIENT
   def get_analysis_server_data() do
-    %{pid_list: pid_list} = TradeServer.get_state()
-    Enum.map(pid_list, &build_server_analysis_data/1)
+    currencies = TradeServer.get_currencies()
+    currencies |> Enum.map(&build_server_analysis_data/1)
   end
 
   # SERVER
@@ -46,9 +46,9 @@ defmodule CryptorWeb.AnalysisLive do
     {:noreply, socket}
   end
 
-  defp build_server_analysis_data(pid),
+  defp build_server_analysis_data(currency),
     do:
-      pid
+      String.to_existing_atom("#{currency}Server")
       |> :sys.get_state()
       |> Map.from_struct()
 
