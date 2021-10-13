@@ -26,11 +26,11 @@ defmodule Cryptor.Trader.TradeServer do
         order_list: OrdersAgent.get_order_list(),
         account_info: Trader.get_account_info()
       },
-      name: TradeServer
+      name: Trader
     )
   end
 
-  def get_state, do: :sys.get_state(TradeServer)
+  def get_state, do: :sys.get_state(Trader)
 
   def add_order(%Order{} = order) do
     add_order_to_analysis_server(order)
@@ -132,14 +132,14 @@ defmodule Cryptor.Trader.TradeServer do
   end
 
   def schedule_update_account_info,
-    do: Process.send_after(TradeServer, :update_account_info, 1000)
+    do: Process.send_after(Trader, :update_account_info, 3000)
 
   def schedule_order_status(attrs),
-    do: Process.send_after(TradeServer, {:get_order_status, attrs}, 8000)
+    do: Process.send_after(Trader, {:get_order_status, attrs}, 8000)
 
   def schedule_process_orders_status do
     Process.send_after(
-      TradeServer,
+      Trader,
       {:process_orders_status, PendingOrdersAgent.get_pending_orders_list()},
       8000
     )
