@@ -31,15 +31,15 @@ defmodule Cryptor.Trader do
          do: response
   end
 
-  def get_order_status(order) do
-    with {:ok, %{"response_data" => %{"order" => %{"status" => order_status}}}} <-
+  def get_order_data(order) do
+    with {:ok, %{"response_data" => %{"order" => %{"status" => order_status, "fee" => fee}}}} <-
            Requests.request(:post, %{
              tapi_method: "get_order",
              coin_pair: "BRL" <> order.coin,
              order_id: order.order_id
            }) do
       mapped_statuses = Order.mapped_order_statuses()
-      Map.get(mapped_statuses, to_string(order_status))
+      %{status: Map.get(mapped_statuses, to_string(order_status)), fee: fee}
     end
   end
 
