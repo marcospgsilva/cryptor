@@ -4,10 +4,13 @@ defmodule Cryptor.Requests do
   """
   alias Cryptor.Utils
 
+  @timeout 40_000
+
   def request(:get = method, path) do
     url = get_data_api_base_url(path)
 
-    http_request(method, url)
+    Task.async(__MODULE__, :http_request, [method, url])
+    |> Task.await(@timeout)
     |> handle_get_response()
   end
 
@@ -24,7 +27,8 @@ defmodule Cryptor.Requests do
         IO.inspect(body)
     end
 
-    http_request(method, url, headers, body)
+    Task.async(__MODULE__, :http_request, [method, url, headers, body])
+    |> Task.await(@timeout)
     |> handle_response()
   end
 
