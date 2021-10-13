@@ -19,8 +19,10 @@ defmodule Cryptor.Analysis do
 
   # SERVER
   @impl true
-  def init(%__MODULE__{} = state),
-    do: {:ok, state, {:continue, :get_transaction_limit_percentage}}
+  def init(%__MODULE__{} = state) do
+    schedule_place_orders()
+    {:ok, state, {:continue, :get_transaction_limit_percentage}}
+  end
 
   @impl true
   def handle_continue(:get_transaction_limit_percentage, %Analysis{currency: currency} = state) do
@@ -64,7 +66,6 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_info(:analyze_orders, %Analysis{orders: []} = state) do
-    schedule_place_orders()
     analisys()
     {:noreply, state}
   end
@@ -84,6 +85,15 @@ defmodule Cryptor.Analysis do
         analisys()
         {:noreply, state}
     end
+  end
+
+  @impl true
+  def handle_info(
+        :place_orders,
+        %Analysis{current_price: 0.0} = state
+      ) do
+    schedule_place_orders()
+    {:noreply, state}
   end
 
   @impl true
@@ -113,7 +123,10 @@ defmodule Cryptor.Analysis do
     do: orders |> Enum.each(&start_transaction(current_price, &1))
 
   def start_transaction(current_price, %Order{} = order),
-    do: Task.start(fn -> Trader.analyze_transaction(current_price, order) end)
+    do:
+      Task.Supervisor.start_child(AnalysisOrdersSupervisor, fn ->
+        Trader.analyze_transaction(current_price, order)
+      end)
 
   defp get_currency_percentages(currency) do
     %Currency{

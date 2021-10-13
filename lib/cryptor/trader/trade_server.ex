@@ -114,9 +114,13 @@ defmodule Cryptor.Trader.TradeServer do
     {:noreply, %{state | pid_list: pid_list}}
   end
 
-  defp check_order_status(peding_orders) do
-    peding_orders
-    |> Enum.each(fn order ->
+  defp check_order_status(peding_orders),
+    do:
+      peding_orders
+      |> Enum.each(&process_order_status/1)
+
+  defp process_order_status(order) do
+    Task.Supervisor.start_child(AnalysisOrdersSupervisor, fn ->
       case Trader.get_order_status(order) do
         :filled ->
           process_pending_order(order)
@@ -135,7 +139,7 @@ defmodule Cryptor.Trader.TradeServer do
     do: Process.send_after(Trader, :update_account_info, 3000)
 
   def schedule_order_status(attrs),
-    do: Process.send_after(Trader, {:get_order_status, attrs}, 8000)
+    do: Process.send_after(Trader, {:get_order_status, attrs}, 10_000)
 
   def schedule_process_orders_status do
     Process.send_after(
