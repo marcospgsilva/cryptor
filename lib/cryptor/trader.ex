@@ -22,20 +22,13 @@ defmodule Cryptor.Trader do
   end
 
   def get_currency_price(coin) do
-    case Requests.request(:get, "#{coin}/ticker/") do
-      {:ok, %{"ticker" => %{"last" => last}}} ->
-        {:ok, String.to_float(last)}
-
-      _ = error ->
-        error
-    end
+    with {:ok, %{"ticker" => %{"last" => last}}} <- Requests.request(:get, "#{coin}/ticker/"),
+         do: {:ok, String.to_float(last)}
   end
 
   def get_account_info do
-    case Requests.request(:post, %{tapi_method: "get_account_info"}) do
-      {:ok, response} -> response
-      _ -> get_account_info()
-    end
+    with {:ok, response} <- Requests.request(:post, %{tapi_method: "get_account_info"}),
+         do: response
   end
 
   def get_order_status(order) do
@@ -45,11 +38,8 @@ defmodule Cryptor.Trader do
              coin_pair: "BRL" <> order.coin,
              order_id: order.order_id
            }) do
-      case order_status do
-        4 -> :filled
-        3 -> :canceled
-        _ -> nil
-      end
+      mapped_statuses = Order.mapped_order_statuses()
+      Map.get(mapped_statuses, to_string(order_status))
     end
   end
 
@@ -70,13 +60,13 @@ defmodule Cryptor.Trader do
   def validate_available_money(:sell, _, _), do: :ok
 
   def validate_available_money(:buy, quantity, newer_price) do
-    available_brl =
+    {:ok, available_amount} =
       get_account_info_data()
       |> Utils.get_available_amount("brl")
 
     order_value = quantity * newer_price
 
-    if available_brl > order_value,
+    if available_amount > order_value,
       do: :ok,
       else: {:error, :no_enough_money}
   end

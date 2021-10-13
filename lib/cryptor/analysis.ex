@@ -26,14 +26,18 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_continue(:get_transaction_limit_percentage, %Analysis{currency: currency} = state) do
-    {sell_perc, buy_perc} = get_currency_percentages(currency)
+    case get_currency_percentages(currency) do
+      %Currency{} = currency ->
+        {:noreply,
+         %{
+           state
+           | sell_percentage_limit: currency[:sell_percentage_limit],
+             buy_percentage_limit: currency[:buy_percentage_limit]
+         }, {:continue, :get_current_price}}
 
-    {:noreply,
-     %{
-       state
-       | sell_percentage_limit: sell_perc,
-         buy_percentage_limit: buy_perc
-     }, {:continue, :get_current_price}}
+      _ ->
+        {:noreply, state, {:continue, :get_current_price}}
+    end
   end
 
   @impl true
@@ -128,14 +132,8 @@ defmodule Cryptor.Analysis do
         Trader.analyze_transaction(current_price, order)
       end)
 
-  defp get_currency_percentages(currency) do
-    %Currency{
-      sell_percentage_limit: sell_percentage_limit,
-      buy_percentage_limit: buy_percentage_limit
-    } = Currency.get_currency(currency)
-
-    {sell_percentage_limit, buy_percentage_limit}
-  end
+  defp get_currency_percentages(currency),
+    do: with(%Currency{} = currency <- Currency.get_currency(currency), do: currency)
 
   defp update_currency_percentages(currency, sell_percentage_limit, buy_percentage_limit) do
     Currency.get_currency(currency)

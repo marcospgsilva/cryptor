@@ -8,6 +8,11 @@ defmodule Cryptor.Order do
   alias Cryptor.Repo
   alias __MODULE__
 
+  @orders_statuses %{
+    "4" => :filled,
+    "3" => :canceled
+  }
+
   @required_fields [:order_id, :coin, :quantity, :price, :type]
 
   @fields @required_fields ++ [:finished]
@@ -68,4 +73,6 @@ defmodule Cryptor.Order do
       type: "buy"
     }
   end
+
+  def mapped_order_statuses(), do: @orders_statuses
 end
