@@ -31,8 +31,8 @@ defmodule Cryptor.Analysis do
         {:noreply,
          %{
            state
-           | sell_percentage_limit: currency[:sell_percentage_limit],
-             buy_percentage_limit: currency[:buy_percentage_limit]
+           | sell_percentage_limit: currency.sell_percentage_limit,
+             buy_percentage_limit: currency.buy_percentage_limit
          }, {:continue, :get_current_price}}
 
       _ ->
