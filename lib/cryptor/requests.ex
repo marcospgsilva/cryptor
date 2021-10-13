@@ -4,20 +4,17 @@ defmodule Cryptor.Requests do
   """
   alias Cryptor.Utils
 
-  @timeout 40_000
-
   def request(:get = method, path) do
-    base_url = get_data_api_base_url(path)
+    url = get_data_api_base_url(path)
 
-    Task.async(fn -> request(method, base_url) end)
-    |> Task.await(@timeout)
+    http_request(method, url)
     |> handle_get_response()
   end
 
   def request(:post = method, trade_body) do
     body = build_body(trade_body)
     headers = get_headers(body)
-    base_url = get_trade_api_base_url()
+    url = get_trade_api_base_url()
 
     case trade_body do
       %{tapi_method: "get_account_info"} ->
@@ -27,12 +24,11 @@ defmodule Cryptor.Requests do
         IO.inspect(body)
     end
 
-    Task.async(fn -> request(method, base_url, headers, body) end)
-    |> Task.await(@timeout)
+    http_request(method, url, headers, body)
     |> handle_response()
   end
 
-  def request(method, url, headers \\ [], body \\ "") do
+  def http_request(method, url, headers \\ [], body \\ "") do
     %HTTPoison.Request{
       method: method,
       url: url,
