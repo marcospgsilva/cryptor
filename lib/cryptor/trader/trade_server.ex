@@ -22,7 +22,6 @@ defmodule Cryptor.Trader.TradeServer do
     GenServer.start_link(
       __MODULE__,
       %{
-        pid_list: [],
         order_list: OrdersAgent.get_order_list(),
         account_info: Trader.get_account_info()
       },
@@ -107,11 +106,11 @@ defmodule Cryptor.Trader.TradeServer do
 
   @impl true
   def handle_continue(:start_process_coin, %{order_list: order_list} = state) do
-    pid_list = start_currencies_analysis(@currencies)
+    start_currencies_analysis(@currencies)
     add_orders_to_analysis(order_list)
     schedule_update_account_info()
     schedule_process_orders_status()
-    {:noreply, %{state | pid_list: pid_list}}
+    {:noreply, state}
   end
 
   defp check_order_status(peding_orders),

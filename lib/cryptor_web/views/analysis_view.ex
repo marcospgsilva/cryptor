@@ -2,10 +2,11 @@ defmodule CryptorWeb.AnalysisView do
   use CryptorWeb, :view
   alias Cryptor.Order
   alias Cryptor.Utils
+  alias Cryptor.Trader.TradeServer
 
-  def render("analysis.json", %{analysis: %{pid_list: pid_list, order_list: order_list}}) do
+  def render("analysis.json", %{analysis: %{order_list: order_list}}) do
     %{
-      moedas: render_currencies(pid_list),
+      moedas: render_currencies(),
       ordens: render_orders(order_list)
     }
   end
@@ -24,14 +25,11 @@ defmodule CryptorWeb.AnalysisView do
     end)
   end
 
-  def render_currencies([]), do: nil
-
-  def render_currencies(nil), do: nil
-
-  def render_currencies(pid_list) do
-    pid_list
-    |> Enum.map(fn pid ->
-      %{orders: orders, current_price: current_price} = :sys.get_state(pid)
+  def render_currencies() do
+    TradeServer.get_currencies()
+    |> Enum.map(fn currency ->
+      %{orders: orders, current_price: current_price} =
+        :sys.get_state(String.to_existing_atom("#{currency}Server"))
 
       order_list =
         orders
