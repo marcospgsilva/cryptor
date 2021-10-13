@@ -4,17 +4,20 @@ defmodule Cryptor.Requests do
   """
   alias Cryptor.Utils
 
-  @default_request_options [timeout: :infinity, recv_timeout: :infinity]
+  @timeout 40_000
 
-  def request(:get, path),
-    do:
-      get_data_api_base_url(path)
-      |> HTTPoison.get(@default_request_options)
-      |> handle_get_response()
+  def request(:get = method, path) do
+    base_url = get_data_api_base_url(path)
 
-  def request(:post, trade_body) do
+    Task.async(fn -> request(method, base_url) end)
+    |> Task.await(@timeout)
+    |> handle_get_response()
+  end
+
+  def request(:post = method, trade_body) do
     body = build_body(trade_body)
     headers = get_headers(body)
+    base_url = get_trade_api_base_url()
 
     case trade_body do
       %{tapi_method: "get_account_info"} ->
@@ -24,9 +27,20 @@ defmodule Cryptor.Requests do
         IO.inspect(body)
     end
 
-    get_trade_api_base_url()
-    |> HTTPoison.post(body, headers, @default_request_options)
+    Task.async(fn -> request(method, base_url, headers, body) end)
+    |> Task.await(@timeout)
     |> handle_response()
+  end
+
+  def request(method, url, headers \\ [], body \\ "") do
+    %HTTPoison.Request{
+      method: method,
+      url: url,
+      headers: headers,
+      body: body,
+      options: get_request_options()
+    }
+    |> HTTPoison.request()
   end
 
   def handle_get_response({:ok, %HTTPoison.Response{body: body}}) do
@@ -106,4 +120,7 @@ defmodule Cryptor.Requests do
 
   def get_trade_api_base_url,
     do: Application.get_env(:cryptor, Cryptor.Requests)[:trade_api_base_url]
+
+  def get_request_options,
+    do: Application.get_env(:cryptor, Cryptor.Requests)[:options]
 end
