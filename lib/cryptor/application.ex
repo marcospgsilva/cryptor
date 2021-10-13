@@ -6,7 +6,10 @@ defmodule Cryptor.Application do
   use Application
 
   def start(_type, _args) do
+    topologies = Application.get_env(:libcluster, :topologies) || []
+
     children = [
+      {Cluster.Supervisor, [topologies, [name: Cryptor.ClusterSupervisor]]},
       # Start the Ecto repository
       Cryptor.Repo,
       # Start the Telemetry supervisor
