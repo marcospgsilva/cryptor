@@ -19,13 +19,7 @@ defmodule Cryptor.Requests do
     headers = get_headers(body)
     url = get_trade_api_base_url()
 
-    case trade_body do
-      %{tapi_method: "get_account_info"} ->
-        nil
-
-      _ ->
-        IO.inspect(body)
-    end
+    if trade_body !== %{tapi_method: "get_account_info"}, do: IO.inspect(body)
 
     Task.async(__MODULE__, :http_request, [method, url, headers, body])
     |> Task.await(@timeout)
@@ -52,28 +46,13 @@ defmodule Cryptor.Requests do
 
   def handle_get_response(_), do: {:error, :unexpected_response}
 
-  def handle_response({:ok, %HTTPoison.Response{status_code: 100, body: body}}) do
+  def handle_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
-      {:ok, %{"response_data" => %{"balance" => _balances}}} = response ->
-        response
-
-      {:ok, _} = response ->
+      {:ok, %{"error_message" => error_message}} = response ->
         IO.inspect(response)
-        response
+        {:error, error_message}
 
-      {:error, reason} = error ->
-        IO.inspect(reason)
-        error
-    end
-  end
-
-  def handle_response({:ok, %HTTPoison.Response{status_code: 200, body: body}}) do
-    case Jason.decode(body) do
-      {:ok, %{"response_data" => %{"balance" => _balances}}} = response ->
-        response
-
-      {:ok, _} = response ->
-        IO.inspect(response)
+      {:ok, %{"response_data" => _}} = response ->
         response
 
       {:error, reason} = error ->

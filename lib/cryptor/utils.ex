@@ -13,9 +13,12 @@ defmodule Cryptor.Utils do
     }
 
   def get_available_amount(account_info, coin) do
-    case account_info["response_data"]["balance"][coin]["available"] do
-      nil -> nil
-      available -> String.to_float(available)
+    case account_info["response_data"]["balance"][String.downcase(coin)]["available"] do
+      nil ->
+        {:ok, 0.00}
+
+      available ->
+        {:ok, String.to_float(available)}
     end
   end
 

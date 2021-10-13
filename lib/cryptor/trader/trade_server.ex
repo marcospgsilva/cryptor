@@ -23,7 +23,7 @@ defmodule Cryptor.Trader.TradeServer do
       __MODULE__,
       %{
         order_list: OrdersAgent.get_order_list(),
-        account_info: Trader.get_account_info()
+        account_info: nil
       },
       name: TraderServer
     )
@@ -76,7 +76,25 @@ defmodule Cryptor.Trader.TradeServer do
 
   # SERVER
   @impl true
-  def init(args), do: {:ok, args, {:continue, :start_process_coin}}
+  def init(args), do: {:ok, args, {:continue, :get_account_info}}
+
+  @impl true
+  def handle_continue(:get_account_info, state) do
+    account_info = get_account_info()
+    schedule_update_account_info()
+
+    {:noreply, %{state | account_info: account_info},
+     {:continue, :start_servers_and_schedule_tasks}}
+  end
+
+  @impl true
+  def handle_continue(:start_servers_and_schedule_tasks, %{order_list: order_list} = state) do
+    start_currencies_analysis(@currencies)
+    add_orders_to_analysis(order_list)
+    schedule_update_account_info()
+    schedule_process_orders_status()
+    {:noreply, state}
+  end
 
   @impl true
   def handle_info({:process_orders_status, []}, state) do
@@ -93,7 +111,7 @@ defmodule Cryptor.Trader.TradeServer do
 
   @impl true
   def handle_info(:update_account_info, state) do
-    case Trader.get_account_info() do
+    case get_account_info() do
       nil ->
         schedule_update_account_info()
         {:noreply, state}
@@ -104,15 +122,6 @@ defmodule Cryptor.Trader.TradeServer do
     end
   end
 
-  @impl true
-  def handle_continue(:start_process_coin, %{order_list: order_list} = state) do
-    start_currencies_analysis(@currencies)
-    add_orders_to_analysis(order_list)
-    schedule_update_account_info()
-    schedule_process_orders_status()
-    {:noreply, state}
-  end
-
   defp check_order_status(peding_orders),
     do:
       peding_orders
@@ -120,18 +129,32 @@ defmodule Cryptor.Trader.TradeServer do
 
   defp process_order_status(order) do
     Task.Supervisor.start_child(OrdersSupervisor, fn ->
-      case Trader.get_order_status(order) do
-        :filled ->
-          process_pending_order(order)
-          PendingOrdersAgent.remove_from_pending_orders_list(order)
-
-        :canceled ->
-          PendingOrdersAgent.remove_from_pending_orders_list(order)
-
-        _ ->
-          nil
-      end
+      handle_order_status(order)
     end)
+  end
+
+  defp handle_order_status(order) do
+    case Trader.get_order_status(order) do
+      :filled ->
+        process_pending_order(order)
+        PendingOrdersAgent.remove_from_pending_orders_list(order)
+
+      :canceled ->
+        PendingOrdersAgent.remove_from_pending_orders_list(order)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp get_account_info() do
+    case Trader.get_account_info() do
+      {:error, _reason} ->
+        nil
+
+      account_info ->
+        account_info
+    end
   end
 
   def schedule_update_account_info,

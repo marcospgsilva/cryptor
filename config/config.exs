@@ -36,4 +36,7 @@ config :appsignal, :config,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
+
+config :cryptor, Cryptor.Requests, options: [timeout: 40_000, recv_timeout: 40_000]
+
 import_config "#{Mix.env()}.exs"
