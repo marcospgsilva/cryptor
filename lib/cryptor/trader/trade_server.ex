@@ -56,7 +56,7 @@ defmodule Cryptor.Trader.TradeServer do
     currencies
     |> Enum.map(fn currency ->
       DynamicSupervisor.start_child(
-        AnalysisOrdersSupervisor,
+        AnalysisSupervisor,
         {Analysis,
          %{state: %Analysis{currency: currency}, name: String.to_atom(currency <> "Server")}}
       )
@@ -120,7 +120,7 @@ defmodule Cryptor.Trader.TradeServer do
       |> Enum.each(&process_order_status/1)
 
   defp process_order_status(order) do
-    Task.Supervisor.start_child(AnalysisOrdersSupervisor, fn ->
+    Task.Supervisor.start_child(OrdersSupervisor, fn ->
       case Trader.get_order_status(order) do
         :filled ->
           process_pending_order(order)

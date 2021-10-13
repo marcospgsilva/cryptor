@@ -16,7 +16,8 @@ defmodule Cryptor.Application do
       # Start the Endpoint (http/https)
       CryptorWeb.Endpoint,
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
-      # {Cryptor.Worker, arg}
+      # {Cryptor.Worker, arg},
+      Cryptor.Orders.Supervisor,
       Cryptor.DynamicSupervisor,
       Cryptor.Orders.OrdersAgent,
       Cryptor.Orders.PendingOrdersAgent,

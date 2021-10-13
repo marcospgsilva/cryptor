@@ -124,7 +124,7 @@ defmodule Cryptor.Analysis do
 
   def start_transaction(current_price, %Order{} = order),
     do:
-      Task.Supervisor.start_child(AnalysisOrdersSupervisor, fn ->
+      Task.Supervisor.start_child(OrdersSupervisor, fn ->
         Trader.analyze_transaction(current_price, order)
       end)
 
