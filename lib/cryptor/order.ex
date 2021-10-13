@@ -23,6 +23,7 @@ defmodule Cryptor.Order do
     field :quantity, :float, default: 0.0
     field :price, :float
     field :type, :string
+    field :fee, :string
     field :finished, :boolean, default: false
 
     timestamps(type: :utc_datetime)
@@ -62,16 +63,6 @@ defmodule Cryptor.Order do
         where: order.finished == false,
         order_by: [desc: order.id]
     )
-  end
-
-  def create_base_order(coin, current_price) do
-    %Order{
-      order_id: 0,
-      coin: coin,
-      quantity: 0.0,
-      price: current_price,
-      type: "buy"
-    }
   end
 
   def mapped_order_statuses(), do: @orders_statuses

@@ -57,6 +57,19 @@ defmodule Cryptor.Trader do
     |> process_order(order)
   end
 
+  def place_order({:error, _} = error, _, _, _, _),
+    do: error
+
+  def place_order(:ok, quantity, method, coin_pair, newer_price) do
+    Requests.request(:post, %{
+      tapi_method: Utils.get_tapi_method(method),
+      coin_pair: coin_pair,
+      quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
+      limit_price: newer_price,
+      async: true
+    })
+  end
+
   def validate_available_money(:sell, _, _), do: :ok
 
   def validate_available_money(:buy, quantity, newer_price) do
@@ -69,19 +82,6 @@ defmodule Cryptor.Trader do
     if available_amount > order_value,
       do: :ok,
       else: {:error, :no_enough_money}
-  end
-
-  def place_order({:error, _} = error, _, _, _, _),
-    do: error
-
-  def place_order(:ok, quantity, method, coin_pair, newer_price) do
-    Requests.request(:post, %{
-      tapi_method: Utils.get_tapi_method(method),
-      coin_pair: coin_pair,
-      quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
-      limit_price: newer_price,
-      async: true
-    })
   end
 
   def process_order(
