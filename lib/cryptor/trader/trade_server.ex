@@ -42,8 +42,11 @@ defmodule Cryptor.Trader.TradeServer do
   def process_pending_order(%{buy_order_id: _buy_order_id} = order),
     do: Trader.remove_and_update_order(order)
 
-  def process_pending_order(order),
-    do: Trader.create_and_add_order(order)
+  def process_pending_order(order) do
+    %{fee: fee} = Trader.get_order_data(order)
+    updated_order = %{order | fee: fee}
+    Trader.create_and_add_order(updated_order)
+  end
 
   def start_currencies_analysis(currencies) do
     currencies
@@ -131,12 +134,12 @@ defmodule Cryptor.Trader.TradeServer do
   end
 
   defp handle_order_status(order) do
-    case Trader.get_order_status(order) do
-      :filled ->
+    case Trader.get_order_data(order) do
+      %{status: :filled} ->
         process_pending_order(order)
         PendingOrdersAgent.remove_from_pending_orders_list(order)
 
-      :canceled ->
+      %{status: :canceled} ->
         PendingOrdersAgent.remove_from_pending_orders_list(order)
 
       _ ->
