@@ -1,6 +1,6 @@
 defmodule Cryptor.Analysis do
   @moduledoc """
-   Each currency has your own Analysis GenServer for trigger buy or sell orders based on the currency current price
+   Each currency has your own Analysis GenServer for trigger buy or sell orders based on the current currency price
   """
 
   use GenServer

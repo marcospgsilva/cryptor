@@ -29,21 +29,15 @@ defmodule Cryptor.Trader.TradeServer do
     )
   end
 
-  def get_state, do: :sys.get_state(TraderServer)
-
   def add_order(%Order{} = order) do
     add_order_to_analysis_server(order)
     OrdersAgent.add_to_order_list(order)
   end
 
-  def add_order(_), do: {:error, :invalid_order}
-
   def remove_order(%Order{} = order) do
     remove_order_from_analysis_server(order)
     OrdersAgent.remove_from_order_list(order)
   end
-
-  def remove_order(_), do: {:error, :invalid_order}
 
   def process_pending_order(%{buy_order_id: _buy_order_id} = order),
     do: Trader.remove_and_update_order(order)
@@ -73,6 +67,8 @@ defmodule Cryptor.Trader.TradeServer do
 
   def remove_order_from_analysis_server(%Order{} = order),
     do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
+
+  def get_state, do: :sys.get_state(TraderServer)
 
   # SERVER
   @impl true
@@ -105,7 +101,6 @@ defmodule Cryptor.Trader.TradeServer do
   @impl true
   def handle_info({:process_orders_status, pending_orders}, state) do
     check_order_status(pending_orders)
-    schedule_process_orders_status()
     {:noreply, state}
   end
 
@@ -131,6 +126,8 @@ defmodule Cryptor.Trader.TradeServer do
     Task.Supervisor.start_child(OrdersSupervisor, fn ->
       handle_order_status(order)
     end)
+
+    schedule_process_orders_status()
   end
 
   defp handle_order_status(order) do
@@ -159,9 +156,6 @@ defmodule Cryptor.Trader.TradeServer do
 
   def schedule_update_account_info,
     do: Process.send_after(TraderServer, :update_account_info, 3000)
-
-  def schedule_order_status(attrs),
-    do: Process.send_after(TraderServer, {:get_order_status, attrs}, 10_000)
 
   def schedule_process_orders_status do
     Process.send_after(
