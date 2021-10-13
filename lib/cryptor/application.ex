@@ -17,7 +17,7 @@ defmodule Cryptor.Application do
       CryptorWeb.Endpoint,
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
       # {Cryptor.Worker, arg},
-      Cryptor.Orders.Supervisor,
+      {Task.Supervisor, name: OrdersSupervisor, restart: :transient},
       Cryptor.DynamicSupervisor,
       Cryptor.Orders.OrdersAgent,
       Cryptor.Orders.PendingOrdersAgent,
