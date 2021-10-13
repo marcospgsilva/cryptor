@@ -9,6 +9,7 @@ defmodule Cryptor.Utils do
       quantity: new_order["quantity"] |> String.to_float(),
       price: new_order["limit_price"] |> String.to_float(),
       coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
+      fee: new_order["fee"],
       type: get_order_type(new_order["order_type"])
     }
 
