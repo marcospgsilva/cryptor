@@ -15,7 +15,7 @@ defmodule Cryptor.Order do
 
   @required_fields [:order_id, :coin, :quantity, :price, :type]
 
-  @fields @required_fields ++ [:finished]
+  @fields @required_fields ++ [:finished, :fee]
 
   schema "orders" do
     field :order_id, :integer
