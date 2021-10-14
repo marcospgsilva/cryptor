@@ -145,5 +145,5 @@ defmodule Cryptor.Analysis do
 
   defp analisys, do: Process.send_after(self(), :analyze_orders, Enum.random(7_000..8_000))
 
-  def schedule_place_orders, do: Process.send_after(self(), :place_orders, 2000)
+  def schedule_place_orders, do: Process.send_after(self(), :place_orders, 5000)
 end
