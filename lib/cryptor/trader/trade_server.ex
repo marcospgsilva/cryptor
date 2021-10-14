@@ -122,18 +122,12 @@ defmodule Cryptor.Trader.TradeServer do
 
   defp check_order_status(peding_orders) do
     peding_orders
-    |> Enum.each(&process_order_status/1)
+    |> Enum.map(&process_order_status/1)
 
     schedule_process_orders_status()
   end
 
   defp process_order_status(order) do
-    Task.Supervisor.start_child(OrdersSupervisor, fn ->
-      handle_order_status(order)
-    end)
-  end
-
-  defp handle_order_status(order) do
     case Trader.get_order_data(order) do
       %{status: :filled} ->
         process_pending_order(order)
