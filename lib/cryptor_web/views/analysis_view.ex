@@ -2,7 +2,7 @@ defmodule CryptorWeb.AnalysisView do
   use CryptorWeb, :view
   alias Cryptor.Order
   alias Cryptor.Utils
-  alias Cryptor.Trader.TradeServer
+  alias Cryptor.Orders.OrdersAgent
 
   def render("analysis.json", %{analysis: %{order_list: order_list}}) do
     %{
@@ -26,28 +26,20 @@ defmodule CryptorWeb.AnalysisView do
   end
 
   def render_currencies() do
-    TradeServer.get_currencies()
-    |> Enum.map(fn currency ->
-      %{orders: orders, current_price: current_price} =
-        :sys.get_state(String.to_existing_atom("#{currency}Server"))
+    OrdersAgent.get_order_list()
+    |> Enum.map(fn order ->
+      %{current_price: current_price} =
+        :sys.get_state(String.to_existing_atom("#{order.coin}Server"))
 
-      order_list =
-        orders
-        |> Enum.filter(fn order -> order.quantity != 0.0 end)
-
-      order_list
-      |> Enum.map(fn order ->
-        %{
-          id: order.id,
-          order_id: order.order_id,
-          coin: order.coin,
-          bought_value: order.price,
-          quantity: order.quantity,
-          current_price: current_price,
-          variation: Utils.calculate_variation(order.price, current_price)
-        }
-      end)
+      %{
+        id: order.id,
+        order_id: order.order_id,
+        coin: order.coin,
+        bought_value: order.price,
+        quantity: order.quantity,
+        current_price: current_price,
+        variation: Utils.calculate_variation(order.price, current_price)
+      }
     end)
-    |> Enum.concat()
   end
 end
