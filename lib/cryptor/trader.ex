@@ -115,6 +115,11 @@ defmodule Cryptor.Trader do
     buy_order = Order.get_order(order.buy_order_id)
     TradeServer.remove_order(buy_order)
     Order.update_order(buy_order, %{finished: true})
+
+    order
+    |> Map.pop(:buy_order_id)
+    |> elem(1)
+    |> Order.create_order()
   end
 
   def delete_order(id) do

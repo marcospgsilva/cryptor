@@ -105,7 +105,16 @@ defmodule Cryptor.Analysis do
         :place_orders,
         %Analysis{currency: currency, current_price: current_price} = state
       ) do
-    Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
+    case Order.get_latest_sell_orders(currency) do
+      [] ->
+        Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
+
+      [latest_order | _] ->
+        if current_price <= latest_order.price * state.buy_percentage_limit,
+          do: Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"}),
+          else: nil
+    end
+
     schedule_place_orders()
     {:noreply, state}
   end
