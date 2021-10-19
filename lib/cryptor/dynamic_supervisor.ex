@@ -2,7 +2,7 @@ defmodule Cryptor.DynamicSupervisor do
   @moduledoc """
    Analysis Supervisor
   """
-  use DynamicSupervisor
+  use DynamicSupervisor, restart: :permanent
 
   def start_link(attrs),
     do: DynamicSupervisor.start_link(__MODULE__, attrs, name: AnalysisSupervisor)
