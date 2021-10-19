@@ -71,7 +71,7 @@ defmodule Cryptor.Trader.TradeServer do
   def remove_order_from_analysis_server(%Order{} = order),
     do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
 
-  def get_state, do: :sys.get_state(TraderServer)
+  def get_state, do: GenServer.call(TraderServer, :get_state, :infinity)
 
   # SERVER
   @impl true
@@ -94,6 +94,9 @@ defmodule Cryptor.Trader.TradeServer do
     schedule_process_orders_status()
     {:noreply, state}
   end
+
+  @impl true
+  def handle_call(:get_state, _, state), do: {:reply, state, state}
 
   @impl true
   def handle_info({:process_orders_status, []}, state) do
