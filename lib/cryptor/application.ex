@@ -16,15 +16,15 @@ defmodule Cryptor.Application do
       CryptorWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: Cryptor.PubSub},
-      # Start the Endpoint (http/https)
-      CryptorWeb.Endpoint,
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
       # {Cryptor.Worker, arg},
-      {Task.Supervisor, name: OrdersSupervisor, restart: :transient},
+      {Task.Supervisor, name: OrdersSupervisor},
       Cryptor.DynamicSupervisor,
       Cryptor.Orders.OrdersAgent,
       Cryptor.Orders.PendingOrdersAgent,
-      Cryptor.Trader.TradeServer
+      Cryptor.Trader.TradeServer,
+      # Start the Endpoint (http/https)
+      CryptorWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
