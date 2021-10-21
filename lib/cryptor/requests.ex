@@ -51,7 +51,6 @@ defmodule Cryptor.Requests do
         {:error, error_message}
 
       {:ok, %{"response_data" => _}} = response ->
-        IO.inspect(response |> elem(1))
         response
 
       {:error, reason} = error ->
