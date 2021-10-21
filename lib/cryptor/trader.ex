@@ -138,6 +138,7 @@ defmodule Cryptor.Trader do
     order
     |> Map.pop(:buy_order_id)
     |> elem(1)
+    |> Map.put(:finished, true)
     |> Order.create_order()
   end
 
