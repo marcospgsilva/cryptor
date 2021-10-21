@@ -43,17 +43,34 @@ defmodule Cryptor.Trader do
     end
   end
 
+  def validate_pending_sell_order(:sell = method, currency) do
+    case PendingOrdersAgent.get_pending_orders_list()
+         |> Enum.find(fn %{type: type, coin: coin} ->
+           type == to_string(method) && coin == currency
+         end) do
+      nil ->
+        :ok
+
+      _ ->
+        :error
+    end
+  end
+
+  def validate_pending_sell_order(_, _), do: :ok
+
   def place_order(:sell, _, %Order{quantity: 0.0}), do: nil
 
-  def place_order(method, newer_price, %Order{coin: coin} = order) do
+  def place_order(method, newer_price, %Order{coin: currency} = order) do
     quantity = AmountControl.get_quantity(method, newer_price, order)
 
-    validate_available_money(
+    method
+    |> validate_pending_sell_order(currency)
+    |> validate_available_money(
       method,
       quantity,
       newer_price
     )
-    |> place_order(quantity, method, "BRL#{coin}", newer_price)
+    |> place_order(quantity, method, "BRL#{currency}", newer_price)
     |> process_order(order)
   end
 
@@ -70,9 +87,11 @@ defmodule Cryptor.Trader do
     })
   end
 
-  def validate_available_money(:sell, _, _), do: :ok
+  def validate_available_money(:error, _, _, _), do: {:error, :pending_sell_order}
 
-  def validate_available_money(:buy, quantity, newer_price) do
+  def validate_available_money(:ok, :sell, _, _), do: :ok
+
+  def validate_available_money(:ok, :buy, quantity, newer_price) do
     {:ok, available_amount} =
       get_account_info_data()
       |> Utils.get_available_amount("brl")
