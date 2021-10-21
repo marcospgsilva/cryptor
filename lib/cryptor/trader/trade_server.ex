@@ -91,7 +91,6 @@ defmodule Cryptor.Trader.TradeServer do
   def handle_continue(:start_servers_and_schedule_tasks, %{order_list: order_list} = state) do
     start_currencies_analysis(@currencies)
     add_orders_to_analysis(order_list)
-    schedule_update_account_info()
     schedule_process_orders_status()
     {:noreply, state}
   end
@@ -156,7 +155,7 @@ defmodule Cryptor.Trader.TradeServer do
   end
 
   def schedule_update_account_info,
-    do: Process.send_after(TraderServer, :update_account_info, 3000)
+    do: Process.send_after(TraderServer, :update_account_info, 8000)
 
   def schedule_process_orders_status do
     Process.send_after(
