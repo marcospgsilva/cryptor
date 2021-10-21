@@ -10,7 +10,8 @@ defmodule Cryptor.Trader.TradeServer do
     Order,
     Orders.PendingOrdersAgent,
     Orders.OrdersAgent,
-    Trader
+    Trader,
+    Utils
   }
 
   @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH"]
@@ -71,7 +72,7 @@ defmodule Cryptor.Trader.TradeServer do
   def remove_order_from_analysis_server(%Order{} = order),
     do: GenServer.cast(String.to_existing_atom(order.coin <> "Server"), {:remove_order, order})
 
-  def get_state, do: GenServer.call(TraderServer, :get_state, :infinity)
+  def get_state, do: GenServer.call(TraderServer, :get_state, Utils.get_timeout())
 
   # SERVER
   @impl true

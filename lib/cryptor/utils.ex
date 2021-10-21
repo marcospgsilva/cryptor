@@ -43,4 +43,6 @@ defmodule Cryptor.Utils do
     do: (current_price / bought_price - 1) |> Float.round(4)
 
   def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix()
+
+  def get_timeout, do: :infinity
 end

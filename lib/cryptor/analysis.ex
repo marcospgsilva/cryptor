@@ -4,7 +4,7 @@ defmodule Cryptor.Analysis do
   """
 
   use GenServer
-  alias Cryptor.{Trader, Order, Currency}
+  alias Cryptor.{Trader, Order, Currency, Utils}
   alias __MODULE__
 
   defstruct orders: [],
@@ -108,11 +108,11 @@ defmodule Cryptor.Analysis do
     case Order.get_latest_sell_orders(currency) do
       [latest_order | _] ->
         if current_price <= latest_order.price * state.buy_percentage_limit,
-          do: Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"}),
+          do: place_buy_order(current_price, currency),
           else: nil
 
       _ ->
-        Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
+        place_buy_order(current_price, currency)
     end
 
     schedule_place_orders()
@@ -132,14 +132,28 @@ defmodule Cryptor.Analysis do
      }}
   end
 
+  def place_buy_order(current_price, currency),
+    do:
+      Task.Supervisor.start_child(
+        OrdersSupervisor,
+        fn ->
+          Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
+        end,
+        shutdown: Utils.get_timeout()
+      )
+
   def process_transaction(orders, current_price),
     do: orders |> Enum.each(&start_transaction(current_price, &1))
 
   def start_transaction(current_price, %Order{} = order),
     do:
-      Task.Supervisor.start_child(OrdersSupervisor, fn ->
-        Trader.analyze_transaction(current_price, order)
-      end)
+      Task.Supervisor.start_child(
+        OrdersSupervisor,
+        fn ->
+          Trader.analyze_transaction(current_price, order)
+        end,
+        shutdown: Utils.get_timeout()
+      )
 
   defp get_currency_percentages(currency),
     do: with(%Currency{} = currency <- Currency.get_currency(currency), do: currency)

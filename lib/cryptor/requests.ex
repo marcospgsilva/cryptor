@@ -4,13 +4,11 @@ defmodule Cryptor.Requests do
   """
   alias Cryptor.Utils
 
-  @timeout 40_000
-
   def request(:get = method, path) do
     url = get_data_api_base_url(path)
 
     Task.async(__MODULE__, :http_request, [method, url])
-    |> Task.await(@timeout)
+    |> Task.await(Utils.get_timeout())
     |> handle_get_response()
   end
 
@@ -22,20 +20,20 @@ defmodule Cryptor.Requests do
     if trade_body !== %{tapi_method: "get_account_info"}, do: IO.inspect(body)
 
     Task.async(__MODULE__, :http_request, [method, url, headers, body])
-    |> Task.await(@timeout)
+    |> Task.await(Utils.get_timeout())
     |> handle_response()
   end
 
-  def http_request(method, url, headers \\ [], body \\ "") do
-    %HTTPoison.Request{
-      method: method,
-      url: url,
-      headers: headers,
-      body: body,
-      options: get_request_options()
-    }
-    |> HTTPoison.request()
-  end
+  def http_request(method, url, headers \\ [], body \\ ""),
+    do:
+      %HTTPoison.Request{
+        method: method,
+        url: url,
+        headers: headers,
+        body: body,
+        options: get_request_options()
+      }
+      |> HTTPoison.request()
 
   def handle_get_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
@@ -53,6 +51,7 @@ defmodule Cryptor.Requests do
         {:error, error_message}
 
       {:ok, %{"response_data" => _}} = response ->
+        IO.inspect(response |> elem(1))
         response
 
       {:error, reason} = error ->
