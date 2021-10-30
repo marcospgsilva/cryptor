@@ -8,6 +8,7 @@ defmodule Cryptor.Accounts.User do
     field :password, :string, virtual: true
     field :hashed_password, :string
     field :confirmed_at, :naive_datetime
+    has_many :orders, Cryptor.Orders.Order
 
     timestamps()
   end
@@ -34,6 +35,7 @@ defmodule Cryptor.Accounts.User do
     |> cast(attrs, [:email, :password])
     |> validate_email()
     |> validate_password(opts)
+    |> cast_assoc(:orders)
   end
 
   defp validate_email(changeset) do

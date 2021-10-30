@@ -10,9 +10,7 @@ defmodule Cryptor.Orders.Order do
     "3" => :canceled
   }
 
-  @required_fields [:order_id, :coin, :quantity, :price, :type]
-
-  @fields @required_fields ++ [:finished, :fee]
+  @fields [:order_id, :coin, :quantity, :price, :type, :finished, :fee, :user_id]
 
   schema "orders" do
     field :order_id, :integer
@@ -22,6 +20,7 @@ defmodule Cryptor.Orders.Order do
     field :type, :string
     field :fee, :string
     field :finished, :boolean, default: false
+    belongs_to :user, Cryptor.Accounts.User
 
     timestamps(type: :utc_datetime)
   end
@@ -30,7 +29,7 @@ defmodule Cryptor.Orders.Order do
     do:
       order
       |> cast(attrs, @fields)
-      |> validate_required(@required_fields)
+      |> assoc_constraint(:user)
 
   def mapped_order_statuses(), do: @orders_statuses
 end
