@@ -4,11 +4,16 @@ defmodule CryptorWeb.AnalysisLive do
   """
   use CryptorWeb, :live_view
   alias Cryptor.Trader.TradeServer
+  alias Cryptor.ProcessRegistry
 
   # CLIENT
-  def get_analysis_server_data() do
-    currencies = TradeServer.get_currencies()
-    currencies |> Enum.map(&build_server_analysis_data/1)
+  def get_analysis_server_data(socket) do
+    user_id = get_user_id_from_socket(socket)
+
+    TradeServer.get_currencies()
+    |> Enum.map(fn currency ->
+      build_server_analysis_data(currency, user_id)
+    end)
   end
 
   # SERVER
@@ -16,12 +21,12 @@ defmodule CryptorWeb.AnalysisLive do
   def mount(_params, session, socket) do
     socket = assign_defaults(session, socket)
     schedule_event()
-    {:ok, assign(socket, analysis: get_analysis_server_data())}
+    {:ok, assign(socket, analysis: get_analysis_server_data(socket))}
   end
 
   @impl true
   def handle_info("update_state", socket),
-    do: {:noreply, assign(socket, analysis: get_analysis_server_data())}
+    do: {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
 
   @impl true
   def handle_event(
@@ -46,11 +51,13 @@ defmodule CryptorWeb.AnalysisLive do
     {:noreply, socket}
   end
 
-  defp build_server_analysis_data(currency),
+  defp build_server_analysis_data(currency, user_id),
     do:
-      String.to_existing_atom("#{currency}Server")
+      ProcessRegistry.whereis_name({user_id, "#{currency}Server"})
       |> :sys.get_state()
       |> Map.from_struct()
 
   defp schedule_event(), do: Process.send_after(self(), "update_state", 9000)
+
+  defp get_user_id_from_socket(socket), do: socket[:current_user][:id]
 end
