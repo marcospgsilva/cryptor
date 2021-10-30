@@ -4,7 +4,7 @@ defmodule CryptorWeb.CurrencyLive do
   """
 
   use CryptorWeb, :live_view
-  alias Cryptor.Currency
+  alias Cryptor.Currencies
   alias Cryptor.Trader.TradeServer
   alias Ecto.Changeset
 
@@ -19,7 +19,7 @@ defmodule CryptorWeb.CurrencyLive do
   def handle_event("create_currency", %{"currency" => currency}, socket) do
     currency = String.upcase(currency)
 
-    case Currency.create_currency(%{coin: currency}) do
+    case Currencies.create_currency(%{coin: currency}) do
       %Changeset{valid?: false} ->
         {:noreply, assign(socket, error: true)}
 

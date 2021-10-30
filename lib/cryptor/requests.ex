@@ -59,7 +59,7 @@ defmodule Cryptor.Requests do
     end
   end
 
-  def handle_response(_ = response) do
+  def handle_response(response) do
     IO.inspect(response)
     {:error, :unexpected_response}
   end

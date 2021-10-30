@@ -4,7 +4,8 @@ defmodule Cryptor.Analysis do
   """
 
   use GenServer
-  alias Cryptor.{Trader, Order, Currency, Utils}
+  alias Cryptor.{Trader, Order, Currencies, Utils}
+  alias Cryptor.Currencies.Currency
   alias __MODULE__
 
   defstruct orders: [],
@@ -156,11 +157,11 @@ defmodule Cryptor.Analysis do
       )
 
   defp get_currency_percentages(currency),
-    do: with(%Currency{} = currency <- Currency.get_currency(currency), do: currency)
+    do: with(%Currency{} = currency <- Currencies.get_currency(currency), do: currency)
 
   defp update_currency_percentages(currency, sell_percentage_limit, buy_percentage_limit) do
-    Currency.get_currency(currency)
-    |> Currency.update_currency(%{
+    Currencies.get_currency(currency)
+    |> Currencies.update_currency(%{
       sell_percentage_limit: sell_percentage_limit,
       buy_percentage_limit: buy_percentage_limit
     })
