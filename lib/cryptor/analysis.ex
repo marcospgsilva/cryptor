@@ -4,7 +4,7 @@ defmodule Cryptor.Analysis do
   """
 
   use GenServer
-  alias Cryptor.{Trader, Order, Currencies, Utils}
+  alias Cryptor.{Trader, Orders, Orders.Order, Currencies, Utils}
   alias Cryptor.Currencies.Currency
   alias __MODULE__
 
@@ -106,7 +106,7 @@ defmodule Cryptor.Analysis do
         :place_orders,
         %Analysis{currency: currency, current_price: current_price} = state
       ) do
-    case Order.get_latest_sell_orders(currency) do
+    case Orders.get_latest_sell_orders(currency) do
       [latest_order | _] ->
         if current_price <= latest_order.price * state.buy_percentage_limit,
           do: place_buy_order(current_price, currency),
@@ -136,7 +136,7 @@ defmodule Cryptor.Analysis do
   def place_buy_order(current_price, currency),
     do:
       Task.Supervisor.start_child(
-        OrdersSupervisor,
+        ExchangesSupervisor,
         fn ->
           Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
         end,
@@ -149,7 +149,7 @@ defmodule Cryptor.Analysis do
   def start_transaction(current_price, %Order{} = order),
     do:
       Task.Supervisor.start_child(
-        OrdersSupervisor,
+        ExchangesSupervisor,
         fn ->
           Trader.analyze_transaction(current_price, order)
         end,

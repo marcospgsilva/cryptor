@@ -3,7 +3,7 @@ defmodule Cryptor.AmountControl do
   Amount Control
   """
 
-  alias Cryptor.Order
+  alias Cryptor.Orders.Order
 
   @currency_amount %{
     "ETH" => 0.01,

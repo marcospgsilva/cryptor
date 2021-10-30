@@ -6,8 +6,9 @@ defmodule Cryptor.Trader do
   alias Cryptor.{
     Analysis,
     AmountControl,
+    Orders,
     Orders.PendingOrdersAgent,
-    Order,
+    Orders.Order,
     Requests,
     Trader.TradeServer,
     Utils
@@ -128,24 +129,27 @@ defmodule Cryptor.Trader do
   def add_to_pending_orders(pending_order, _order),
     do: PendingOrdersAgent.add_to_pending_orders_list(pending_order)
 
-  def create_and_add_order(order), do: Order.create_order(order) |> TradeServer.add_order()
+  def create_and_add_order(order),
+    do:
+      Orders.create_order(order)
+      |> TradeServer.add_order()
 
   def remove_and_update_order(order) do
-    buy_order = Order.get_order(order.buy_order_id)
+    buy_order = Orders.get_order(order.buy_order_id)
     TradeServer.remove_order(buy_order)
-    Order.update_order(buy_order, %{finished: true})
+    Orders.update_order(buy_order, %{finished: true})
 
     order
     |> Map.pop(:buy_order_id)
     |> elem(1)
     |> Map.put(:finished, true)
-    |> Order.create_order()
+    |> Orders.create_order()
   end
 
   def delete_order(id) do
-    order = Order.get_order(id)
+    order = Orders.get_order(id)
     TradeServer.remove_order(order)
-    Order.update_order(order, %{finished: true})
+    Orders.update_order(order, %{finished: true})
   end
 
   def get_account_info_data do

@@ -3,9 +3,9 @@ defmodule Cryptor.Orders.OrdersAgent do
   Orders Agent
   """
   use Agent
-  alias Cryptor.Order
+  alias Cryptor.Orders
 
-  def start_link(_), do: Agent.start_link(fn -> Order.get_orders() end, name: __MODULE__)
+  def start_link(_), do: Agent.start_link(fn -> Orders.get_orders() end, name: __MODULE__)
 
   @spec get_order_list() :: list(map())
   def get_order_list, do: Agent.get(__MODULE__, & &1)

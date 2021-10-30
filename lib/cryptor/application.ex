@@ -18,7 +18,7 @@ defmodule Cryptor.Application do
       {Phoenix.PubSub, name: Cryptor.PubSub},
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
       # {Cryptor.Worker, arg},
-      {Task.Supervisor, name: OrdersSupervisor},
+      {Task.Supervisor, name: ExchangesSupervisor},
       Cryptor.DynamicSupervisor,
       Cryptor.Orders.OrdersAgent,
       Cryptor.Orders.PendingOrdersAgent,

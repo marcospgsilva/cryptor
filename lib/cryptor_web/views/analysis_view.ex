@@ -1,8 +1,7 @@
 defmodule CryptorWeb.AnalysisView do
   use CryptorWeb, :view
-  alias Cryptor.Order
   alias Cryptor.Utils
-  alias Cryptor.Orders.OrdersAgent
+  alias Cryptor.Orders.{OrdersAgent, Order}
 
   def render("analysis.json", %{analysis: %{order_list: order_list}}) do
     %{

@@ -7,9 +7,9 @@ defmodule Cryptor.Trader.TradeServer do
 
   alias Cryptor.{
     Analysis,
-    Order,
     Orders.PendingOrdersAgent,
     Orders.OrdersAgent,
+    Orders.Order,
     Trader,
     Utils
   }
