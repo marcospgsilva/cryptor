@@ -26,6 +26,6 @@ config :logger, level: :warn
 
 config :cryptor, Cryptor.Requests,
   trade_api_base_url: "https://www.mercadobitcoin.net/tapi/v3/",
-  data_api_base_url: "https://www.mercadobitcoin.net/api/",
+  data_api_base_url: "",
   tapi_id: "",
   tapi_id_secret_key: ""
