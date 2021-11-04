@@ -1,4 +1,4 @@
-defmodule Cryptor.Repo.Migrations.AddUserInConditions do
+defmodule Cryptor.Repo.Migrations.AddUserInOrders do
   use Ecto.Migration
 
   def change do
