@@ -3,12 +3,14 @@ defmodule Cryptor.Accounts.User do
   import Ecto.Changeset
 
   @derive {Inspect, except: [:password]}
+
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true
     field :hashed_password, :string
     field :confirmed_at, :naive_datetime
     has_many :orders, Cryptor.Orders.Order
+    has_many :bots, Cryptor.Bots.Bot
 
     timestamps()
   end
@@ -36,6 +38,7 @@ defmodule Cryptor.Accounts.User do
     |> validate_email()
     |> validate_password(opts)
     |> cast_assoc(:orders)
+    |> cast_assoc(:bots)
   end
 
   defp validate_email(changeset) do

@@ -10,6 +10,7 @@
 </div>
 
   <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-2xl m-auto">
+    <%= if !Enum.empty?(@analysis) do %>
     <%= for server <- @analysis do %>
       <div class="w-full flex-col min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
         <div class="flex flex-1 justify-center items-center self-center flex-grow">
@@ -20,7 +21,7 @@
         <div class="flex flex-1 flex-wrap mt-2 mb-2">
           <div class="flex flex-1 mr-3">
             <p class="text-gray-400 font-light mr-2">Estado</p>
-            <p class="text-green-400 font-extrabold mr-2">Running</p>
+            <p class="text-green-400 font-extrabold mr-2"><%= server.active %>></p>
             <p class="text-gray-400 font-extrabold">|</p>
           </div>
           <div class="flex flex-1 mr-3">
@@ -47,5 +48,6 @@
         </div>
         </div>
       </div>
+    <% end %>
     <% end %>
   </div>

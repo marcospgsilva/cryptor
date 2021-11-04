@@ -23,6 +23,8 @@ defmodule CryptorWeb.UserRegistrationController do
         |> put_flash(:info, "User created successfully.")
         |> UserAuth.log_in_user(user)
 
+        Process.send(Cryptor.Server, {:start_servers, user}, [])
+
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end

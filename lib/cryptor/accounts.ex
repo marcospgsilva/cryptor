@@ -59,6 +59,20 @@ defmodule Cryptor.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Gets all users.
+
+  ## Examples
+
+      iex> get_users()
+      [%User{}]
+
+      iex> get_users()
+      []
+
+  """
+  def get_users(), do: Repo.all(User) |> Repo.preload([:bots, :orders])
+
   ## User registration
 
   @doc """

@@ -1,6 +1,6 @@
 defmodule Cryptor.Orders.Order do
   @moduledoc """
-   Trader Order
+   Order
   """
   use Ecto.Schema
   import Ecto.Changeset

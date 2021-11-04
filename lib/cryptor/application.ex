@@ -21,9 +21,7 @@ defmodule Cryptor.Application do
       {Task.Supervisor, name: ExchangesSupervisor},
       {Registry, keys: :unique, name: Cryptor.ProcessRegistry},
       Cryptor.DynamicSupervisor,
-      Cryptor.Orders.OrdersAgent,
-      Cryptor.Orders.PendingOrdersAgent,
-      Cryptor.Trader.TradeServer,
+      Cryptor.Server,
       # Start the Endpoint (http/https)
       CryptorWeb.Endpoint
     ]

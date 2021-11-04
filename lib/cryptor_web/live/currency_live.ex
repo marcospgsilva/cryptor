@@ -5,7 +5,6 @@ defmodule CryptorWeb.CurrencyLive do
 
   use CryptorWeb, :live_view
   alias Cryptor.Currencies
-  alias Cryptor.Trader.TradeServer
   alias Ecto.Changeset
 
   # SERVER
@@ -23,10 +22,7 @@ defmodule CryptorWeb.CurrencyLive do
       %Changeset{valid?: false} ->
         {:noreply, assign(socket, error: true)}
 
-      currency ->
-        [currency.coin]
-        |> TradeServer.start_currencies_analysis()
-
+      _ ->
         {:noreply, assign(socket, error: false)}
     end
   end

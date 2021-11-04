@@ -5,12 +5,10 @@ defmodule Cryptor.Currencies.Currency do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @fields [:coin, :sell_percentage_limit, :buy_percentage_limit]
+  @fields [:coin]
 
   schema "currencies" do
     field :coin, :string
-    field :sell_percentage_limit, :float, default: 1.008
-    field :buy_percentage_limit, :float, default: 0.985
 
     timestamps(type: :utc_datetime)
   end

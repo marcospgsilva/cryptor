@@ -2,6 +2,7 @@ defmodule Cryptor.Orders do
   import Ecto.Query
   alias Cryptor.Repo
   alias Cryptor.Orders.Order
+  alias Cryptor.Accounts.User
 
   def get_order(id) do
     Repo.one(
@@ -17,8 +18,6 @@ defmodule Cryptor.Orders do
       |> Repo.insert()
       |> elem(1)
 
-  def update_order(nil, _attrs), do: nil
-
   def update_order(order, attrs),
     do:
       order
@@ -31,6 +30,18 @@ defmodule Cryptor.Orders do
         where:
           order.finished == false and
             order.type == "buy",
+        order_by: [desc: order.id]
+    )
+  end
+
+  def get_orders(user_id) do
+    Repo.all(
+      from order in Order,
+        join: user in User,
+        where:
+          order.finished == false and
+            order.type == "buy" and
+            order.user_id == ^user_id,
         order_by: [desc: order.id]
     )
   end

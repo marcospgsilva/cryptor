@@ -1,173 +1,107 @@
 defmodule Cryptor.Analysis do
   @moduledoc """
-   Each currency has your own Analysis GenServer for trigger buy or sell orders based on the current currency price
+   Analysis Server
   """
 
   use GenServer
-  alias Cryptor.{Trader, Orders, Orders.Order, Currencies, Utils}
-  alias Cryptor.Currencies.Currency
-  alias __MODULE__
 
-  defstruct orders: [],
-            current_price: 0.0,
-            currency: nil,
-            sell_percentage_limit: 1.008,
-            buy_percentage_limit: 0.985
+  alias Cryptor.{
+    BotServer,
+    Orders.PendingOrdersAgent,
+    Trader,
+    Utils
+  }
 
   # CLIENT
-  def start_link(%{state: state, name: name}),
-    do: GenServer.start_link(__MODULE__, state, name: name)
+  def start_link(%{name: name, user_id: user_id}) do
+    GenServer.start_link(
+      __MODULE__,
+      %{
+        user_id: user_id,
+        account_info: nil
+      },
+      name: name
+    )
+  end
+
+  def get_state(pid), do: GenServer.call(pid, :get_state, Utils.get_timeout())
 
   # SERVER
   @impl true
-  def init(%__MODULE__{} = state) do
-    schedule_place_orders()
-    {:ok, state, {:continue, :get_transaction_limit_percentage}}
+  def init(args), do: {:ok, args, {:continue, :get_account_info}}
+
+  @impl true
+  def handle_continue(:get_account_info, %{user_id: user_id} = state) do
+    account_info = get_account_info()
+    pids = Cryptor.ProcessRegistry.get_servers_registry(user_id)
+
+    schedule_update_account_info(pids[:analysis_pid])
+    {:noreply, %{state | account_info: account_info}}
   end
 
   @impl true
-  def handle_continue(:get_transaction_limit_percentage, %Analysis{currency: currency} = state) do
-    case get_currency_percentages(currency) do
-      %Currency{} = currency ->
-        {:noreply,
-         %{
-           state
-           | sell_percentage_limit: currency.sell_percentage_limit,
-             buy_percentage_limit: currency.buy_percentage_limit
-         }, {:continue, :get_current_price}}
+  def handle_call(:get_state, _, state), do: {:reply, state, state}
 
-      _ ->
-        {:noreply, state, {:continue, :get_current_price}}
-    end
+  @impl true
+  def handle_info({:process_orders_status, {[], pids}}, state) do
+    BotServer.schedule_process_orders_status(pids)
+    {:noreply, state}
   end
 
   @impl true
-  def handle_continue(:get_current_price, %Analysis{currency: currency} = state) do
-    case Trader.get_currency_price(currency) do
-      {:ok, current_price} ->
-        analisys()
-        {:noreply, %{state | current_price: current_price}}
+  def handle_info({:process_orders_status, {pending_orders, pids}}, state) do
+    check_order_status(pending_orders, pids)
+    {:noreply, state}
+  end
 
-      _ ->
-        analisys()
+  @impl true
+  def handle_info(:update_account_info, %{user_id: user_id} = state) do
+    pids = Cryptor.ProcessRegistry.get_servers_registry(user_id)
+    analysis_pid = pids[:analysis_pid]
+
+    case get_account_info() do
+      nil ->
+        schedule_update_account_info(analysis_pid)
         {:noreply, state}
+
+      account_info ->
+        schedule_update_account_info(analysis_pid)
+        {:noreply, %{state | account_info: account_info}}
     end
   end
 
-  @impl true
-  def handle_info(
-        {:update_transaction_limit_percentage, sell_percentage_limit, buy_percentage_limit},
-        %Analysis{currency: currency} = state
-      ) do
-    update_currency_percentages(currency, sell_percentage_limit, buy_percentage_limit)
+  defp check_order_status(peding_orders, pids) do
+    Enum.map(peding_orders, &process_order_status/1)
 
-    {:noreply,
-     %{
-       state
-       | sell_percentage_limit: sell_percentage_limit,
-         buy_percentage_limit: buy_percentage_limit
-     }}
+    BotServer.schedule_process_orders_status(pids)
   end
 
-  @impl true
-  def handle_info(:analyze_orders, %Analysis{orders: []} = state) do
-    analisys()
-    {:noreply, state}
-  end
+  defp process_order_status(order) do
+    pids = Cryptor.ProcessRegistry.get_servers_registry(order.user_id)
 
-  @impl true
-  def handle_info(
-        :analyze_orders,
-        %Analysis{orders: orders, currency: currency} = state
-      ) do
-    case Trader.get_currency_price(currency) do
-      {:ok, current_price} ->
-        process_transaction(orders, current_price)
-        analisys()
-        {:noreply, %{state | current_price: current_price}}
+    case Trader.get_order_data(order) do
+      %{status: :filled} ->
+        Trader.process_pending_order(order)
+        PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order)
+
+      %{status: :canceled} ->
+        PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order)
 
       _ ->
-        analisys()
-        {:noreply, state}
+        nil
     end
   end
 
-  @impl true
-  def handle_info(
-        :place_orders,
-        %Analysis{current_price: 0.0} = state
-      ) do
-    schedule_place_orders()
-    {:noreply, state}
-  end
+  defp get_account_info() do
+    case Trader.get_account_info() do
+      {:error, _reason} ->
+        nil
 
-  @impl true
-  def handle_info(
-        :place_orders,
-        %Analysis{currency: currency, current_price: current_price} = state
-      ) do
-    case Orders.get_latest_sell_orders(currency) do
-      [latest_order | _] ->
-        if current_price <= latest_order.price * state.buy_percentage_limit,
-          do: place_buy_order(current_price, currency),
-          else: nil
-
-      _ ->
-        place_buy_order(current_price, currency)
+      account_info ->
+        account_info
     end
-
-    schedule_place_orders()
-    {:noreply, state}
   end
 
-  @impl true
-  def handle_cast({:add_order, order}, state),
-    do: {:noreply, %{state | orders: [order | state.orders]}}
-
-  @impl true
-  def handle_cast({:remove_order, order}, state) do
-    {:noreply,
-     %{
-       state
-       | orders: List.delete(state.orders, order)
-     }}
-  end
-
-  def place_buy_order(current_price, currency),
-    do:
-      Task.Supervisor.start_child(
-        ExchangesSupervisor,
-        fn ->
-          Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"})
-        end,
-        shutdown: Utils.get_timeout()
-      )
-
-  def process_transaction(orders, current_price),
-    do: orders |> Enum.each(&start_transaction(current_price, &1))
-
-  def start_transaction(current_price, %Order{} = order),
-    do:
-      Task.Supervisor.start_child(
-        ExchangesSupervisor,
-        fn ->
-          Trader.analyze_transaction(current_price, order)
-        end,
-        shutdown: Utils.get_timeout()
-      )
-
-  defp get_currency_percentages(currency),
-    do: with(%Currency{} = currency <- Currencies.get_currency(currency), do: currency)
-
-  defp update_currency_percentages(currency, sell_percentage_limit, buy_percentage_limit) do
-    Currencies.get_currency(currency)
-    |> Currencies.update_currency(%{
-      sell_percentage_limit: sell_percentage_limit,
-      buy_percentage_limit: buy_percentage_limit
-    })
-  end
-
-  defp analisys, do: Process.send_after(self(), :analyze_orders, Enum.random(7_000..8_000))
-
-  def schedule_place_orders, do: Process.send_after(self(), :place_orders, 5000)
+  def schedule_update_account_info(analysis_pid),
+    do: Process.send_after(analysis_pid, :update_account_info, 8000)
 end
