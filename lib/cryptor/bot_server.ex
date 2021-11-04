@@ -61,13 +61,14 @@ defmodule Cryptor.BotServer do
   end
 
   def handle_info(
-        {:update_transaction_limit_percentage, sell_percentage, buy_percentage},
+        {:update_bot, sell_percentage, buy_percentage, buy_amount},
         %State{bot: bot} = state
       ) do
     {:ok, bot} =
       Cryptor.Bot.update_bot(bot, %{
         sell_percentage_limit: sell_percentage,
-        buy_percentage_limit: buy_percentage
+        buy_percentage_limit: buy_percentage,
+        buy_amount: buy_amount
       })
 
     {:noreply, %{state | bot: bot}}
