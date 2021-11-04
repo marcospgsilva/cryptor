@@ -18,34 +18,38 @@
           <p class="text-white font-black text-xl"><%= server.currency %></p>
         </div>
         <div class="flex flex-col flex-1 text-right self-center">
-        <div class="flex flex-1 flex-wrap mt-2 mb-2">
-          <div class="flex flex-1 mr-3">
-            <p class="text-gray-400 font-light mr-2">Estado</p>
-            <p class="text-green-400 font-extrabold mr-2"><%= server.active %>></p>
-            <p class="text-gray-400 font-extrabold">|</p>
+          <div class="flex flex-1 flex-wrap mt-2 mb-2">
+            <div x-data="{running: '<%= server.active %>'}" class="flex flex-1 mr-3">
+              <p class="text-gray-400 font-light mr-2">Estado</p>
+              <p :class="[running === 'true' ? 'font-extrabold mr-2 text-green-500' : 'font-extrabold mr-2 text-red-500']"><%= if(server.active, do: "Ligado", else: "Desligado") %></p>
+              <p class="text-gray-400 font-extrabold">|</p>
+            </div>
+            <div class="flex flex-1 mr-3">
+              <p class="text-gray-400 font-light mr-2">Análise</p>
+              <p class="text-green-400 font-extrabold mr-2"><%= Enum.count(server.orders) %></p>
+              <p class="text-gray-400 font-extrabold">|</p>
+            </div>
+            <div class="flex flex-1 mr-3 text-center">
+              <p class="text-gray-400 font-light mr-2">Valor</p>
+              <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(server.current_price) %></p>
+            </div>
           </div>
-          <div class="flex flex-1 mr-3">
-            <p class="text-gray-400 font-light mr-2">Análise</p>
-            <p class="text-green-400 font-extrabold mr-2"><%= Enum.count(server.orders) %></p>
-            <p class="text-gray-400 font-extrabold">|</p>
+          <div x-data="{running: '<%= server.active %>'}" class="flex flex-1 flex-col self-center text-center">
+            <%= if @current_user do %>
+              <form phx-submit="update_percentages">
+                <label class="text-white font-light">Percentage to sell:</label>
+                <input name="sell_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value="<%= server.sell_percentage_limit %>" step=".0001"><br><br>
+                <label class="text-white font-light mt-2">Percentage to buy:</label>
+                <input name="buy_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value="<%= server.buy_percentage_limit %>" step=".0001">
+                <input name="coin" class="hidden" type="text" value="<%= server.currency %>">
+                <button type="submit" class="flex flex-1 rounded-lg bg-green-400 p-2 mt-5 m-auto" >Salvar alterações</button>
+              </form>
+              <form phx-submit="change_bot_activity">
+                <input name="currency" class="hidden" type="text" value="<%= server.currency %>">
+                <button phx-submit="change_bot_activity" type="submit" :class="[running === 'true' ? 'flex flex-1 rounded-lg bg-red-500 p-2 mt-5 m-auto' : 'flex flex-1 rounded-lg bg-green-400 p-2 mt-5 m-auto']"> <%= if(server.active, do: "Desligar Cryptor", else: "Ligar Cryptor") %> </button>
+              </form>
+            <% end %>
           </div>
-          <div class="flex flex-1 mr-3 text-center">
-            <p class="text-gray-400 font-light mr-2">Valor</p>
-            <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(server.current_price) %></p>
-          </div>
-        </div>
-        <div class="flex flex-1 flex-col self-center text-center">
-        <%= if @current_user do %>
-          <form phx-submit="update_percentages">
-            <label class="text-white font-light">Percentage to sell:</label>
-            <input name="sell_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value="<%= server.sell_percentage_limit %>" step=".0001"><br><br>
-            <label class="text-white font-light mt-2">Percentage to buy:</label>
-            <input name="buy_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value="<%= server.buy_percentage_limit %>" step=".0001">
-            <input name="coin" class="hidden" type="text" value="<%= server.currency %>">
-          <button type="submit" class="flex flex-1 rounded-lg bg-green-400 p-4 mt-5 m-auto" >Salvar alterações</button>
-          </form>
-        <% end %>
-        </div>
         </div>
       </div>
     <% end %>

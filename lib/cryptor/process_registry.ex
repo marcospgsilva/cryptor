@@ -12,9 +12,6 @@ defmodule Cryptor.ProcessRegistry do
     orders_pid = whereis_name({user_id, "OrdersAgent"})
     pending_orders_pid = whereis_name({user_id, "PendingOrdersAgent"})
 
-    IO.inspect(orders_pid, label: "ORDERESPID")
-    IO.inspect(user_id, label: "USERID")
-
     %{
       analysis_pid: analysis_pid,
       orders_pid: orders_pid,

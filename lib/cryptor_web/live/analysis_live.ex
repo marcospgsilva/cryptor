@@ -24,6 +24,7 @@ defmodule CryptorWeb.AnalysisLive do
         |> Enum.map(fn currency ->
           build_server_analysis_data(id, currency)
         end)
+        |> Enum.reject(&(&1 == nil))
     end
   end
 
@@ -36,8 +37,10 @@ defmodule CryptorWeb.AnalysisLive do
   end
 
   @impl true
-  def handle_info("update_state", socket),
-    do: {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
+  def handle_info("update_state", socket) do
+    schedule_event()
+    {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
+  end
 
   @impl true
   def handle_event(
@@ -66,12 +69,12 @@ defmodule CryptorWeb.AnalysisLive do
   end
 
   @impl true
-  def handle_event("start_analysis_server", %{"currency" => currency}, socket) do
+  def handle_event("change_bot_activity", %{"currency" => currency}, socket) do
     user_id = get_user_id_from_socket(socket)
 
     case Bot.get_bot(user_id, currency) do
       nil ->
-        {:ok, bot} = Bot.create_bot(%{user_id: user_id})
+        {:ok, bot} = Bot.create_bot(%{user_id: user_id, active: true})
         Server.start_bot_server(bot, user_id)
 
       bot ->
@@ -79,21 +82,24 @@ defmodule CryptorWeb.AnalysisLive do
 
         case pids[:bot_pid] do
           nil ->
-            Server.start_bot_server(bot, user_id)
+            with {:ok, bot} <- Bot.update_bot(bot, %{active: true}) do
+              Server.start_bot_server(bot, user_id)
+            end
 
           pid ->
-            Bot.update_bot(bot, %{active: false})
-            Process.exit(pid, :kill)
+            Process.send(pid, :change_bot_activity, [])
         end
     end
 
-    {:noreply, socket}
+    {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
   end
 
   defp build_server_analysis_data(nil, _currency), do: nil
 
   defp build_server_analysis_data(user_id, currency) do
-    case ProcessRegistry.get_servers_registry(user_id, currency)[:bot_pid] do
+    bot_pid = ProcessRegistry.get_servers_registry(user_id, currency)[:bot_pid]
+
+    case bot_pid do
       :undefined ->
         nil
 
@@ -101,8 +107,7 @@ defmodule CryptorWeb.AnalysisLive do
         %{
           bot: bot,
           orders: orders,
-          current_price: current_price,
-          buy_percentage_limit: buy_percentage_limit
+          current_price: current_price
         } = Cryptor.BotServer.get_state(pid)
 
         %{
@@ -111,7 +116,7 @@ defmodule CryptorWeb.AnalysisLive do
           orders: orders,
           current_price: current_price,
           sell_percentage_limit: bot.sell_percentage_limit,
-          buy_percentage_limit: buy_percentage_limit
+          buy_percentage_limit: bot.buy_percentage_limit
         }
     end
   end
