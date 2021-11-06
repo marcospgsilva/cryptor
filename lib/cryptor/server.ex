@@ -30,9 +30,8 @@ defmodule Cryptor.Server do
   @impl true
   def handle_continue(:get_users, state) do
     create_table()
-    # users = Accounts.get_users()
-    # {:noreply, %{state | users: users}, {:continue, :create_cache}}
-    {:noreply, state}
+    users = Accounts.get_users()
+    {:noreply, %{state | users: users}, {:continue, :create_cache}}
   end
 
   def handle_continue(:create_cache, %{users: []} = state) do
