@@ -80,9 +80,8 @@ defmodule Cryptor.Analysis do
 
   defp process_order_status(order) do
     pids = Cryptor.ProcessRegistry.get_servers_registry(order.user_id)
-    analysis_pid = pids[:analysis_pid]
 
-    case Trader.get_order_data(order, analysis_pid) do
+    case Trader.get_order_data(order, order.user_id) do
       %{status: :filled} ->
         Trader.process_pending_order(order, order.user_id)
         PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order)
