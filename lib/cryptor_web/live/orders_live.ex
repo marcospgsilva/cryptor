@@ -14,21 +14,12 @@ defmodule CryptorWeb.OrdersLive do
   def mount(_params, session, socket) do
     socket = assign_defaults(session, socket)
     user_id = get_user_id_from_socket(socket)
+    pids = ProcessRegistry.get_servers_registry(user_id)
+    %{account_info: account_info} = Analysis.get_state(pids[:analysis_pid])
+    {:ok, available_amount} = Utils.get_available_amount(account_info, "brl")
 
-    case render_currencies(user_id) do
-      [] ->
-        schedule_event()
-        {:ok, assign(socket, orders: [], available_brl: 0.00)}
-
-      orders ->
-        schedule_event()
-        pids = ProcessRegistry.get_servers_registry(user_id)
-
-        %{account_info: account_info} = Analysis.get_state(pids[:analysis_pid])
-        {:ok, available_amount} = Utils.get_available_amount(account_info, "brl")
-
-        {:ok, assign(socket, orders: orders, available_brl: available_amount)}
-    end
+    schedule_event()
+    {:ok, assign(socket, orders: render_currencies(user_id), available_brl: available_amount)}
   end
 
   @impl true
