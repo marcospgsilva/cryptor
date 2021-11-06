@@ -51,7 +51,7 @@ defmodule Cryptor.BotServer do
       orders ->
         filtered_orders =
           orders
-          |> Enum.filter(fn order -> order.currency == bot.currency end)
+          |> Enum.filter(fn order -> order.coin == bot.currency end)
 
         {:noreply, %{state | orders: filtered_orders}}
     end
