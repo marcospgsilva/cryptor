@@ -115,7 +115,7 @@ defmodule Cryptor.Server do
 
   defp add_to_dynamic_supervisor(module, state) do
     DynamicSupervisor.start_child(
-      AnalysisSupervisor,
+      ServersSupervisor,
       {module, state}
     )
   end

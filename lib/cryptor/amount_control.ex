@@ -9,5 +9,5 @@ defmodule Cryptor.AmountControl do
       when not is_nil(fee),
       do: (quantity - String.to_float(fee)) |> Float.round(8)
 
-  def get_quantity(:buy, _newer_price, _order, bot), do: bot.currency
+  def get_quantity(:buy, _newer_price, _order, bot), do: bot.buy_amount
 end

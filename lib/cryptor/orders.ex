@@ -24,16 +24,6 @@ defmodule Cryptor.Orders do
       |> Order.changeset(attrs)
       |> Repo.update()
 
-  def get_orders() do
-    Repo.all(
-      from order in Order,
-        where:
-          order.finished == false and
-            order.type == "buy",
-        order_by: [desc: order.id]
-    )
-  end
-
   def get_orders(user_id) do
     Repo.all(
       from order in Order,
@@ -46,12 +36,14 @@ defmodule Cryptor.Orders do
     )
   end
 
-  def get_latest_sell_orders(currency) do
+  def get_latest_sell_orders(currency, user_id) do
     Repo.all(
       from order in Order,
+        join: user in User,
         where:
           order.coin == ^currency and
-            order.type == "sell",
+            order.type == "sell" and
+            order.user_id == ^user_id,
         order_by: [desc: order.inserted_at]
     )
   end

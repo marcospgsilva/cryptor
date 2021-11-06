@@ -18,14 +18,13 @@ defmodule Cryptor.Trader do
     Utils
   }
 
-  @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH"]
+  @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH", "ADA"]
 
   def get_currencies, do: @currencies
 
   def analyze_transaction(current_price, %Order{price: price, coin: currency} = order, user_id) do
     pids = ProcessRegistry.get_servers_registry(user_id, currency)
-
-    %BotServer.State{bot: bot = %Bot{}} = BotServer.get_state(pids[:bot_pid])
+    %State{bot: bot = %Bot{}} = BotServer.get_state(pids[:bot_pid])
 
     if current_price >= price * bot.sell_percentage_limit,
       do: place_order(:sell, current_price, order, user_id)
@@ -167,7 +166,7 @@ defmodule Cryptor.Trader do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
     order = Orders.create_order(order)
 
-    add_order_to_analysis_server(pids[:bot_pid], order)
+    add_order_to_bot_server(pids[:bot_pid], order)
     OrdersAgent.add_to_order_list(pids[:orders_pid], order)
   end
 
@@ -175,7 +174,7 @@ defmodule Cryptor.Trader do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
     buy_order = Orders.get_order(order.buy_order_id)
 
-    remove_order_from_analysis_server(pids[:bot_pid], order)
+    remove_order_from_bot_server(pids[:bot_pid], order)
     OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
     Orders.update_order(buy_order, %{finished: true})
 
@@ -190,7 +189,7 @@ defmodule Cryptor.Trader do
     order = Orders.get_order(id)
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
 
-    remove_order_from_analysis_server(pids[:bot_pid], order)
+    remove_order_from_bot_server(pids[:bot_pid], order)
     OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
     Orders.update_order(order, %{finished: true})
   end
@@ -209,11 +208,11 @@ defmodule Cryptor.Trader do
     create_and_add_order(updated_order)
   end
 
-  def add_order_to_analysis_server(analysis_pid, %Order{} = order) when order.coin in @currencies,
-    do: GenServer.cast(analysis_pid, {:add_order, order})
+  def add_order_to_bot_server(bot_pid, %Order{} = order) when order.coin in @currencies,
+    do: GenServer.cast(bot_pid, {:add_order, order})
 
-  def add_order_to_analysis_server(_, _), do: :ok
+  def add_order_to_bot_server(_, _), do: :ok
 
-  def remove_order_from_analysis_server(analysis_pid, %Order{} = order),
-    do: GenServer.cast(analysis_pid, {:remove_order, order})
+  def remove_order_from_bot_server(bot_pid, %Order{} = order),
+    do: GenServer.cast(bot_pid, {:remove_order, order})
 end

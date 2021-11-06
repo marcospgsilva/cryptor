@@ -95,7 +95,7 @@ defmodule Cryptor.BotServer do
         nil
 
       current_price ->
-        case Orders.get_latest_sell_orders(bot.currency) do
+        case Orders.get_latest_sell_orders(bot.currency, user_id) do
           [latest_order | _] ->
             if current_price <= latest_order.price * bot.buy_percentage_limit,
               do: place_buy_order(current_price, bot.currency, user_id),
