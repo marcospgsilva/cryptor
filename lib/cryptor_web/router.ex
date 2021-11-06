@@ -20,7 +20,6 @@ defmodule CryptorWeb.Router do
   scope "/", CryptorWeb do
     pipe_through :browser
 
-    live "/", OrdersLive, :index
     live "/orders", OrdersLive, :index
     live "/analysis", AnalysisLive, :index
   end
@@ -51,6 +50,7 @@ defmodule CryptorWeb.Router do
   scope "/", CryptorWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
+    get "/", HomeController, :index
     get "/users/register", UserRegistrationController, :new
     post "/users/register", UserRegistrationController, :create
     get "/users/log_in", UserSessionController, :new

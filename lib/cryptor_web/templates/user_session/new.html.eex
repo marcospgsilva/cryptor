@@ -1,6 +1,6 @@
 
 <%= form_for @conn, Routes.user_session_path(@conn, :create), [as: :user], fn f -> %>
-  <div class="flex flex-1 flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl mt-20 p-5 max-w-2xl m-auto" >
+  <div class="flex flex-1 flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-2xl m-auto" >
 
   <%= if @error_message do %>
     <div class="alert alert-danger">
@@ -16,8 +16,10 @@
   <%= label f, :password %>
   <%= password_input f, :password, required: true %>
 
-  <%= label f, :remember_me, "Keep me logged in for 60 days" %>
-  <%= checkbox f, :remember_me %>
+  <div class="flex flex-1 content-between items-center">
+    <%= checkbox f, :remember_me %>
+    <%= label f, :remember_me, "Keep me logged in for 60 days" %>
+  </div>
 
   <div class="text-gray-800 font-bold self-center">
     <%= submit "Log in" %>
