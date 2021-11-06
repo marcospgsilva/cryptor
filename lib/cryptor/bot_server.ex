@@ -10,13 +10,14 @@ defmodule Cryptor.BotServer do
     Orders,
     Bots.Bot,
     Orders.Order,
+    ProcessRegistry,
     Orders.PendingOrdersAgent,
-    Utils
+    Utils,
+    CurrencyServer
   }
 
   defmodule State do
     defstruct orders: [],
-              current_price: 0.0,
               user_id: nil,
               bot: nil
   end
@@ -30,30 +31,14 @@ defmodule Cryptor.BotServer do
   # SERVER
   @impl true
   def init(%State{user_id: user_id, bot: %Bot{active: true}} = state) do
-    pids = Cryptor.ProcessRegistry.get_servers_registry(user_id)
+    pids = ProcessRegistry.get_servers_registry(user_id)
     schedule_place_orders()
     schedule_process_orders_status(pids)
-    {:ok, state, {:continue, :get_current_price}}
+    {:ok, state}
   end
 
   @impl true
-  def init(state), do: {:ok, state, {:continue, :get_current_price}}
-
-  @impl true
-  def handle_continue(
-        :get_current_price,
-        %State{bot: %Bot{currency: currency}} = state
-      ) do
-    case Trader.get_currency_price(currency) do
-      {:ok, current_price} ->
-        analisys()
-        {:noreply, %{state | current_price: current_price}}
-
-      _ ->
-        analisys()
-        {:noreply, state}
-    end
-  end
+  def init(state), do: {:ok, state}
 
   def handle_info(:change_bot_activity, %State{bot: bot = %Bot{active: active}} = state) do
     {:ok, bot} = Cryptor.Bot.update_bot(bot, %{active: !active})
@@ -85,37 +70,15 @@ defmodule Cryptor.BotServer do
         :analyze_orders,
         %State{bot: %Bot{currency: currency, active: true}} = state
       ) do
-    case Trader.get_currency_price(currency) do
-      {:ok, current_price} ->
-        process_transaction(state, current_price)
-        analisys()
-        {:noreply, %{state | current_price: current_price}}
-
-      _ ->
-        analisys()
-        {:noreply, state}
-    end
+    current_price = CurrencyServer.get_current_price(currency)
+    process_transaction(state, current_price)
+    analisys()
+    {:noreply, state}
   end
 
   @impl true
-  def handle_info(:analyze_orders, %State{bot: %Bot{currency: currency}} = state) do
-    case Trader.get_currency_price(currency) do
-      {:ok, current_price} ->
-        analisys()
-        {:noreply, %{state | current_price: current_price}}
-
-      _ ->
-        analisys()
-        {:noreply, state}
-    end
-  end
-
-  @impl true
-  def handle_info(
-        :place_orders,
-        %State{current_price: 0.0} = state
-      ) do
-    schedule_place_orders()
+  def handle_info(:analyze_orders, state) do
+    analisys()
     {:noreply, state}
   end
 
@@ -124,18 +87,23 @@ defmodule Cryptor.BotServer do
         :place_orders,
         %State{
           bot: bot = %Bot{},
-          current_price: current_price,
           user_id: user_id
         } = state
       ) do
-    case Orders.get_latest_sell_orders(bot.currency) do
-      [latest_order | _] ->
-        if current_price <= latest_order.price * bot.buy_percentage_limit,
-          do: place_buy_order(current_price, bot.currency, user_id),
-          else: nil
+    case CurrencyServer.get_current_price(bot.currency) do
+      0.0 ->
+        nil
 
-      _ ->
-        place_buy_order(current_price, bot.currency, user_id)
+      current_price ->
+        case Orders.get_latest_sell_orders(bot.currency) do
+          [latest_order | _] ->
+            if current_price <= latest_order.price * bot.buy_percentage_limit,
+              do: place_buy_order(current_price, bot.currency, user_id),
+              else: nil
+
+          _ ->
+            place_buy_order(current_price, bot.currency, user_id)
+        end
     end
 
     schedule_place_orders()

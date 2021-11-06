@@ -7,6 +7,8 @@ defmodule Cryptor.Server do
   alias Cryptor.Analysis
   alias Cryptor.Orders.OrdersAgent
   alias Cryptor.Orders.PendingOrdersAgent
+  alias Cryptor.CurrencyServer
+  alias Cryptor.Trader
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, %{users: nil}, name: __MODULE__)
@@ -14,18 +16,32 @@ defmodule Cryptor.Server do
 
   @impl true
   def init(state) do
-    {:ok, state, {:continue, :get_users}}
+    {:ok, state, {:continue, :start_currency_servers}}
+  end
+
+  @impl true
+  def handle_continue(:start_currency_servers, state) do
+    Trader.get_currencies()
+    |> Enum.each(&start_currency_server/1)
+
+    {:noreply, state, {:continue, :get_users}}
   end
 
   @impl true
   def handle_continue(:get_users, state) do
+    create_table()
     users = Accounts.get_users()
-    {:noreply, %{state | users: users}, {:continue, :start_analysis_server}}
+    {:noreply, %{state | users: users}, {:continue, :create_cache}}
+  end
+
+  def handle_continue(:create_cache, %{users: []} = state) do
+    {:noreply, state}
   end
 
   @impl true
-  def handle_continue(:start_analysis_server, %{users: []} = state) do
-    {:noreply, state}
+  def handle_continue(:create_cache, %{users: users} = state) do
+    Enum.each(users, &persist_keys_cache(&1))
+    {:noreply, state, {:continue, :start_analysis_server}}
   end
 
   @impl true
@@ -59,12 +75,19 @@ defmodule Cryptor.Server do
 
   @impl true
   def handle_info({:start_servers, user}, state) do
+    persist_keys_cache(user)
     start_analysis_server(user.id)
     start_orders_agent(user.id)
     start_pending_orders_agent(user.id)
 
+    user.bots
+    |> Enum.each(&start_bot_server(&1, user.id))
+
     {:noreply, %{state | users: [user | state.users]}}
   end
+
+  def start_currency_server(currency),
+    do: add_to_dynamic_supervisor(CurrencyServer, %{currency: currency})
 
   def start_bot_server(bot, user_id) do
     bot_name = ProcessRegistry.via_tuple({user_id, "#{bot.currency}Server"})
@@ -96,4 +119,9 @@ defmodule Cryptor.Server do
       {module, state}
     )
   end
+
+  defp create_table, do: :ets.new(:api_keys, [:named_table])
+
+  defp persist_keys_cache(user),
+    do: :ets.insert(:api_keys, {user.id, user.shared_key, user.api_id})
 end

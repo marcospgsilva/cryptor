@@ -4,7 +4,7 @@ defmodule CryptorWeb.UserSettingsController do
   alias Cryptor.Accounts
   alias CryptorWeb.UserAuth
 
-  plug :assign_email_and_password_changesets
+  plug :assign_email_and_password_and_shared_key_and_api_id_changesets
 
   def edit(conn, _params) do
     render(conn, "edit.html")
@@ -50,6 +50,38 @@ defmodule CryptorWeb.UserSettingsController do
     end
   end
 
+  def update(conn, %{"action" => "update_api_id"} = params) do
+    %{"user" => user_params} = params
+    user = conn.assigns.current_user
+
+    case Accounts.update_user_api_id(user, user_params) do
+      {:ok, user} ->
+        conn
+        |> put_flash(:info, "api id updated successfully.")
+        |> put_session(:user_return_to, Routes.user_settings_path(conn, :edit))
+        |> UserAuth.log_in_user(user)
+
+      {:error, changeset} ->
+        render(conn, "edit.html", api_id_changeset: changeset)
+    end
+  end
+
+  def update(conn, %{"action" => "update_shared_key"} = params) do
+    %{"user" => user_params} = params
+    user = conn.assigns.current_user
+
+    case Accounts.update_user_shared_key(user, user_params) do
+      {:ok, user} ->
+        conn
+        |> put_flash(:info, "shared key updated successfully.")
+        |> put_session(:user_return_to, Routes.user_settings_path(conn, :edit))
+        |> UserAuth.log_in_user(user)
+
+      {:error, changeset} ->
+        render(conn, "edit.html", shared_key_changeset: changeset)
+    end
+  end
+
   def confirm_email(conn, %{"token" => token}) do
     case Accounts.update_user_email(conn.assigns.current_user, token) do
       :ok ->
@@ -64,11 +96,13 @@ defmodule CryptorWeb.UserSettingsController do
     end
   end
 
-  defp assign_email_and_password_changesets(conn, _opts) do
+  defp assign_email_and_password_and_shared_key_and_api_id_changesets(conn, _opts) do
     user = conn.assigns.current_user
 
     conn
     |> assign(:email_changeset, Accounts.change_user_email(user))
     |> assign(:password_changeset, Accounts.change_user_password(user))
+    |> assign(:shared_key_changeset, Accounts.change_user_shared_key(user))
+    |> assign(:api_id_changeset, Accounts.change_user_api_id(user))
   end
 end

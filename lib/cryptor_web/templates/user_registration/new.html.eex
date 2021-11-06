@@ -1,26 +1,38 @@
-<h1 class="text-white">Register</h1>
-
 <%= form_for @changeset, Routes.user_registration_path(@conn, :create), fn f -> %>
-  <%= if @changeset.action do %>
-    <div class="alert alert-danger">
-      <p>Oops, something went wrong! Please check the errors below.</p>
+
+  <div class="flex flex-1 flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl mt-20 p-5 max-w-2xl m-auto" >
+    <h1 class="text-gray-800 font-bold self-center">Register</h1>
+
+    <%= if @changeset.action do %>
+      <div class="alert alert-danger">
+        <p>Oops, something went wrong! Please check the errors below.</p>
+      </div>
+    <% end %>
+
+    <%= label f, :email %>
+    <%= email_input f, :email, required: true %>
+    <%= error_tag f, :email %>
+
+    <%= label f, :password %>
+    <%= password_input f, :password, required: true %>
+    <%= error_tag f, :password %>
+
+    <%= label f, :shared_key %>
+    <%= text_input f, :shared_key, required: true %>
+    <%= error_tag f, :shared_key %>
+
+    <%= label f, :api_id %>
+    <%= text_input f, :api_id, required: true %>
+    <%= error_tag f, :api_id %>
+
+    <div class="text-gray-800 self-center">
+      <%= submit "Register" %>
     </div>
-  <% end %>
 
-  <%= label f, :email %>
-  <%= email_input f, :email, required: true %>
-  <%= error_tag f, :email %>
-
-  <%= label f, :password %>
-  <%= password_input f, :password, required: true %>
-  <%= error_tag f, :password %>
-
-  <div class="text-white">
-    <%= submit "Register" %>
+    <p class="text-gray-800 self-center font-bold">
+      <%= link "Log in", to: Routes.user_session_path(@conn, :new) %> |
+      <%= link "Forgot your password?", to: Routes.user_reset_password_path(@conn, :new) %>
+    </p>
   </div>
-<% end %>
 
-<p class="text-white">
-  <%= link "Log in", to: Routes.user_session_path(@conn, :new) %> |
-  <%= link "Forgot your password?", to: Routes.user_reset_password_path(@conn, :new) %>
-</p>
+<% end %>

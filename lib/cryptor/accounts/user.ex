@@ -2,11 +2,13 @@ defmodule Cryptor.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Inspect, except: [:password]}
+  @derive {Inspect, except: [:password, :shared_key, :api_id]}
 
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true
+    field :shared_key, :string
+    field :api_id, :string
     field :hashed_password, :string
     field :confirmed_at, :naive_datetime
     has_many :orders, Cryptor.Orders.Order
@@ -34,9 +36,10 @@ defmodule Cryptor.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :password, :shared_key, :api_id])
     |> validate_email()
     |> validate_password(opts)
+    |> validate_required([:shared_key, :api_id])
     |> cast_assoc(:orders)
     |> cast_assoc(:bots)
   end
@@ -105,6 +108,24 @@ defmodule Cryptor.Accounts.User do
     |> cast(attrs, [:password])
     |> validate_confirmation(:password, message: "does not match password")
     |> validate_password(opts)
+  end
+
+  @doc """
+  A user changeset for changing the shared key.
+  """
+  def shared_key_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:shared_key])
+    |> validate_confirmation(:shared_key, message: "does not match shared_key")
+  end
+
+  @doc """
+  A user changeset for changing the api id.
+  """
+  def api_id_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:api_id])
+    |> validate_confirmation(:api_id, message: "does not match api_id")
   end
 
   @doc """

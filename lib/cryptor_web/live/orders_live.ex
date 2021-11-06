@@ -3,11 +3,11 @@ defmodule CryptorWeb.OrdersLive do
    Orders Live
   """
   use CryptorWeb, :live_view
-  alias CryptorWeb.AnalysisView
   alias Cryptor.Trader
   alias Cryptor.Analysis
   alias Cryptor.ProcessRegistry
   alias Cryptor.Utils
+  alias Cryptor.Orders.OrdersAgent
 
   # SERVER
   @impl true
@@ -15,7 +15,7 @@ defmodule CryptorWeb.OrdersLive do
     socket = assign_defaults(session, socket)
     user_id = get_user_id_from_socket(socket)
 
-    case AnalysisView.render_currencies(user_id) do
+    case render_currencies(user_id) do
       [] ->
         schedule_event()
         {:ok, assign(socket, orders: [], available_brl: 0.00)}
@@ -34,7 +34,7 @@ defmodule CryptorWeb.OrdersLive do
   @impl true
   def handle_info("update_state", socket) do
     user_id = get_user_id_from_socket(socket)
-    orders = AnalysisView.render_currencies(user_id)
+    orders = render_currencies(user_id)
 
     case ProcessRegistry.get_servers_registry(user_id) do
       nil ->
@@ -60,6 +60,33 @@ defmodule CryptorWeb.OrdersLive do
     case socket.assigns[:current_user] do
       nil -> nil
       current_user -> current_user.id
+    end
+  end
+
+  def render_currencies(nil), do: []
+
+  def render_currencies(user_id) do
+    pids = ProcessRegistry.get_servers_registry(user_id)
+
+    case OrdersAgent.get_order_list(pids[:orders_pid]) do
+      [] ->
+        []
+
+      orders ->
+        orders
+        |> Enum.map(fn order ->
+          current_price = Cryptor.CurrencyServer.get_current_price(order.coin)
+
+          %{
+            id: order.id,
+            order_id: order.order_id,
+            coin: order.coin,
+            bought_value: order.price,
+            quantity: order.quantity,
+            current_price: current_price,
+            variation: Utils.calculate_variation(order.price, current_price)
+          }
+        end)
     end
   end
 end

@@ -32,22 +32,28 @@ defmodule Cryptor.Trader do
   end
 
   def get_currency_price(coin) do
-    with {:ok, %{"ticker" => %{"last" => last}}} <- Requests.request(:get, "#{coin}/ticker/"),
+    with {:ok, %{"ticker" => %{"last" => last}}} <-
+           Requests.request(:get, "#{coin}/ticker/"),
          do: {:ok, String.to_float(last)}
   end
 
-  def get_account_info do
-    with {:ok, response} <- Requests.request(:post, %{tapi_method: "get_account_info"}),
+  def get_account_info(user_id) do
+    with {:ok, response} <-
+           Requests.request(:post, %{tapi_method: "get_account_info"}, user_id),
          do: response
   end
 
-  def get_order_data(order) do
+  def get_order_data(order, user_id) do
     with {:ok, %{"response_data" => %{"order" => %{"status" => order_status, "fee" => fee}}}} <-
-           Requests.request(:post, %{
-             tapi_method: "get_order",
-             coin_pair: "BRL" <> order.coin,
-             order_id: order.order_id
-           }) do
+           Requests.request(
+             :post,
+             %{
+               tapi_method: "get_order",
+               coin_pair: "BRL" <> order.coin,
+               order_id: order.order_id
+             },
+             user_id
+           ) do
       mapped_statuses = Order.mapped_order_statuses()
       %{status: Map.get(mapped_statuses, to_string(order_status)), fee: fee}
     end
@@ -57,6 +63,7 @@ defmodule Cryptor.Trader do
 
   def place_order(method, newer_price, %Order{coin: currency} = order, user_id) do
     pids = ProcessRegistry.get_servers_registry(user_id, currency)
+    server_pid = pids[:analysis_pid]
     %State{bot: bot} = BotServer.get_state(pids[:bot_pid])
 
     quantity = AmountControl.get_quantity(method, newer_price, order, bot)
@@ -69,21 +76,25 @@ defmodule Cryptor.Trader do
       newer_price,
       user_id
     )
-    |> place_order(quantity, method, "BRL#{currency}", newer_price)
+    |> place_order(quantity, method, "BRL#{currency}", newer_price, server_pid)
     |> process_order(order, user_id)
   end
 
-  def place_order({:error, _} = error, _, _, _, _),
+  def place_order({:error, _} = error, _, _, _, _, _),
     do: error
 
-  def place_order(:ok, quantity, method, coin_pair, newer_price) do
-    Requests.request(:post, %{
-      tapi_method: Utils.get_tapi_method(method),
-      coin_pair: coin_pair,
-      quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
-      limit_price: newer_price,
-      async: true
-    })
+  def place_order(:ok, quantity, method, coin_pair, newer_price, server_pid) do
+    Requests.request(
+      :post,
+      %{
+        tapi_method: Utils.get_tapi_method(method),
+        coin_pair: coin_pair,
+        quantity: :erlang.float_to_binary(quantity, [:compact, {:decimals, 8}]),
+        limit_price: newer_price,
+        async: true
+      },
+      server_pid
+    )
   end
 
   def validate_pending_sell_order(:sell = method, currency, user_id) do
@@ -106,9 +117,10 @@ defmodule Cryptor.Trader do
 
   def validate_available_money(:ok, :buy, quantity, newer_price, user_id) do
     pids = ProcessRegistry.get_servers_registry(user_id)
+    analysis_pid = pids[:analysis_pid]
 
     {:ok, available_amount} =
-      pids[:analysis_pid]
+      analysis_pid
       |> get_account_info_data()
       |> Utils.get_available_amount("brl")
 
@@ -188,11 +200,11 @@ defmodule Cryptor.Trader do
     state[:account_info]
   end
 
-  def process_pending_order(%{buy_order_id: _buy_order_id} = order),
+  def process_pending_order(%{buy_order_id: _buy_order_id} = order, _),
     do: remove_and_update_order(order)
 
-  def process_pending_order(order) do
-    %{fee: fee} = get_order_data(order)
+  def process_pending_order(order, user_id) do
+    %{fee: fee} = get_order_data(order, user_id)
     updated_order = %{order | fee: fee}
     create_and_add_order(updated_order)
   end

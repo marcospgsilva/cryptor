@@ -21,10 +21,8 @@ defmodule CryptorWeb.Router do
     pipe_through :browser
 
     live "/", OrdersLive, :index
+    live "/orders", OrdersLive, :index
     live "/analysis", AnalysisLive, :index
-    live "/currency", CurrencyLive, :index
-    get "/orders", AnalysisController, :index
-    get "/infos", TraderController, :index
   end
 
   # Other scopes may use custom stacks.
@@ -53,8 +51,14 @@ defmodule CryptorWeb.Router do
   scope "/", CryptorWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
+    get "/users/register", UserRegistrationController, :new
+    post "/users/register", UserRegistrationController, :create
     get "/users/log_in", UserSessionController, :new
     post "/users/log_in", UserSessionController, :create
+    get "/users/reset_password", UserResetPasswordController, :new
+    post "/users/reset_password", UserResetPasswordController, :create
+    get "/users/reset_password/:token", UserResetPasswordController, :edit
+    put "/users/reset_password/:token", UserResetPasswordController, :update
   end
 
   scope "/", CryptorWeb do

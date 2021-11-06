@@ -23,7 +23,7 @@ defmodule Cryptor.Bot do
   def build_bots(currencies),
     do:
       currencies
-      |> Enum.map(&(%Bot{currency: &1} |> Map.from_struct()))
+      |> Enum.map(&%{currency: &1})
 
   def update_bot(bot, attrs),
     do:

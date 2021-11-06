@@ -7,6 +7,7 @@ defmodule Cryptor.Analysis do
 
   alias Cryptor.{
     BotServer,
+    ProcessRegistry,
     Orders.PendingOrdersAgent,
     Trader,
     Utils
@@ -32,10 +33,11 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_continue(:get_account_info, %{user_id: user_id} = state) do
-    account_info = get_account_info()
-    pids = Cryptor.ProcessRegistry.get_servers_registry(user_id)
+    pids = ProcessRegistry.get_servers_registry(user_id)
+    analysis_pid = pids[:analysis_pid]
+    account_info = get_account_info(user_id)
 
-    schedule_update_account_info(pids[:analysis_pid])
+    schedule_update_account_info(analysis_pid)
     {:noreply, %{state | account_info: account_info}}
   end
 
@@ -59,7 +61,7 @@ defmodule Cryptor.Analysis do
     pids = Cryptor.ProcessRegistry.get_servers_registry(user_id)
     analysis_pid = pids[:analysis_pid]
 
-    case get_account_info() do
+    case get_account_info(user_id) do
       nil ->
         schedule_update_account_info(analysis_pid)
         {:noreply, state}
@@ -78,10 +80,11 @@ defmodule Cryptor.Analysis do
 
   defp process_order_status(order) do
     pids = Cryptor.ProcessRegistry.get_servers_registry(order.user_id)
+    analysis_pid = pids[:analysis_pid]
 
-    case Trader.get_order_data(order) do
+    case Trader.get_order_data(order, analysis_pid) do
       %{status: :filled} ->
-        Trader.process_pending_order(order)
+        Trader.process_pending_order(order, order.user_id)
         PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order)
 
       %{status: :canceled} ->
@@ -92,8 +95,8 @@ defmodule Cryptor.Analysis do
     end
   end
 
-  defp get_account_info() do
-    case Trader.get_account_info() do
+  defp get_account_info(user_id) do
+    case Trader.get_account_info(user_id) do
       {:error, _reason} ->
         nil
 
