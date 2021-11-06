@@ -41,12 +41,6 @@ defmodule Cryptor.Server do
   @impl true
   def handle_continue(:create_cache, %{users: users} = state) do
     Enum.each(users, &persist_keys_cache(&1))
-    {:noreply, state, {:continue, :start_analysis_server}}
-  end
-
-  @impl true
-  def handle_continue(:start_analysis_server, %{users: users} = state) do
-    Enum.each(users, &start_analysis_server(&1.id))
     {:noreply, state, {:continue, :start_orders_agent_server}}
   end
 
@@ -59,6 +53,12 @@ defmodule Cryptor.Server do
   @impl true
   def handle_continue(:start_pending_orders_agent_server, %{users: users} = state) do
     Enum.each(users, &start_pending_orders_agent(&1.id))
+    {:noreply, state, {:continue, :start_analysis_server}}
+  end
+
+  @impl true
+  def handle_continue(:start_analysis_server, %{users: users} = state) do
+    Enum.each(users, &start_analysis_server(&1.id))
     {:noreply, state, {:continue, :start_bots}}
   end
 

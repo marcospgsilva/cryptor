@@ -34,11 +34,28 @@ defmodule Cryptor.BotServer do
     pids = ProcessRegistry.get_servers_registry(user_id)
     schedule_place_orders()
     schedule_process_orders_status(pids)
-    {:ok, state}
+    {:ok, state, {:continue, :get_orders}}
   end
 
   @impl true
-  def init(state), do: {:ok, state}
+  def init(state), do: {:ok, state, {:continue, :get_orders}}
+
+  @impl true
+  def handle_continue(:get_orders, %{bot: bot, user_id: user_id} = state) do
+    pids = ProcessRegistry.get_servers_registry(user_id)
+
+    case Orders.OrdersAgent.get_order_list(pids[:orders_pid]) do
+      [] ->
+        {:noreply, state}
+
+      orders ->
+        filtered_orders =
+          orders
+          |> Enum.filter(fn order -> order.currency == bot.currency end)
+
+        {:noreply, %{state | orders: filtered_orders}}
+    end
+  end
 
   def handle_info(:change_bot_activity, %State{bot: bot = %Bot{active: active}} = state) do
     {:ok, bot} = Cryptor.Bot.update_bot(bot, %{active: !active})
