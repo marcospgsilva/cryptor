@@ -62,7 +62,6 @@ defmodule Cryptor.Trader do
 
   def place_order(method, newer_price, %Order{coin: currency} = order, user_id) do
     pids = ProcessRegistry.get_servers_registry(user_id, currency)
-    server_pid = pids[:analysis_pid]
     %State{bot: bot} = BotServer.get_state(pids[:bot_pid])
 
     quantity = AmountControl.get_quantity(method, newer_price, order, bot)
@@ -75,14 +74,14 @@ defmodule Cryptor.Trader do
       newer_price,
       user_id
     )
-    |> place_order(quantity, method, "BRL#{currency}", newer_price, server_pid)
+    |> place_order(quantity, method, "BRL#{currency}", newer_price, user_id)
     |> process_order(order, user_id)
   end
 
   def place_order({:error, _} = error, _, _, _, _, _),
     do: error
 
-  def place_order(:ok, quantity, method, coin_pair, newer_price, server_pid) do
+  def place_order(:ok, quantity, method, coin_pair, newer_price, user_id) do
     Requests.request(
       :post,
       %{
@@ -92,7 +91,7 @@ defmodule Cryptor.Trader do
         limit_price: newer_price,
         async: true
       },
-      server_pid
+      user_id
     )
   end
 
