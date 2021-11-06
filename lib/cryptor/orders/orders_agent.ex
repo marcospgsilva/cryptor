@@ -3,23 +3,21 @@ defmodule Cryptor.Orders.OrdersAgent do
   Orders Agent
   """
   use Agent
-  alias Cryptor.Order
+  alias Cryptor.Orders
 
-  def start_link(_), do: Agent.start_link(fn -> Order.get_orders() end, name: __MODULE__)
+  def start_link(%{name: name, user_id: user_id}),
+    do: Agent.start_link(fn -> Orders.get_orders(user_id) end, name: name)
 
-  @spec get_order_list() :: list(map())
-  def get_order_list, do: Agent.get(__MODULE__, & &1)
+  def get_order_list(pid), do: Agent.get(pid, & &1)
 
-  @spec add_to_order_list(new_order :: map()) :: list(map())
-  def add_to_order_list(new_order) do
-    Agent.get_and_update(__MODULE__, fn orders ->
+  def add_to_order_list(pid, new_order) do
+    Agent.get_and_update(pid, fn orders ->
       {orders, [new_order | orders]}
     end)
   end
 
-  @spec remove_from_order_list(new_order :: map()) :: list(map())
-  def remove_from_order_list(order_to_be_removed) do
-    Agent.get_and_update(__MODULE__, fn orders ->
+  def remove_from_order_list(pid, order_to_be_removed) do
+    Agent.get_and_update(pid, fn orders ->
       {orders, List.delete(orders, order_to_be_removed)}
     end)
   end

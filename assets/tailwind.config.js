@@ -21,6 +21,7 @@ module.exports = {
       backgroundImage: _theme => ({
         'XRP': "url('/images/XRP.png')",
         'LTC': "url('/images/LTC.png')",
+        'cryptor': "url('/images/cryptor.jpg')",
       })
     },
     backgroundColor: theme => ({

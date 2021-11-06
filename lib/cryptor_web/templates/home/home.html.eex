@@ -1,0 +1,16 @@
+  <div class="flex flex-1 flex-col self-center justify-self-center">
+    <div class="flex flex-1 flex-col text-white text-center mb-10">
+      <h1 class="text-8xl font-bold mb-5">- Cryptor -</h1>
+      <h3 class="text-xl">O bot responsável por compras e vendas de moedas digitais.</h3>
+    </div>
+
+    <div class="flex flex-1 items-center justify-center w-28 m-auto h-10 text-white">
+      <div class="flex flex-col items-center justify-center">
+        <div class="flex shadow-lg  shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl w-56 m-auto h-16">
+          <p class="text-gray-800 self-center font-bold text-2xl">
+            <%= link "Começar agora", to: Routes.user_session_path(@conn, :new) %>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>

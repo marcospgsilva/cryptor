@@ -3,12 +3,30 @@ defmodule CryptorWeb.AnalysisLive do
    Analysis Live
   """
   use CryptorWeb, :live_view
-  alias Cryptor.Trader.TradeServer
+
+  alias Cryptor.{
+    CurrencyServer,
+    Trader,
+    Server,
+    ProcessRegistry,
+    Bot
+  }
 
   # CLIENT
-  def get_analysis_server_data() do
-    currencies = TradeServer.get_currencies()
-    currencies |> Enum.map(&build_server_analysis_data/1)
+  def get_analysis_server_data(socket) do
+    user_id = get_user_id_from_socket(socket)
+
+    case user_id do
+      nil ->
+        []
+
+      id ->
+        Trader.get_currencies()
+        |> Enum.map(fn currency ->
+          build_server_analysis_data(id, currency)
+        end)
+        |> Enum.reject(&(&1 == nil))
+    end
   end
 
   # SERVER
@@ -16,12 +34,14 @@ defmodule CryptorWeb.AnalysisLive do
   def mount(_params, session, socket) do
     socket = assign_defaults(session, socket)
     schedule_event()
-    {:ok, assign(socket, analysis: get_analysis_server_data())}
+    {:ok, assign(socket, analysis: get_analysis_server_data(socket))}
   end
 
   @impl true
-  def handle_info("update_state", socket),
-    do: {:noreply, assign(socket, analysis: get_analysis_server_data())}
+  def handle_info("update_state", socket) do
+    schedule_event()
+    {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
+  end
 
   @impl true
   def handle_event(
@@ -29,16 +49,21 @@ defmodule CryptorWeb.AnalysisLive do
         %{
           "coin" => coin,
           "sell_percentage" => sell_percentage,
-          "buy_percentage" => buy_percentage
+          "buy_percentage" => buy_percentage,
+          "buy_amount" => buy_amount
         },
         socket
       ) do
+    user_id = get_user_id_from_socket(socket)
+    pids = ProcessRegistry.get_servers_registry(user_id, coin)
+
     Process.send(
-      String.to_existing_atom(coin <> "Server"),
+      pids[:bot_pid],
       {
-        :update_transaction_limit_percentage,
+        :update_bot,
         String.to_float(sell_percentage),
-        String.to_float(buy_percentage)
+        String.to_float(buy_percentage),
+        String.to_float(buy_amount)
       },
       []
     )
@@ -46,11 +71,67 @@ defmodule CryptorWeb.AnalysisLive do
     {:noreply, socket}
   end
 
-  defp build_server_analysis_data(currency),
-    do:
-      String.to_existing_atom("#{currency}Server")
-      |> :sys.get_state()
-      |> Map.from_struct()
+  @impl true
+  def handle_event("change_bot_activity", %{"currency" => currency}, socket) do
+    user_id = get_user_id_from_socket(socket)
+
+    case Bot.get_bot(user_id, currency) do
+      nil ->
+        {:ok, bot} = Bot.create_bot(%{user_id: user_id, active: true})
+        Server.start_bot_server(bot, user_id)
+
+      bot ->
+        pids = ProcessRegistry.get_servers_registry(user_id, currency)
+
+        case pids[:bot_pid] do
+          nil ->
+            with {:ok, bot} <- Bot.update_bot(bot, %{active: true}) do
+              Server.start_bot_server(bot, user_id)
+            end
+
+          pid ->
+            Process.send(pid, :change_bot_activity, [])
+        end
+    end
+
+    {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
+  end
+
+  defp build_server_analysis_data(nil, _currency), do: nil
+
+  defp build_server_analysis_data(user_id, currency) do
+    bot_pid = ProcessRegistry.get_servers_registry(user_id, currency)[:bot_pid]
+
+    case bot_pid do
+      :undefined ->
+        nil
+
+      pid ->
+        %{
+          bot: bot,
+          orders: orders
+        } = Cryptor.BotServer.get_state(pid)
+
+        current_price = CurrencyServer.get_current_price(bot.currency)
+
+        %{
+          currency: bot.currency,
+          active: bot.active,
+          orders: orders,
+          current_price: current_price,
+          sell_percentage_limit: bot.sell_percentage_limit,
+          buy_percentage_limit: bot.buy_percentage_limit,
+          buy_amount: bot.buy_amount
+        }
+    end
+  end
 
   defp schedule_event(), do: Process.send_after(self(), "update_state", 9000)
+
+  defp get_user_id_from_socket(socket) do
+    case socket.assigns[:current_user] do
+      nil -> nil
+      current_user -> current_user.id
+    end
+  end
 end

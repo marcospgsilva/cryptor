@@ -5,6 +5,8 @@ defmodule Cryptor.Accounts do
 
   import Ecto.Query, warn: false
   alias Cryptor.Repo
+  alias Cryptor.Trader
+  alias Cryptor.Bot
   alias Cryptor.Accounts.{User, UserToken, UserNotifier}
 
   ## Database getters
@@ -59,6 +61,20 @@ defmodule Cryptor.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Gets all users.
+
+  ## Examples
+
+      iex> get_users()
+      [%User{}]
+
+      iex> get_users()
+      []
+
+  """
+  def get_users(), do: Repo.all(User) |> Repo.preload([:bots, :orders])
+
   ## User registration
 
   @doc """
@@ -74,9 +90,17 @@ defmodule Cryptor.Accounts do
 
   """
   def register_user(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
-    |> Repo.insert()
+    full_attrs =
+      attrs
+      |> Map.put("bots", Trader.get_currencies() |> Bot.build_bots())
+
+    with {:ok, user} = result <-
+           %User{}
+           |> User.registration_changeset(full_attrs)
+           |> Repo.insert() do
+      Process.send(Cryptor.Server, {:start_servers, user}, [])
+      result
+    end
   end
 
   @doc """
@@ -105,6 +129,32 @@ defmodule Cryptor.Accounts do
   """
   def change_user_email(user, attrs \\ %{}) do
     User.email_changeset(user, attrs)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user shared key.
+
+  ## Examples
+
+      iex> change_shared_key(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_shared_key(user, attrs \\ %{}) do
+    User.shared_key_changeset(user, attrs)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user api id.
+
+  ## Examples
+
+      iex> change_api_id(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_api_id(user, attrs \\ %{}) do
+    User.api_id_changeset(user, attrs)
   end
 
   @doc """
@@ -200,6 +250,60 @@ defmodule Cryptor.Accounts do
       user
       |> User.password_changeset(attrs)
       |> User.validate_current_password(password)
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, changeset)
+    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{user: user}} -> {:ok, user}
+      {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  @doc """
+  Updates the user shared_key.
+
+  ## Examples
+
+      iex> update_user_shared_key(user, "valid shared_key", %{shared_key: ...})
+      {:ok, %User{}}
+
+      iex> update_user_shared_key(user, "invalid shared_key", %{shared_key: ...})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_shared_key(user, attrs) do
+    changeset =
+      user
+      |> User.shared_key_changeset(attrs)
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, changeset)
+    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{user: user}} -> {:ok, user}
+      {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  @doc """
+  Updates the user api id.
+
+  ## Examples
+
+      iex> update_user_api_id(user, "valid api_id", %{api_id: ...})
+      {:ok, %User{}}
+
+      iex> update_user_api_id(user, "invalid api_id", %{api_id: ...})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_api_id(user, attrs) do
+    changeset =
+      user
+      |> User.api_id_changeset(attrs)
 
     Ecto.Multi.new()
     |> Ecto.Multi.update(:user, changeset)

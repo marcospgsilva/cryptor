@@ -4,17 +4,11 @@ defmodule Cryptor.Requests do
   """
   alias Cryptor.Utils
 
-  def request(:get = method, path) do
-    url = get_data_api_base_url(path)
+  def request(method, trade_body, user_id \\ nil)
 
-    Task.async(__MODULE__, :http_request, [method, url])
-    |> Task.await(Utils.get_timeout())
-    |> handle_get_response()
-  end
-
-  def request(:post = method, trade_body) do
+  def request(:post = method, trade_body, user_id) do
     body = build_body(trade_body)
-    headers = get_headers(body)
+    headers = get_headers(body, user_id)
     url = get_trade_api_base_url()
 
     if trade_body !== %{tapi_method: "get_account_info"}, do: IO.inspect(body)
@@ -22,6 +16,14 @@ defmodule Cryptor.Requests do
     Task.async(__MODULE__, :http_request, [method, url, headers, body])
     |> Task.await(Utils.get_timeout())
     |> handle_response()
+  end
+
+  def request(:get = method, path, _user_id) do
+    url = get_data_api_base_url(path)
+
+    Task.async(__MODULE__, :http_request, [method, url])
+    |> Task.await(Utils.get_timeout())
+    |> handle_get_response()
   end
 
   def http_request(method, url, headers \\ [], body \\ ""),
@@ -59,23 +61,24 @@ defmodule Cryptor.Requests do
     end
   end
 
-  def handle_response(_ = response) do
+  def handle_response(response) do
     IO.inspect(response)
     {:error, :unexpected_response}
   end
 
-  def get_headers(body) do
+  def get_headers(body, user_id) do
     tapi_mac = "/tapi/v3/" <> "?#{body}"
-    key = get_tapi_id_secret_key()
+
+    {_, shared_key, api_id} = get_api_keys(user_id) |> List.first()
 
     crypto =
-      :crypto.mac(:hmac, :sha512, key, tapi_mac)
+      :crypto.mac(:hmac, :sha512, shared_key, tapi_mac)
       |> Base.encode16(padding: false)
       |> String.downcase()
 
     [
       "Content-Type": "application/x-www-form-urlencoded",
-      "TAPI-ID": get_tapi_id(),
+      "TAPI-ID": api_id,
       "TAPI-MAC": crypto
     ]
   end
@@ -86,11 +89,7 @@ defmodule Cryptor.Requests do
       |> Map.put(:tapi_nonce, Utils.get_date_time())
       |> URI.encode_query()
 
-  def get_tapi_id,
-    do: Application.get_env(:cryptor, Cryptor.Requests)[:tapi_id]
-
-  def get_tapi_id_secret_key,
-    do: Application.get_env(:cryptor, Cryptor.Requests)[:tapi_id_secret_key]
+  def get_api_keys(user_id), do: :ets.lookup(:api_keys, user_id)
 
   def get_data_api_base_url(path),
     do: Application.get_env(:cryptor, Cryptor.Requests)[:data_api_base_url] <> path

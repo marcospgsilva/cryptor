@@ -1,11 +1,14 @@
-<h1 class="text-white">Log in</h1>
 
 <%= form_for @conn, Routes.user_session_path(@conn, :create), [as: :user], fn f -> %>
+  <div class="flex flex-1 flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-2xl m-auto" >
+
   <%= if @error_message do %>
     <div class="alert alert-danger">
       <p><%= @error_message %></p>
     </div>
   <% end %>
+
+  <h1 class="text-gray-800 font-bold self-center">Log in</h1>
 
   <%= label f, :email %>
   <%= email_input f, :email, required: true %>
@@ -13,10 +16,18 @@
   <%= label f, :password %>
   <%= password_input f, :password, required: true %>
 
-  <%= label f, :remember_me, "Keep me logged in for 60 days" %>
-  <%= checkbox f, :remember_me %>
+  <div class="flex flex-1 content-between items-center">
+    <%= checkbox f, :remember_me %>
+    <%= label f, :remember_me, "Keep me logged in for 60 days" %>
+  </div>
 
-  <div class="text-white">
+  <div class="text-gray-800 font-bold self-center">
     <%= submit "Log in" %>
   </div>
+
+  <p class="text-gray-800 font-bold self-center">
+    <%= link "Register", to: Routes.user_registration_path(@conn, :new) %> |
+    <%= link "Forgot your password?", to: Routes.user_reset_password_path(@conn, :new) %>
+  </p>
+</div>
 <% end %>
