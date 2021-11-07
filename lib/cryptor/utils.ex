@@ -11,6 +11,7 @@ defmodule Cryptor.Utils do
       coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
       fee: new_order["fee"],
       type: get_order_type(new_order["order_type"]),
+      buy_order_id: nil,
       filled: false
     }
 

@@ -77,7 +77,6 @@ defmodule CryptorWeb.PendingOrdersLive do
           current_price = CurrencyServer.get_current_price(order.coin)
 
           %{
-            id: order.id,
             order_id: order.order_id,
             coin: order.coin,
             value: order.price,
