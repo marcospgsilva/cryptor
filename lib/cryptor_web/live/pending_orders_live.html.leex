@@ -47,7 +47,7 @@
                 </div>
                 <div>
                   <p class="text-gray-400 font-light">Tipo de ordem</p>
-                  <p class="text-green-400 font-extrabold">R$ <%= if(pending_order.type == "sell", do: "Venda", else: "Compra") %></p>
+                  <p class="text-green-400 font-extrabold"><%= if(pending_order.type == "sell", do: "Venda", else: "Compra") %></p>
                 </div>
               </div>
             </div>

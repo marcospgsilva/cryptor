@@ -67,7 +67,7 @@ defmodule CryptorWeb.PendingOrdersLive do
   def render_pending_orders(user_id) do
     pids = ProcessRegistry.get_servers_registry(user_id)
 
-    case PendingOrdersAgent.get_pending_orders_list(pids[:orders_pid]) do
+    case PendingOrdersAgent.get_pending_orders_list(pids[:pending_orders_pid]) do
       [] ->
         []
 
