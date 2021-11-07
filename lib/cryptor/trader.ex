@@ -5,10 +5,7 @@ defmodule Cryptor.Trader do
 
   alias Cryptor.{
     Analysis,
-    BotServer,
-    BotServer.State,
     AmountControl,
-    Bots.Bot,
     Orders,
     Orders.PendingOrdersAgent,
     Orders.OrdersAgent,
@@ -22,12 +19,14 @@ defmodule Cryptor.Trader do
 
   def get_currencies, do: @currencies
 
-  def analyze_transaction(current_price, %Order{price: price, coin: currency} = order, user_id) do
-    pids = ProcessRegistry.get_servers_registry(user_id, currency)
-    %State{bot: bot = %Bot{}} = BotServer.get_state(pids[:bot_pid])
-
+  def analyze_transaction(
+        current_price,
+        %Order{price: price} = order,
+        user_id,
+        bot
+      ) do
     if current_price >= price * bot.sell_percentage_limit,
-      do: place_order(:sell, current_price, order, user_id)
+      do: place_order(:sell, current_price, order, user_id, bot)
   end
 
   def get_currency_price(coin) do
@@ -70,12 +69,9 @@ defmodule Cryptor.Trader do
     )
   end
 
-  def place_order(:sell, _, %Order{quantity: 0.0}, _user_id), do: nil
+  def place_order(:sell, _, %Order{quantity: 0.0}, _user_id, _bot), do: nil
 
-  def place_order(method, newer_price, %Order{coin: currency} = order, user_id) do
-    pids = ProcessRegistry.get_servers_registry(user_id, currency)
-    %State{bot: bot} = BotServer.get_state(pids[:bot_pid])
-
+  def place_order(method, newer_price, %Order{coin: currency} = order, user_id, bot) do
     quantity = AmountControl.get_quantity(method, newer_price, order, bot)
 
     method

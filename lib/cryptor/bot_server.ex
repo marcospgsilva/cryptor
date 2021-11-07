@@ -62,7 +62,7 @@ defmodule Cryptor.BotServer do
   @impl true
   def handle_info(
         :analyze_orders,
-        %State{bot: %Bot{currency: currency, active: true, user_id: user_id}} = state
+        %State{bot: bot = %Bot{currency: currency, active: true, user_id: user_id}} = state
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id)
 
@@ -74,7 +74,7 @@ defmodule Cryptor.BotServer do
         current_price = CurrencyServer.get_current_price(currency)
 
         orders
-        |> Enum.each(&Trader.analyze_transaction(current_price, &1, user_id))
+        |> Enum.each(&Trader.analyze_transaction(current_price, &1, user_id, bot))
 
         analisys()
         {:noreply, state}
@@ -108,7 +108,8 @@ defmodule Cryptor.BotServer do
                   :buy,
                   current_price,
                   %Order{coin: bot.currency, type: "buy"},
-                  user_id
+                  user_id,
+                  bot
                 ),
               else: nil
 
@@ -117,7 +118,8 @@ defmodule Cryptor.BotServer do
               :buy,
               current_price,
               %Order{coin: bot.currency, type: "buy"},
-              user_id
+              user_id,
+              bot
             )
         end
     end
