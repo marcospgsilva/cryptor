@@ -4,10 +4,13 @@ defmodule Cryptor.Orders do
   alias Cryptor.Orders.Order
   alias Cryptor.Accounts.User
 
-  def get_order(id) do
+  def get_order(id, user_id) do
     Repo.one(
       from order in Order,
-        where: order.order_id == ^id
+        join: user in User,
+        where:
+          order.order_id == ^id and
+            user.id == ^user_id
     )
   end
 

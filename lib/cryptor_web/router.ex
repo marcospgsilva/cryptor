@@ -21,6 +21,7 @@ defmodule CryptorWeb.Router do
     pipe_through :browser
 
     live "/orders", OrdersLive, :index
+    live "/orders/pendings", PendingOrdersLive, :index
     live "/analysis", AnalysisLive, :index
   end
 
@@ -72,7 +73,7 @@ defmodule CryptorWeb.Router do
   scope "/", CryptorWeb do
     pipe_through [:browser]
 
-    delete "/users/log_out", UserSessionController, :delete
+    get "/users/log_out", UserSessionController, :delete
     get "/users/confirm", UserConfirmationController, :new
     post "/users/confirm", UserConfirmationController, :create
     get "/users/confirm/:token", UserConfirmationController, :confirm
