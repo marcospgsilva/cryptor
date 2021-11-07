@@ -19,7 +19,7 @@ defmodule Cryptor.CurrencyServer do
 
   @impl true
   def init(state) do
-    schedule_get_currency_price()
+    schedule_get_currency_price(state.currency)
     {:ok, state}
   end
 
@@ -36,6 +36,6 @@ defmodule Cryptor.CurrencyServer do
     end
   end
 
-  def schedule_get_currency_price,
-    do: Process.send_after(self(), :get_current_price, Enum.random(7_000..8_000))
+  def schedule_get_currency_price(currency),
+    do: Process.send_after(String.to_existing_atom(currency <> "Server"), :get_current_price, Enum.random(7_000..8_000))
 end
