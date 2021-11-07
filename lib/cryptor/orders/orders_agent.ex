@@ -18,7 +18,7 @@ defmodule Cryptor.Orders.OrdersAgent do
 
   def remove_from_order_list(pid, order_to_be_removed) do
     Agent.get_and_update(pid, fn orders ->
-      {orders, List.delete(orders, order_to_be_removed)}
+      {orders, orders |> Enum.reject(&(order_to_be_removed.order_id == &1.order_id))}
     end)
   end
 end

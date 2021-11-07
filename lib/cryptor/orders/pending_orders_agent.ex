@@ -18,7 +18,8 @@ defmodule Cryptor.Orders.PendingOrdersAgent do
 
   def remove_from_pending_orders_list(pid, order_to_be_removed) do
     Agent.get_and_update(pid, fn pending_orders ->
-      {pending_orders, List.delete(pending_orders, order_to_be_removed)}
+      {pending_orders,
+       pending_orders |> Enum.reject(&(order_to_be_removed.order_id == &1.order_id))}
     end)
   end
 end
