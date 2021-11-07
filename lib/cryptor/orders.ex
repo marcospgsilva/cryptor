@@ -47,4 +47,15 @@ defmodule Cryptor.Orders do
         order_by: [desc: order.inserted_at]
     )
   end
+
+  def get_pending_orders(user_id) do
+    Repo.all(
+      from order in Order,
+        join: user in User,
+        where:
+          order.filled == false and
+            order.user_id == ^user_id,
+        order_by: [desc: order.inserted_at]
+    )
+  end
 end

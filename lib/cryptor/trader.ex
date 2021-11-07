@@ -159,11 +159,12 @@ defmodule Cryptor.Trader do
     pids = ProcessRegistry.get_servers_registry(user_id)
 
     PendingOrdersAgent.add_to_pending_orders_list(pids[:pending_orders_pid], pending_order)
+    Orders.create_order(pending_order)
   end
 
   def create_and_add_order(order) do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
-    order = Orders.create_order(order)
+    {:ok, order} = Orders.update_order(order, %{filled: true})
 
     add_order_to_bot_server(pids[:bot_pid], order)
     OrdersAgent.add_to_order_list(pids[:orders_pid], order)
@@ -177,11 +178,7 @@ defmodule Cryptor.Trader do
     OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
     Orders.update_order(buy_order, %{finished: true})
 
-    order
-    |> Map.pop(:buy_order_id)
-    |> elem(1)
-    |> Map.put(:finished, true)
-    |> Orders.create_order()
+    Orders.update_order(order, %{finished: true, filled: true})
   end
 
   def delete_order(id) do
@@ -198,14 +195,14 @@ defmodule Cryptor.Trader do
     state[:account_info]
   end
 
-  def process_pending_order(%{buy_order_id: _buy_order_id} = order, _),
-    do: remove_and_update_order(order)
-
-  def process_pending_order(order, user_id) do
+  def process_pending_order(%{buy_order_id: nil} = order, user_id) do
     %{fee: fee} = get_order_data(order, user_id)
     updated_order = %{order | fee: fee}
     create_and_add_order(updated_order)
   end
+
+  def process_pending_order(order, _),
+    do: remove_and_update_order(order)
 
   def add_order_to_bot_server(bot_pid, %Order{} = order) when order.coin in @currencies,
     do: GenServer.cast(bot_pid, {:add_order, order})

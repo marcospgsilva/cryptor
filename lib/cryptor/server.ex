@@ -110,7 +110,11 @@ defmodule Cryptor.Server do
 
   def start_pending_orders_agent(user_id) do
     pending_orders_agent_name = ProcessRegistry.via_tuple({user_id, "PendingOrdersAgent"})
-    add_to_dynamic_supervisor(PendingOrdersAgent, %{name: pending_orders_agent_name})
+
+    add_to_dynamic_supervisor(PendingOrdersAgent, %{
+      name: pending_orders_agent_name,
+      user_id: user_id
+    })
   end
 
   defp add_to_dynamic_supervisor(module, state) do
