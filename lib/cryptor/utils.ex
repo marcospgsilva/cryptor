@@ -10,7 +10,8 @@ defmodule Cryptor.Utils do
       price: new_order["limit_price"] |> String.to_float(),
       coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
       fee: new_order["fee"],
-      type: get_order_type(new_order["order_type"])
+      type: get_order_type(new_order["order_type"]),
+      filled: false
     }
 
   def get_available_amount(account_info, coin) do

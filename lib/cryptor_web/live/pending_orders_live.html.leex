@@ -1,14 +1,13 @@
   <div class="flex items-center justify-center w-28 m-auto h-10 mb-8">
     <div class="flex items-center justify-center shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl w-56 m-auto h-10 mb-8">
-      <p class="font-extrabold text-xl text-gray-800 whitespace-nowrap">Saldo Disponível: </p>
+      <p class="font-extrabold text-xl text-gray-800 whitespace-nowrap">Ordens pendentes</p>
     </div>
-    <p class="font-extrabold text-2xl text-green-500 ml-5">R$<%= Cryptor.Utils.format_for_brl(@available_brl)%></p>
   </div>
 
   <div class="flex items-center justify-center m-auto mb-8 font-extrabold text-lg text-gray-800">
     <%= if @current_user do %>
       <div class="flex self-center justify-center items-center shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl w-64 h-10 mr-2">
-        <%= live_patch "Ord. Pend.", to: Routes.pending_orders_path(@socket, :index) %>
+        <%= live_patch "Ver ordens", to: Routes.orders_path(@socket, :index) %>
       </div>
       <div class="flex self-center justify-center items-center shadow-3xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl w-64 h-10 ml-2">
         <%= live_patch "Meus bots", to: Routes.analysis_path(@socket, :index) %>
@@ -21,37 +20,38 @@
   </div>
 
   <%= if @current_user do %>
-    <%= if Enum.empty?(@orders) do %>
-      <h3 class="text-xl text-white text-center">Você não possui ordens.</h3>
+    <%= if Enum.empty?(@pending_orders) do %>
+      <h3 class="text-xl text-white text-center">Você não possui ordens pendentes.</h3>
     <% else %>
       <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-lg m-auto">
-        <%= for order <- @orders do %>
+        <%= for pending_order <- @pending_orders do %>
           <div>
-            <div x-data="{ profit: '<%=order.variation > 0%>' }" class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
+            <div class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
               <div class="flex-1 flex-grow self-center">
-                <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-12 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
-                <p class="text-white font-black text-xl"><%= order.coin %></p>
-                <p class="text-gray-400 font-light text-sm">#<%= order.order_id %></p>
-                <p :class="[profit === 'true' ? 'font-light text-xl text-green-500' : 'font-light text-xl text-red-500']"><%= order.variation %>%</p>
+                <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-12 ml-2" style="background-image: url('/images/<%= pending_order.coin %>.png')"></div>
+                <p class="text-white font-black text-xl"><%= pending_order.coin %></p>
+                <p class="text-gray-400 font-light text-sm">#<%= pending_order.order_id %></p>
               </div>
               <div class="flex-1 text-right self-center">
                 <div>
                   <p class="text-gray-400 font-light">Quantidade</p>
-                  <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(order.quantity) %></p>
+                  <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(pending_order.quantity) %></p>
                 </div>
                 <div>
                   <p class="text-gray-400 font-light">Valor inicial</p>
-                  <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(order.bought_value) %></p>
+                  <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(pending_order.value) %></p>
                 </div>
                 <div>
                   <p class="text-gray-400 font-light">Valor atual</p>
-                    <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(order.current_price) %></p>
+                  <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(pending_order.current_price) %></p>
+                </div>
+                <div>
+                  <p class="text-gray-400 font-light">Tipo de ordem</p>
+                  <p class="text-green-400 font-extrabold">R$ <%= if(pending_order.type == "sell", do: "Venda", else: "Compra") %></p>
                 </div>
               </div>
             </div>
-            <%= if @current_user do %>
-              <button phx-click="delete_order" phx-value-order_id="<%= order.order_id %>" class="flex shadow-2xl bg-red-600 rounded-lg p-1 -mt-3 m-auto text-white font-extrabold border-4 border-gray-800" >Remover Análise</button>
-            <% end %>
+              <button phx-click="delete_order" phx-value-order_id="<%= pending_order.order_id %>" class="flex shadow-2xl bg-red-600 rounded-lg p-1 -mt-3 m-auto text-white font-extrabold border-4 border-gray-800" >Remover ordem</button>
           </div>
         <% end %>
       </div>

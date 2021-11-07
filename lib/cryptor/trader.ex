@@ -58,6 +58,18 @@ defmodule Cryptor.Trader do
     end
   end
 
+  def set_order_status_canceled(order, user_id) do
+    Requests.request(
+      :post,
+      %{
+        tapi_method: "cancel_order",
+        coin_pair: "BRL" <> order.coin,
+        order_id: order.order_id
+      },
+      user_id
+    )
+  end
+
   def place_order(:sell, _, %Order{quantity: 0.0}, _user_id), do: nil
 
   def place_order(method, newer_price, %Order{coin: currency} = order, user_id) do
@@ -159,11 +171,12 @@ defmodule Cryptor.Trader do
     pids = ProcessRegistry.get_servers_registry(user_id)
 
     PendingOrdersAgent.add_to_pending_orders_list(pids[:pending_orders_pid], pending_order)
+    Orders.create_order(pending_order)
   end
 
   def create_and_add_order(order) do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
-    order = Orders.create_order(order)
+    {:ok, order} = Orders.update_order(order, %{filled: true})
 
     add_order_to_bot_server(pids[:bot_pid], order)
     OrdersAgent.add_to_order_list(pids[:orders_pid], order)
@@ -171,21 +184,17 @@ defmodule Cryptor.Trader do
 
   def remove_and_update_order(order) do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
-    buy_order = Orders.get_order(order.buy_order_id)
+    buy_order = Orders.get_order(order.buy_order_id, order.user_id)
 
     remove_order_from_bot_server(pids[:bot_pid], order)
     OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
     Orders.update_order(buy_order, %{finished: true})
 
-    order
-    |> Map.pop(:buy_order_id)
-    |> elem(1)
-    |> Map.put(:finished, true)
-    |> Orders.create_order()
+    Orders.update_order(order, %{finished: true, filled: true})
   end
 
-  def delete_order(id) do
-    order = Orders.get_order(id)
+  def delete_order(id, user_id) do
+    order = Orders.get_order(id, user_id)
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
 
     remove_order_from_bot_server(pids[:bot_pid], order)
@@ -193,19 +202,33 @@ defmodule Cryptor.Trader do
     Orders.update_order(order, %{finished: true})
   end
 
+  def remove_order_from_pending_list(id, user_id) do
+    pids = ProcessRegistry.get_servers_registry(user_id)
+    order = Orders.get_order(id, user_id)
+
+    case set_order_status_canceled(order, user_id) do
+      {:ok, _} ->
+        PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order)
+        Orders.update_order(order, %{finished: true, filled: true})
+
+      _ ->
+        nil
+    end
+  end
+
   def get_account_info_data(analysis_pid) do
     state = Analysis.get_state(analysis_pid)
     state[:account_info]
   end
 
-  def process_pending_order(%{buy_order_id: _buy_order_id} = order, _),
-    do: remove_and_update_order(order)
-
-  def process_pending_order(order, user_id) do
+  def process_pending_order(%{buy_order_id: nil} = order, user_id) do
     %{fee: fee} = get_order_data(order, user_id)
     updated_order = %{order | fee: fee}
     create_and_add_order(updated_order)
   end
+
+  def process_pending_order(order, _),
+    do: remove_and_update_order(order)
 
   def add_order_to_bot_server(bot_pid, %Order{} = order) when order.coin in @currencies,
     do: GenServer.cast(bot_pid, {:add_order, order})

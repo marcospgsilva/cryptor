@@ -88,6 +88,7 @@ defmodule Cryptor.Analysis do
 
       %{status: :canceled} ->
         PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order)
+        Cryptor.Orders.update_order(order, %{filled: true, finished: true})
 
       _ ->
         nil

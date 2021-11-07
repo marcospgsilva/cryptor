@@ -3,8 +3,10 @@ defmodule Cryptor.Orders.PendingOrdersAgent do
    Pending Orders Agent
   """
   use Agent
+  alias Cryptor.Orders
 
-  def start_link(%{name: name}), do: Agent.start_link(fn -> [] end, name: name)
+  def start_link(%{name: name, user_id: user_id}),
+    do: Agent.start_link(fn -> Orders.get_pending_orders(user_id) end, name: name)
 
   def get_pending_orders_list(pid), do: Agent.get(pid, & &1)
 

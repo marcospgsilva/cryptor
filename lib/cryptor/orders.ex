@@ -4,10 +4,13 @@ defmodule Cryptor.Orders do
   alias Cryptor.Orders.Order
   alias Cryptor.Accounts.User
 
-  def get_order(id) do
+  def get_order(id, user_id) do
     Repo.one(
       from order in Order,
-        where: order.order_id == ^id
+        join: user in User,
+        where:
+          order.order_id == ^id and
+            user.id == ^user_id
     )
   end
 
@@ -43,6 +46,17 @@ defmodule Cryptor.Orders do
         where:
           order.coin == ^currency and
             order.type == "sell" and
+            order.user_id == ^user_id,
+        order_by: [desc: order.inserted_at]
+    )
+  end
+
+  def get_pending_orders(user_id) do
+    Repo.all(
+      from order in Order,
+        join: user in User,
+        where:
+          order.filled == false and
             order.user_id == ^user_id,
         order_by: [desc: order.inserted_at]
     )

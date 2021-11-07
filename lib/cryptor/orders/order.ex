@@ -10,7 +10,18 @@ defmodule Cryptor.Orders.Order do
     "3" => :canceled
   }
 
-  @fields [:order_id, :coin, :quantity, :price, :type, :finished, :fee, :user_id]
+  @fields [
+    :order_id,
+    :coin,
+    :quantity,
+    :price,
+    :type,
+    :finished,
+    :fee,
+    :filled,
+    :buy_order_id,
+    :user_id
+  ]
 
   schema "orders" do
     field :order_id, :integer
@@ -20,6 +31,8 @@ defmodule Cryptor.Orders.Order do
     field :type, :string
     field :fee, :string
     field :finished, :boolean, default: false
+    field :filled, :boolean, default: false
+    field :buy_order_id, :integer
     belongs_to :user, Cryptor.Accounts.User
 
     timestamps(type: :utc_datetime)

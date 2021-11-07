@@ -10,6 +10,12 @@
     <script defer phx-track-static type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </head>
   <body class="bg-primary">
+    <%= if @current_user do %>
+      <div class="flex flex-1 items-center text-white justify-end">
+        <image src="./favicon.ico" alt="sair" class="w-8 h-8 mt-2 mr-2"/>
+        <a href="<%= Routes.user_session_path(@conn, :delete) %>" class="mt-2 mr-4">Sair</a>
+      </div>
+    <% end %>
     <%= @inner_content %>
     <footer class="fixed w-full bg-gradient-to-r from-gray-800 to-gray-900 bottom-0">
       <p class="text-white text-lg text-center self-center">Copyright &copy; <%= date = Date.utc_today(); date.year%> MPDev, All Rights Reserved</p>
