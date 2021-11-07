@@ -33,6 +33,7 @@ defmodule Cryptor.Orders do
         join: user in User,
         where:
           order.finished == false and
+            order.filled == true and
             order.type == "buy" and
             order.user_id == ^user_id,
         order_by: [desc: order.id]

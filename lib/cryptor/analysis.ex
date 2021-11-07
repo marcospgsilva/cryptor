@@ -52,7 +52,8 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_info({:process_orders_status, {pending_orders, pids}}, state) do
-    check_order_status(pending_orders, pids)
+    check_order_status(pending_orders)
+    BotServer.schedule_process_orders_status(pids)
     {:noreply, state}
   end
 
@@ -72,11 +73,8 @@ defmodule Cryptor.Analysis do
     end
   end
 
-  defp check_order_status(peding_orders, pids) do
-    Enum.map(peding_orders, &process_order_status/1)
-
-    BotServer.schedule_process_orders_status(pids)
-  end
+  defp check_order_status(peding_orders),
+    do: Enum.map(peding_orders, &process_order_status/1)
 
   defp process_order_status(order) do
     pids = Cryptor.ProcessRegistry.get_servers_registry(order.user_id)

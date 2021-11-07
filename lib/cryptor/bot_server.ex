@@ -29,16 +29,6 @@ defmodule Cryptor.BotServer do
 
   def get_state(pid), do: GenServer.call(pid, :get_state, Utils.get_timeout())
 
-  # SERVER
-  @impl true
-  def init(%State{user_id: user_id, bot: %Bot{active: true}} = state) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
-    analisys()
-    schedule_place_orders()
-    schedule_process_orders_status(pids)
-    {:ok, state, {:continue, :get_orders}}
-  end
-
   @impl true
   def init(state), do: {:ok, state, {:continue, :get_orders}}
 
@@ -48,15 +38,23 @@ defmodule Cryptor.BotServer do
 
     case OrdersAgent.get_order_list(pids[:orders_pid]) do
       [] ->
-        {:noreply, state}
+        {:noreply, state, {:continue, :schedule_jobs}}
 
       orders ->
         filtered_orders =
           orders
           |> Enum.filter(fn order -> order.coin == bot.currency end)
 
-        {:noreply, %{state | orders: filtered_orders}}
+        {:noreply, %{state | orders: filtered_orders}, {:continue, :schedule_jobs}}
     end
+  end
+
+  def handle_continue(:schedule_jobs, %{user_id: user_id} = state) do
+    pids = ProcessRegistry.get_servers_registry(user_id)
+    analisys()
+    schedule_place_orders()
+    schedule_process_orders_status(pids)
+    {:noreply, state}
   end
 
   def handle_info(:change_bot_activity, %State{bot: bot = %Bot{active: active}} = state) do
@@ -105,7 +103,7 @@ defmodule Cryptor.BotServer do
   def handle_info(
         :place_orders,
         %State{
-          bot: bot = %Bot{},
+          bot: bot = %Bot{active: true},
           user_id: user_id
         } = state
       ) do
@@ -125,6 +123,12 @@ defmodule Cryptor.BotServer do
         end
     end
 
+    schedule_place_orders()
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:place_orders, state) do
     schedule_place_orders()
     {:noreply, state}
   end
