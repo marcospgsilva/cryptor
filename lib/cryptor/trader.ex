@@ -19,6 +19,8 @@ defmodule Cryptor.Trader do
 
   def get_currencies, do: @currencies
 
+  def analyze_transaction(0.0, _, _, _), do: nil
+
   def analyze_transaction(
         current_price,
         %Order{price: price} = order,
