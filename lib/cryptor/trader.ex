@@ -72,7 +72,7 @@ defmodule Cryptor.Trader do
   def place_order(:sell, _, %Order{quantity: 0.0}, _user_id, _bot), do: nil
 
   def place_order(method, newer_price, %Order{coin: currency} = order, user_id, bot) do
-    quantity = AmountControl.get_quantity(method, newer_price, order, bot)
+    quantity = AmountControl.get_quantity(method, newer_price, order, bot.buy_amount)
 
     method
     |> validate_pending_sell_order(currency, user_id)
