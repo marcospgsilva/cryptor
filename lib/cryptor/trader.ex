@@ -181,6 +181,7 @@ defmodule Cryptor.Trader do
   def remove_and_update_order(order) do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
     buy_order = Orders.get_order(order.buy_order_id, order.user_id)
+    order = Orders.get_order(order.order_id, order.user_id)
 
     OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
     Orders.update_order(buy_order, %{finished: true})
