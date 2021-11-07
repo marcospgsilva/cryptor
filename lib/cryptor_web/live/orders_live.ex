@@ -45,6 +45,7 @@ defmodule CryptorWeb.OrdersLive do
 
     case ProcessRegistry.get_servers_registry(user_id) do
       nil ->
+        schedule_event()
         {:noreply, socket}
 
       pids ->

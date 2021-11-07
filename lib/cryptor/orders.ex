@@ -47,6 +47,7 @@ defmodule Cryptor.Orders do
         where:
           order.coin == ^currency and
             order.type == "sell" and
+            order.filled == true and
             order.user_id == ^user_id,
         order_by: [desc: order.inserted_at]
     )

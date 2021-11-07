@@ -137,16 +137,23 @@ defmodule Cryptor.BotServer do
   def handle_call(:get_state, _, state), do: {:reply, state, state}
 
   @impl true
-  def handle_cast({:add_order, order}, state),
-    do: {:noreply, %{state | orders: [order | state.orders]}}
+  def handle_call(:update_orders, _from, %{bot: bot, user_id: user_id} = state) do
+    pids = ProcessRegistry.get_servers_registry(user_id)
 
-  @impl true
-  def handle_cast({:remove_order, order}, state) do
-    {:noreply,
-     %{
-       state
-       | orders: List.delete(state.orders, order)
-     }}
+    case OrdersAgent.get_order_list(pids[:orders_pid]) do
+      [] ->
+        new_state = %{state | orders: []}
+
+        {:reply, new_state, new_state}
+
+      orders ->
+        filtered_orders =
+          orders
+          |> Enum.filter(&(&1.coin == bot.currency))
+
+        new_state = %{state | orders: filtered_orders}
+        {:reply, new_state, new_state}
+    end
   end
 
   def place_buy_order(current_price, currency, user_id),

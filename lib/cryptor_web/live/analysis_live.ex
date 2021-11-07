@@ -5,6 +5,7 @@ defmodule CryptorWeb.AnalysisLive do
   use CryptorWeb, :live_view
 
   alias Cryptor.{
+    BotServer,
     CurrencyServer,
     Trader,
     Server,
@@ -110,7 +111,7 @@ defmodule CryptorWeb.AnalysisLive do
         %{
           bot: bot,
           orders: orders
-        } = Cryptor.BotServer.get_state(pid)
+        } = BotServer.get_state(pid)
 
         current_price = CurrencyServer.get_current_price(bot.currency)
 
