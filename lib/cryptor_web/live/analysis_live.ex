@@ -101,17 +101,18 @@ defmodule CryptorWeb.AnalysisLive do
   defp build_server_analysis_data(nil, _currency), do: nil
 
   defp build_server_analysis_data(user_id, currency) do
-    bot_pid = ProcessRegistry.get_servers_registry(user_id, currency)[:bot_pid]
+    pids = ProcessRegistry.get_servers_registry(user_id, currency)
 
-    case bot_pid do
+    case pids[[:bot_pid]] do
       :undefined ->
         nil
 
       pid ->
-        %{
-          bot: bot,
-          orders: orders
-        } = BotServer.get_state(pid)
+        %{bot: bot} = BotServer.get_state(pid)
+
+        orders =
+          Cryptor.Orders.OrdersAgent.get_order_list(pids[:orders_pid])
+          |> Enum.filter(&(&1.coin == bot.currency))
 
         current_price = CurrencyServer.get_current_price(bot.currency)
 

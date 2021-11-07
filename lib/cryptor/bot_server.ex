@@ -18,8 +18,7 @@ defmodule Cryptor.BotServer do
   }
 
   defmodule State do
-    defstruct orders: [],
-              user_id: nil,
+    defstruct user_id: nil,
               bot: nil
   end
 
@@ -30,25 +29,9 @@ defmodule Cryptor.BotServer do
   def get_state(pid), do: GenServer.call(pid, :get_state, Utils.get_timeout())
 
   @impl true
-  def init(state), do: {:ok, state, {:continue, :get_orders}}
+  def init(state), do: {:ok, state, {:continue, :schedule_jobs}}
 
   @impl true
-  def handle_continue(:get_orders, %{bot: bot, user_id: user_id} = state) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
-
-    case OrdersAgent.get_order_list(pids[:orders_pid]) do
-      [] ->
-        {:noreply, state, {:continue, :schedule_jobs}}
-
-      orders ->
-        filtered_orders =
-          orders
-          |> Enum.filter(fn order -> order.coin == bot.currency end)
-
-        {:noreply, %{state | orders: filtered_orders}, {:continue, :schedule_jobs}}
-    end
-  end
-
   def handle_continue(:schedule_jobs, %{user_id: user_id} = state) do
     pids = ProcessRegistry.get_servers_registry(user_id)
     analisys()
@@ -77,20 +60,25 @@ defmodule Cryptor.BotServer do
   end
 
   @impl true
-  def handle_info(:analyze_orders, %State{orders: []} = state) do
-    analisys()
-    {:noreply, state}
-  end
-
-  @impl true
   def handle_info(
         :analyze_orders,
-        %State{bot: %Bot{currency: currency, active: true}} = state
+        %State{bot: %Bot{currency: currency, active: true, user_id: user_id}} = state
       ) do
-    current_price = CurrencyServer.get_current_price(currency)
-    process_transaction(state, current_price)
-    analisys()
-    {:noreply, state}
+    pids = ProcessRegistry.get_servers_registry(user_id)
+
+    case OrdersAgent.get_order_list(pids[:orders_pid]) do
+      [] ->
+        {:noreply, state}
+
+      orders ->
+        current_price = CurrencyServer.get_current_price(currency)
+
+        orders
+        |> Enum.each(&Trader.analyze_transaction(current_price, &1, user_id))
+
+        analisys()
+        {:noreply, state}
+    end
   end
 
   @impl true
@@ -115,11 +103,22 @@ defmodule Cryptor.BotServer do
         case Orders.get_latest_sell_orders(bot.currency, user_id) do
           [latest_order | _] ->
             if current_price <= latest_order.price * bot.buy_percentage_limit,
-              do: place_buy_order(current_price, bot.currency, user_id),
+              do:
+                Trader.place_order(
+                  :buy,
+                  current_price,
+                  %Order{coin: bot.currency, type: "buy"},
+                  user_id
+                ),
               else: nil
 
           _ ->
-            place_buy_order(current_price, bot.currency, user_id)
+            Trader.place_order(
+              :buy,
+              current_price,
+              %Order{coin: bot.currency, type: "buy"},
+              user_id
+            )
         end
     end
 
@@ -136,55 +135,10 @@ defmodule Cryptor.BotServer do
   @impl true
   def handle_call(:get_state, _, state), do: {:reply, state, state}
 
-  @impl true
-  def handle_call(:update_orders, _from, %{bot: bot, user_id: user_id} = state) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
-
-    case OrdersAgent.get_order_list(pids[:orders_pid]) do
-      [] ->
-        new_state = %{state | orders: []}
-
-        {:reply, new_state, new_state}
-
-      orders ->
-        filtered_orders =
-          orders
-          |> Enum.filter(&(&1.coin == bot.currency))
-
-        new_state = %{state | orders: filtered_orders}
-        {:reply, new_state, new_state}
-    end
-  end
-
-  def place_buy_order(current_price, currency, user_id),
-    do:
-      Task.Supervisor.start_child(
-        ExchangesSupervisor,
-        fn ->
-          Trader.place_order(:buy, current_price, %Order{coin: currency, type: "buy"}, user_id)
-        end,
-        shutdown: Utils.get_timeout()
-      )
-
-  def process_transaction(
-        %State{orders: orders, user_id: user_id},
-        current_price
-      ),
-      do: orders |> Enum.each(&start_transaction(current_price, &1, user_id))
-
-  def start_transaction(current_price, order, user_id) do
-    Task.Supervisor.start_child(
-      ExchangesSupervisor,
-      fn ->
-        Trader.analyze_transaction(current_price, order, user_id)
-      end,
-      shutdown: Utils.get_timeout()
-    )
-  end
-
   defp analisys, do: Process.send_after(self(), :analyze_orders, Enum.random(7_000..8_000))
 
-  def schedule_place_orders, do: Process.send_after(self(), :place_orders, 5000)
+  def schedule_place_orders,
+    do: Process.send_after(self(), :place_orders, Enum.random(7_000..8_000))
 
   def schedule_process_orders_status(pids) do
     Process.send_after(

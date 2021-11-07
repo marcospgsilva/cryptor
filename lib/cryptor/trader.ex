@@ -180,7 +180,6 @@ defmodule Cryptor.Trader do
     {:ok, order} = Orders.update_order(order, %{filled: true})
 
     OrdersAgent.add_to_order_list(pids[:orders_pid], order)
-    update_bot_server_orders(pids[:bot_pid])
   end
 
   def remove_and_update_order(order) do
@@ -188,7 +187,6 @@ defmodule Cryptor.Trader do
     buy_order = Orders.get_order(order.buy_order_id, order.user_id)
 
     OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
-    update_bot_server_orders(pids[:bot_pid])
     Orders.update_order(buy_order, %{finished: true})
 
     Orders.update_order(order, %{finished: true, filled: true})
@@ -199,7 +197,6 @@ defmodule Cryptor.Trader do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
 
     OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
-    update_bot_server_orders(pids[:bot_pid])
     Orders.update_order(order, %{finished: true})
   end
 
@@ -230,7 +227,4 @@ defmodule Cryptor.Trader do
 
   def process_pending_order(order, _),
     do: remove_and_update_order(order)
-
-  def update_bot_server_orders(bot_pid),
-    do: GenServer.call(bot_pid, :update_orders)
 end
