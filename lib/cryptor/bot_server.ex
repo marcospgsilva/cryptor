@@ -10,6 +10,7 @@ defmodule Cryptor.BotServer do
     Orders,
     Bots.Bot,
     Orders.Order,
+    Orders.OrdersAgent,
     ProcessRegistry,
     Orders.PendingOrdersAgent,
     Utils,
@@ -32,6 +33,7 @@ defmodule Cryptor.BotServer do
   @impl true
   def init(%State{user_id: user_id, bot: %Bot{active: true}} = state) do
     pids = ProcessRegistry.get_servers_registry(user_id)
+    analisys()
     schedule_place_orders()
     schedule_process_orders_status(pids)
     {:ok, state, {:continue, :get_orders}}
@@ -44,7 +46,7 @@ defmodule Cryptor.BotServer do
   def handle_continue(:get_orders, %{bot: bot, user_id: user_id} = state) do
     pids = ProcessRegistry.get_servers_registry(user_id)
 
-    case Orders.OrdersAgent.get_order_list(pids[:orders_pid]) do
+    case OrdersAgent.get_order_list(pids[:orders_pid]) do
       [] ->
         {:noreply, state}
 

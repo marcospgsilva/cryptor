@@ -176,6 +176,7 @@ defmodule Cryptor.Trader do
 
   def create_and_add_order(order) do
     pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
+    order = Orders.get_order(order.order_id, order.user_id)
     {:ok, order} = Orders.update_order(order, %{filled: true})
 
     add_order_to_bot_server(pids[:bot_pid], order)
