@@ -98,6 +98,8 @@ defmodule Cryptor.BotServer do
           user_id: user_id
         } = state
       ) do
+    pids = ProcessRegistry.get_servers_registry(user_id)
+
     case Cryptor.CurrencyServer.get_current_price(bot.currency) do
       0.0 ->
         nil
@@ -117,13 +119,30 @@ defmodule Cryptor.BotServer do
               else: nil
 
           _ ->
-            Trader.place_order(
-              :buy,
-              current_price,
-              %Order{coin: bot.currency, type: "buy"},
-              user_id,
-              bot
-            )
+            case OrdersAgent.get_order_list(pids[:orders_pid]) do
+              [] ->
+                Trader.place_order(
+                  :buy,
+                  current_price,
+                  %Order{coin: bot.currency, type: "buy"},
+                  user_id,
+                  bot
+                )
+
+              orders ->
+                latest_buy = orders |> Enum.sort(&(&1.price < &2.price)) |> List.first()
+
+                if current_price <= latest_buy.price * bot.buy_percentage_limit,
+                  do:
+                    Trader.place_order(
+                      :buy,
+                      current_price,
+                      %Order{coin: bot.currency, type: "buy"},
+                      user_id,
+                      bot
+                    ),
+                  else: nil
+            end
         end
     end
 
