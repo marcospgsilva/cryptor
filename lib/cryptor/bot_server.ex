@@ -13,8 +13,7 @@ defmodule Cryptor.BotServer do
     Orders.OrdersAgent,
     ProcessRegistry,
     Orders.PendingOrdersAgent,
-    Utils,
-    CurrencyServer
+    Utils
   }
 
   defmodule State do
@@ -65,19 +64,26 @@ defmodule Cryptor.BotServer do
         %State{bot: bot = %Bot{currency: currency, active: true, user_id: user_id}} = state
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id)
+    current_price = Cryptor.CurrencyServer.get_current_price(currency)
 
     case OrdersAgent.get_order_list(pids[:orders_pid]) do
       [] ->
         {:noreply, state}
 
       orders ->
-        current_price = CurrencyServer.get_current_price(currency)
+        case orders
+             |> Enum.filter(fn order -> order.coin == currency end) do
+          [] ->
+            nil
+            {:noreply, state}
 
-        orders
-        |> Enum.each(&Trader.analyze_transaction(current_price, &1, user_id, bot))
+          orders ->
+            orders
+            |> Enum.each(&Trader.analyze_transaction(current_price, &1, user_id, bot))
 
-        analisys()
-        {:noreply, state}
+            analisys()
+            {:noreply, state}
+        end
     end
   end
 
@@ -95,7 +101,7 @@ defmodule Cryptor.BotServer do
           user_id: user_id
         } = state
       ) do
-    case CurrencyServer.get_current_price(bot.currency) do
+    case Cryptor.CurrencyServer.get_current_price(bot.currency) do
       0.0 ->
         nil
 

@@ -103,7 +103,7 @@ defmodule CryptorWeb.AnalysisLive do
   defp build_server_analysis_data(user_id, currency) do
     pids = ProcessRegistry.get_servers_registry(user_id, currency)
 
-    case pids[[:bot_pid]] do
+    case pids[:bot_pid] do
       :undefined ->
         nil
 
