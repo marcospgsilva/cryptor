@@ -108,40 +108,27 @@ defmodule Cryptor.BotServer do
         case Orders.get_latest_sell_orders(bot.currency, user_id) do
           [latest_order | _] ->
             if current_price <= latest_order.price * bot.buy_percentage_limit,
-              do:
-                Trader.place_order(
-                  :buy,
-                  current_price,
-                  %Order{coin: bot.currency, type: "buy"},
-                  user_id,
-                  bot
-                ),
+              do: place_order(current_price, user_id, bot),
               else: nil
 
           _ ->
             case OrdersAgent.get_order_list(pids[:orders_pid]) do
               [] ->
-                Trader.place_order(
-                  :buy,
-                  current_price,
-                  %Order{coin: bot.currency, type: "buy"},
-                  user_id,
-                  bot
-                )
+                place_order(current_price, user_id, bot)
 
               orders ->
-                latest_buy = orders |> Enum.sort(&(&1.price < &2.price)) |> List.first()
+                case orders |> Enum.filter(&(&1.coin == bot.currency)) do
+                  [] ->
+                    place_order(current_price, user_id, bot)
 
-                if current_price <= latest_buy.price * bot.buy_percentage_limit,
-                  do:
-                    Trader.place_order(
-                      :buy,
-                      current_price,
-                      %Order{coin: bot.currency, type: "buy"},
-                      user_id,
-                      bot
-                    ),
-                  else: nil
+                  filtered_orders ->
+                    latest_buy =
+                      filtered_orders |> Enum.sort(&(&1.price < &2.price)) |> List.first()
+
+                    if current_price <= latest_buy.price * bot.buy_percentage_limit,
+                      do: place_order(current_price, user_id, bot),
+                      else: nil
+                end
             end
         end
     end
@@ -163,4 +150,14 @@ defmodule Cryptor.BotServer do
 
   def schedule_place_orders,
     do: Process.send_after(self(), :place_orders, Enum.random(7_000..8_000))
+
+  def place_order(current_price, user_id, bot) do
+    Trader.place_order(
+      :buy,
+      current_price,
+      %Order{coin: bot.currency, type: "buy"},
+      user_id,
+      bot
+    )
+  end
 end
