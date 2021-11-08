@@ -27,15 +27,20 @@ defmodule Cryptor.CurrencyServer do
   def handle_info(:get_current_price, %{currency: currency} = state) do
     case Trader.get_currency_price(currency) do
       {:ok, current_price} ->
-        schedule_get_currency_price()
+        schedule_get_currency_price(currency)
         {:noreply, %{state | current_price: current_price}}
 
       _ ->
-        schedule_get_currency_price()
+        schedule_get_currency_price(currency)
         {:noreply, state}
     end
   end
 
   def schedule_get_currency_price(currency),
-    do: Process.send_after(String.to_existing_atom(currency <> "Server"), :get_current_price, Enum.random(7_000..8_000))
+    do:
+      Process.send_after(
+        String.to_existing_atom(currency <> "Server"),
+        :get_current_price,
+        Enum.random(7_000..8_000)
+      )
 end
