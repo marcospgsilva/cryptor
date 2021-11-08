@@ -12,7 +12,6 @@ defmodule Cryptor.BotServer do
     Orders.Order,
     Orders.OrdersAgent,
     ProcessRegistry,
-    Orders.PendingOrdersAgent,
     Utils
   }
 
@@ -31,11 +30,9 @@ defmodule Cryptor.BotServer do
   def init(state), do: {:ok, state, {:continue, :schedule_jobs}}
 
   @impl true
-  def handle_continue(:schedule_jobs, %{user_id: user_id} = state) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
+  def handle_continue(:schedule_jobs, state) do
     analisys()
     schedule_place_orders()
-    schedule_process_orders_status(pids)
     {:noreply, state}
   end
 
@@ -147,13 +144,4 @@ defmodule Cryptor.BotServer do
 
   def schedule_place_orders,
     do: Process.send_after(self(), :place_orders, Enum.random(7_000..8_000))
-
-  def schedule_process_orders_status(pids) do
-    Process.send_after(
-      pids[:analysis_pid],
-      {:process_orders_status,
-       {PendingOrdersAgent.get_pending_orders_list(pids[:pending_orders_pid]), pids}},
-      8000
-    )
-  end
 end

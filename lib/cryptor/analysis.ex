@@ -6,7 +6,6 @@ defmodule Cryptor.Analysis do
   use GenServer
 
   alias Cryptor.{
-    BotServer,
     ProcessRegistry,
     Orders.PendingOrdersAgent,
     Trader,
@@ -38,7 +37,14 @@ defmodule Cryptor.Analysis do
     account_info = get_account_info(user_id)
 
     schedule_update_account_info(analysis_pid)
-    {:noreply, %{state | account_info: account_info}}
+    {:noreply, %{state | account_info: account_info}, {:continue, :schedule_orders_status}}
+  end
+
+  @impl true
+  def handle_continue(:schedule_orders_status, %{user_id: user_id} = state) do
+    pids = ProcessRegistry.get_servers_registry(user_id)
+    schedule_process_orders_status(pids)
+    {:noreply, state}
   end
 
   @impl true
@@ -46,14 +52,14 @@ defmodule Cryptor.Analysis do
 
   @impl true
   def handle_info({:process_orders_status, {[], pids}}, state) do
-    BotServer.schedule_process_orders_status(pids)
+    schedule_process_orders_status(pids)
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:process_orders_status, {pending_orders, pids}}, state) do
     check_order_status(pending_orders)
-    BotServer.schedule_process_orders_status(pids)
+    schedule_process_orders_status(pids)
     {:noreply, state}
   end
 
@@ -105,4 +111,13 @@ defmodule Cryptor.Analysis do
 
   def schedule_update_account_info(analysis_pid),
     do: Process.send_after(analysis_pid, :update_account_info, 8000)
+
+  def schedule_process_orders_status(pids) do
+    Process.send_after(
+      self(),
+      {:process_orders_status,
+       {PendingOrdersAgent.get_pending_orders_list(pids[:pending_orders_pid]), pids}},
+      8000
+    )
+  end
 end
