@@ -51,4 +51,15 @@ defmodule Cryptor.Utils do
   def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix()
 
   def get_timeout, do: :infinity
+
+  def format_float_with_decimals(value),
+    do: :erlang.float_to_binary(value, [:compact, {:decimals, 8}])
+
+  def validate_float(value) do
+    try do
+      String.to_float(value)
+    rescue
+      _e -> String.to_integer(value) * 1.0
+    end
+  end
 end

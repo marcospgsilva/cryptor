@@ -45,18 +45,18 @@
                 </div>
                 <div class="flex flex-1 mr-3 text-center">
                   <p class="text-gray-400 font-light mr-2">Price</p>
-                  <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(server.current_price) %></p>
+                  <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_float_with_decimals(server.current_price) |> Cryptor.Utils.format_for_brl() %></p>
                 </div>
               </div>
               <div x-data="{running: '<%= server.active %>'}" class="flex flex-1 flex-col self-center text-center">
                 <%= if @current_user do %>
                   <form phx-submit="update_percentages" class="flex flex-1 flex-col justify-self-start">
                     <label class="text-white font-light">Percentage to sell:</label>
-                    <input name="sell_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value="<%= server.sell_percentage_limit %>" step=".0001">
+                    <input name="sell_percentage" class="rounded-lg text-center bg-white border-2 border-yellow-500" type="number" min=".0001" max="2.0000" value="<%= server.sell_percentage_limit %>" step=".0001">
                     <label class="text-white font-light mt-2">Percentage to buy:</label>
-                    <input name="buy_percentage" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="2.0000" value="<%= server.buy_percentage_limit %>" step=".0001">
+                    <input name="buy_percentage" class="rounded-lg text-center bg-white border-2 border-yellow-500" type="number" min=".0001" max="2.0000" value="<%= server.buy_percentage_limit %>" step=".0001">
                     <label class="text-white font-light mt-2">Amount to buy:</label>
-                    <input name="buy_amount" class="rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-600" type="number" min=".0001" max="100.0" value="<%= :erlang.float_to_binary(server.buy_amount, [:compact, {:decimals, 4}]) %>" step=".0001">
+                    <input name="buy_amount" class="rounded-lg text-center bg-white border-2 border-yellow-500" type="number" min=".0001" max="100.0" value="<%= Cryptor.Utils.format_float_with_decimals(server.buy_amount) %>" step=".0001">
                     <input name="coin" class="hidden" type="text" value="<%= server.currency %>">
                     <button type="submit" class="flex flex-1 rounded-lg bg-green-400 p-2 mt-5 m-auto" >Save changes</button>
                   </form>

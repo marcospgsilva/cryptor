@@ -5,6 +5,7 @@ defmodule CryptorWeb.AnalysisLive do
   use CryptorWeb, :live_view
 
   alias Cryptor.{
+    Utils,
     BotServer,
     CurrencyServer,
     Trader,
@@ -62,9 +63,9 @@ defmodule CryptorWeb.AnalysisLive do
       pids[:bot_pid],
       {
         :update_bot,
-        String.to_float(sell_percentage),
-        String.to_float(buy_percentage),
-        String.to_float(buy_amount)
+        Utils.validate_float(sell_percentage),
+        Utils.validate_float(buy_percentage),
+        Utils.validate_float(buy_amount)
       },
       []
     )
