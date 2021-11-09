@@ -114,7 +114,7 @@ defmodule Cryptor.Analysis do
 
   def schedule_process_orders_status(pids) do
     Process.send_after(
-      self(),
+      pids[:analysis_pid],
       {:process_orders_status,
        {PendingOrdersAgent.get_pending_orders_list(pids[:pending_orders_pid]), pids}},
       8000

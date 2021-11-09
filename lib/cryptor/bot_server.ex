@@ -31,8 +31,11 @@ defmodule Cryptor.BotServer do
 
   @impl true
   def handle_continue(:schedule_jobs, state) do
-    analisys()
-    schedule_place_orders()
+    pids = ProcessRegistry.get_servers_registry(state.user_id, state.bot.currency)
+    bot_pid = pids[:bot_pid]
+
+    analisys(bot_pid)
+    schedule_place_orders(bot_pid)
     {:noreply, state}
   end
 
@@ -60,7 +63,7 @@ defmodule Cryptor.BotServer do
         :analyze_orders,
         %State{bot: bot = %Bot{currency: currency, active: true, user_id: user_id}} = state
       ) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
+    pids = ProcessRegistry.get_servers_registry(user_id, currency)
     current_price = Cryptor.CurrencyServer.get_current_price(currency)
 
     case OrdersAgent.get_order_list(pids[:orders_pid]) do
@@ -78,7 +81,7 @@ defmodule Cryptor.BotServer do
             orders
             |> Enum.each(&Trader.analyze_transaction(current_price, &1, user_id, bot))
 
-            analisys()
+            analisys(pids[:bot_pid])
             {:noreply, state}
         end
     end
@@ -86,7 +89,8 @@ defmodule Cryptor.BotServer do
 
   @impl true
   def handle_info(:analyze_orders, state) do
-    analisys()
+    pids = ProcessRegistry.get_servers_registry(state.user_id, state.bot.currency)
+    analisys(pids[:bot_pid])
     {:noreply, state}
   end
 
@@ -98,7 +102,7 @@ defmodule Cryptor.BotServer do
           user_id: user_id
         } = state
       ) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
+    pids = ProcessRegistry.get_servers_registry(user_id, bot.currency)
 
     case Cryptor.CurrencyServer.get_current_price(bot.currency) do
       0.0 ->
@@ -133,23 +137,25 @@ defmodule Cryptor.BotServer do
         end
     end
 
-    schedule_place_orders()
+    schedule_place_orders(pids[:bot_pid])
     {:noreply, state}
   end
 
   @impl true
   def handle_info(:place_orders, state) do
-    schedule_place_orders()
+    pids = ProcessRegistry.get_servers_registry(state.user_id, state.bot.currency)
+    schedule_place_orders(pids[:bot_pid])
     {:noreply, state}
   end
 
   @impl true
   def handle_call(:get_state, _, state), do: {:reply, state, state}
 
-  defp analisys, do: Process.send_after(self(), :analyze_orders, Enum.random(7_000..8_000))
+  defp analisys(bot_pid),
+    do: Process.send_after(bot_pid, :analyze_orders, Enum.random(7_000..8_000))
 
-  def schedule_place_orders,
-    do: Process.send_after(self(), :place_orders, Enum.random(7_000..8_000))
+  def schedule_place_orders(bot_pid),
+    do: Process.send_after(bot_pid, :place_orders, Enum.random(7_000..8_000))
 
   def place_order(current_price, user_id, bot) do
     Trader.place_order(
