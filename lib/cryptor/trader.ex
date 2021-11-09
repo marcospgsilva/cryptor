@@ -185,7 +185,7 @@ defmodule Cryptor.Trader do
     buy_order = Orders.get_order(order.buy_order_id, order.user_id)
     order = Orders.get_order(order.order_id, order.user_id)
 
-    OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
+    OrdersAgent.remove_from_order_list(pids[:orders_pid], buy_order)
     Orders.update_order(buy_order, %{finished: true})
 
     Orders.update_order(order, %{finished: true, filled: true})
