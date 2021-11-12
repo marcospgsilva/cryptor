@@ -11,8 +11,6 @@ defmodule Cryptor.Requests do
     headers = get_headers(body, user_id)
     url = get_trade_api_base_url()
 
-    if trade_body !== %{tapi_method: "get_account_info"}, do: IO.inspect(body)
-
     Task.async(__MODULE__, :http_request, [method, url, headers, body])
     |> Task.await(Utils.get_timeout())
     |> handle_response()
@@ -48,23 +46,18 @@ defmodule Cryptor.Requests do
 
   def handle_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
-      {:ok, %{"error_message" => error_message}} = response ->
-        IO.inspect(response)
+      {:ok, %{"error_message" => error_message}} ->
         {:error, error_message}
 
       {:ok, %{"response_data" => _}} = response ->
         response
 
-      {:error, reason} = error ->
-        IO.inspect(reason)
+      {:error, _reason} = error ->
         error
     end
   end
 
-  def handle_response(response) do
-    IO.inspect(response)
-    {:error, :unexpected_response}
-  end
+  def handle_response(_response), do: {:error, :unexpected_response}
 
   def get_headers(body, user_id) do
     tapi_mac = "/tapi/v3/" <> "?#{body}"
