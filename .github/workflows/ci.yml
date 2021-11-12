@@ -27,43 +27,38 @@ jobs:
             --health-timeout 5s
             --health-retries 5
 
-  build:
+      steps:
+      - uses: actions/checkout@v2
+      - name: Set up Elixir
+        uses: erlef/setup-elixir@885971a72ed1f9240973bd92ab57af8c1aa68f24
+        with:
+          elixir-version: '1.12.2' 
+          otp-version: '22.2'
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
 
-    name: Build and test
-    runs-on: ubuntu-latest
+      - name: Install dependencies
+        run: mix deps.get
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Elixir
-      uses: erlef/setup-elixir@885971a72ed1f9240973bd92ab57af8c1aa68f24
-      with:
-        elixir-version: '1.12.2' 
-        otp-version: '22.2'
-    - name: Restore dependencies cache
-      uses: actions/cache@v2
-      with:
-        path: deps
-        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-        restore-keys: ${{ runner.os }}-mix-
+      - run: mix compile
 
-    - name: Install dependencies
-      run: mix deps.get
-
-    - run: mix compile
-
-    - run: mix ecto.migrate
-    
-    - run: npm install
-      working-directory: ./assets
-    
-    - run: npm run deploy --prefix ./assets
-
-    - name: Run Format
-      run: mix format --check-formatted
-
-    - name: Run Credo
-      run: mix credo
-
-    - name: Run tests
-      run: mix coveralls
+      - run: mix ecto.migrate
       
+      - run: npm install
+        working-directory: ./assets
+      
+      - run: npm run deploy --prefix ./assets
+
+      - name: Run Format
+        run: mix format --check-formatted
+
+      - name: Run Credo
+        run: mix credo
+
+      - name: Run tests
+        run: mix coveralls
+        
