@@ -56,8 +56,8 @@ jobs:
       - name: Run Format
         run: mix format --check-formatted
 
-      - name: Run tests
-        run: mix coveralls
+      # - name: Run tests
+      #   run: mix coveralls
 
   deploy:
     # only run this job if the test job succeeds
