@@ -7,6 +7,26 @@ on:
     branches: [ main ]
 
 jobs:
+  test:
+      env:
+        MIX_ENV: test
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      runs-on: ubuntu-latest
+
+      services:
+        db:
+          env:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: cryptor_test
+          image: postgres:11
+          ports: ['5432:5432']
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
   build:
 
     name: Build and test
@@ -27,9 +47,16 @@ jobs:
         restore-keys: ${{ runner.os }}-mix-
 
     - name: Install dependencies
-      run: |
-        mix deps.get
-        (cd assets && npm install)
+      run: mix deps.get
+
+    - run: mix compile
+
+    - run: mix ecto.migrate
+    
+    - run: npm install
+      working-directory: ./assets
+    
+    - run: npm run deploy --prefix ./assets
 
     - name: Run Format
       run: mix format --check-formatted
@@ -39,3 +66,4 @@ jobs:
 
     - name: Run tests
       run: mix coveralls
+      
