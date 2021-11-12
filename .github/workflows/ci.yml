@@ -56,9 +56,6 @@ jobs:
       - name: Run Format
         run: mix format --check-formatted
 
-      - name: Run Credo
-        run: mix credo
-
       - name: Run tests
         run: mix coveralls
         
