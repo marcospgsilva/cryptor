@@ -58,4 +58,30 @@ jobs:
 
       - name: Run tests
         run: mix coveralls
+
+  deploy:
+    # only run this job if the test job succeeds
+    needs: test
+
+    # only run this job if the workflow is running on the main branch
+    if: github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        
+        # actions/checkout@v2 only checks out the latest commit,
+        # so we need to tell it to check out the entire main branch
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # configure the gigalixir-actions with our credentials and app name
+      - uses: mhanberg/gigalixir-action@v0.1.0
+        with:
+          GIGALIXIR_USERNAME: ${{ secrets.GIGALIXIR_USERNAME }}
+          GIGALIXIR_PASSWORD: ${{ secrets.GIGALIXIR_PASSWORD }}
+          GIGALIXIR_APP: cryptor
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         
