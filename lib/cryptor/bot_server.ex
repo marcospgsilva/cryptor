@@ -7,6 +7,7 @@ defmodule Cryptor.BotServer do
 
   alias Cryptor.{
     Trader,
+    CurrencyServer,
     Orders,
     Bots.Bot,
     Orders.Order,
@@ -64,7 +65,7 @@ defmodule Cryptor.BotServer do
         %State{bot: bot = %Bot{currency: currency, active: true, user_id: user_id}} = state
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id, currency)
-    current_price = Cryptor.CurrencyServer.get_current_price(currency)
+    current_price = CurrencyServer.get_current_price(currency)
 
     case OrdersAgent.get_order_list(pids[:orders_pid]) do
       [] ->
@@ -104,7 +105,7 @@ defmodule Cryptor.BotServer do
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id, bot.currency)
 
-    case Cryptor.CurrencyServer.get_current_price(bot.currency) do
+    case CurrencyServer.get_current_price(bot.currency) do
       0.0 ->
         nil
 
@@ -165,5 +166,10 @@ defmodule Cryptor.BotServer do
       user_id,
       bot
     )
+  end
+
+  @impl true
+  def terminate(_reason, %{bot: bot, user_id: user_id}) do
+    Cryptor.Server.start_bot_server(bot, user_id)
   end
 end
