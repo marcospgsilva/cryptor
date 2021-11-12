@@ -1,63 +1,64 @@
-on: push
+name: Elixir CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        otp: [22.3.0]
-        elixir: [1.12.2]
+  build:
 
-    services:
-      db:
-        image: postgres:12
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: cryptor_test
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    name: Build and test
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1
-        with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
+    - uses: actions/checkout@v2
+    - name: Set up Elixir
+      uses: erlef/setup-elixir@885971a72ed1f9240973bd92ab57af8c1aa68f24
+      with:
+        elixir-version: '1.12.2'
+        otp-version: '22.3'
+    - name: Restore dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
 
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 14.17.2
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.17.2
 
-      - uses: actions/cache@v1
-        id: deps-cache
-        with:
-          path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+    - uses: actions/cache@v1
+      id: deps-cache
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
 
-      - uses: actions/cache@v1
-        id: build-cache
-        with:
-          path: _build
-          key: ${{ runner.os }}-build-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+    - uses: actions/cache@v1
+      id: build-cache
+      with:
+        path: _build
+        key: ${{ runner.os }}-build-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
 
-      - name: Find npm cache location
-        id: npm-cache
-        run: echo "::set-output name=dir::$(npm cache dir)"
+    - name: Find npm cache location
+      id: npm-cache
+      run: echo "::set-output name=dir::$(npm cache dir)"
 
-      - uses: actions/cache@v1
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/npm.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+    - uses: actions/cache@v1
+      with:
+        path: ${{ steps.npm-cache.outputs.dir }}
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/npm.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
 
-      - name: Install deps
-        run: |
-          mix deps.get
-          (cd assets && npm)
+    - name: Install deps
+      run: |
+        mix deps.get
+        (cd assets && npm)
 
-      - run: mix format --check-formatted
-      - run: mix credo
-      - run: mix coveralls
+    - run: mix format --check-formatted
+    - run: mix credo
+    - run: mix coveralls
