@@ -167,9 +167,4 @@ defmodule Cryptor.BotServer do
       bot
     )
   end
-
-  @impl true
-  def terminate(_reason, %{bot: bot, user_id: user_id}) do
-    Cryptor.Server.start_bot_server(bot, user_id)
-  end
 end

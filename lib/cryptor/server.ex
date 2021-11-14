@@ -8,7 +8,6 @@ defmodule Cryptor.Server do
   alias Cryptor.Orders.OrdersAgent
   alias Cryptor.Orders.PendingOrdersAgent
   alias Cryptor.CurrencyServer
-  alias Cryptor.Trader
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, %{users: nil}, name: __MODULE__)
@@ -16,15 +15,7 @@ defmodule Cryptor.Server do
 
   @impl true
   def init(state) do
-    {:ok, state, {:continue, :start_currency_servers}}
-  end
-
-  @impl true
-  def handle_continue(:start_currency_servers, state) do
-    Trader.get_currencies()
-    |> Enum.each(&start_currency_server/1)
-
-    {:noreply, state, {:continue, :get_users}}
+    {:ok, state, {:continue, :get_users}}
   end
 
   @impl true

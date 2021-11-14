@@ -13,7 +13,7 @@ defmodule Cryptor.CurrencyServer do
   def get_current_price(currency) do
     %{current_price: current_price} =
       String.to_existing_atom(currency <> "Server")
-      |> GenServer.call(:get_state, :infinity)
+      |> GenServer.call(:get_state, 40_00)
 
     current_price
   end
@@ -49,9 +49,4 @@ defmodule Cryptor.CurrencyServer do
         :get_current_price,
         Enum.random(7_000..8_000)
       )
-
-  @impl true
-  def terminate(_reason, %{currency: currency}) do
-    Cryptor.Server.start_currency_server(currency)
-  end
 end
