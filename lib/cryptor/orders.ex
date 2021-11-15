@@ -45,11 +45,11 @@ defmodule Cryptor.Orders do
       from order in Order,
         join: user in User,
         where:
-          order.coin == ^currency and
+          order.user_id == ^user_id and
             order.type == "sell" and
             order.filled == true and
-            order.user_id == ^user_id,
-        order_by: [desc: order.inserted_at]
+            order.coin == ^currency,
+        order_by: [desc: order.updated_at]
     )
   end
 

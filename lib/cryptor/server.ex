@@ -13,6 +13,10 @@ defmodule Cryptor.Server do
     GenServer.start_link(__MODULE__, %{users: nil}, name: __MODULE__)
   end
 
+  def start_servers(user) do
+    Process.send(Cryptor.Server, {:start_servers, user}, [])
+  end
+
   @impl true
   def init(state) do
     {:ok, state, {:continue, :get_users}}
