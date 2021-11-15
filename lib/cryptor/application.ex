@@ -19,7 +19,6 @@ defmodule Cryptor.Application do
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
       # {Cryptor.Worker, arg},
       Cryptor.CurrencySupervisor,
-      {Task.Supervisor, name: ExchangesSupervisor},
       {Registry, keys: :unique, name: Cryptor.ProcessRegistry},
       Cryptor.DynamicSupervisor,
       Cryptor.Server,
