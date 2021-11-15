@@ -18,7 +18,8 @@ defmodule Cryptor.BotServer do
 
   defmodule State do
     defstruct user_id: nil,
-              bot: nil
+              bot: nil,
+              latest_sell_order: []
   end
 
   # CLIENT
@@ -28,7 +29,21 @@ defmodule Cryptor.BotServer do
   def get_state(pid), do: GenServer.call(pid, :get_state, Utils.get_timeout())
 
   @impl true
-  def init(state), do: {:ok, state, {:continue, :schedule_jobs}}
+  def init(state), do: {:ok, state, {:continue, :get_latest_sell_order}}
+
+  @impl true
+  def handle_continue(
+        :get_latest_sell_order,
+        %{bot: bot, user_id: user_id} = state
+      ) do
+    case Orders.get_latest_sell_orders(bot.currency, user_id) do
+      [latest_sell_order | _] ->
+        {:noreply, %{state | latest_sell_order: latest_sell_order}, {:continue, :schedule_jobs}}
+
+      [] ->
+        {:noreply, state, {:continue, :schedule_jobs}}
+    end
+  end
 
   @impl true
   def handle_continue(:schedule_jobs, state) do
@@ -38,6 +53,11 @@ defmodule Cryptor.BotServer do
     analisys(bot_pid)
     schedule_place_orders(bot_pid)
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:update_latest_sell_order, latest_sell_order}, state) do
+    {:noreply, %{state | latest_sell_order: latest_sell_order}}
   end
 
   def handle_info(:change_bot_activity, %State{bot: bot = %Bot{active: active}} = state) do
@@ -100,7 +120,8 @@ defmodule Cryptor.BotServer do
         :place_orders,
         %State{
           bot: bot = %Bot{active: true},
-          user_id: user_id
+          user_id: user_id,
+          latest_sell_order: latest_sell_order
         } = state
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id, bot.currency)
@@ -110,13 +131,8 @@ defmodule Cryptor.BotServer do
         nil
 
       current_price ->
-        case Orders.get_latest_sell_orders(bot.currency, user_id) do
-          [latest_order | _] ->
-            if current_price <= latest_order.price * bot.buy_percentage_limit,
-              do: place_order(current_price, user_id, bot),
-              else: nil
-
-          _ ->
+        case latest_sell_order do
+          [] ->
             case OrdersAgent.get_order_list(pids[:orders_pid]) do
               [] ->
                 place_order(current_price, user_id, bot)
@@ -135,6 +151,11 @@ defmodule Cryptor.BotServer do
                       else: nil
                 end
             end
+
+          latest_order ->
+            if current_price <= latest_order.price * bot.buy_percentage_limit,
+              do: place_order(current_price, user_id, bot),
+              else: nil
         end
     end
 

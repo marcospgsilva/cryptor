@@ -98,7 +98,7 @@ defmodule Cryptor.Accounts do
            %User{}
            |> User.registration_changeset(full_attrs)
            |> Repo.insert() do
-      Process.send(Cryptor.Server, {:start_servers, user}, [])
+      Cryptor.Server.start_servers(user)
       result
     end
   end

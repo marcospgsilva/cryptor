@@ -188,7 +188,9 @@ defmodule Cryptor.Trader do
     OrdersAgent.remove_from_order_list(pids[:orders_pid], buy_order)
     Orders.update_order(buy_order, %{finished: true})
 
-    Orders.update_order(order, %{finished: true, filled: true})
+    {:ok, order} = Orders.update_order(order, %{finished: true, filled: true})
+
+    Process.send(pids[:bot_pid], {:update_latest_sell_order, order}, [])
   end
 
   def delete_order(id, user_id) do
