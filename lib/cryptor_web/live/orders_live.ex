@@ -60,6 +60,7 @@ defmodule CryptorWeb.OrdersLive do
   def handle_event("delete_order", %{"order_id" => id}, socket) do
     user_id = get_user_id_from_socket(socket)
     Trader.delete_order(String.to_integer(id), user_id)
+    Process.sleep(1000)
     {:noreply, socket}
   end
 

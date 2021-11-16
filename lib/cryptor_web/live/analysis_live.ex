@@ -70,6 +70,7 @@ defmodule CryptorWeb.AnalysisLive do
       []
     )
 
+    Process.sleep(1000)
     {:noreply, socket}
   end
 
@@ -96,6 +97,7 @@ defmodule CryptorWeb.AnalysisLive do
         end
     end
 
+    Process.sleep(1000)
     {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
   end
 

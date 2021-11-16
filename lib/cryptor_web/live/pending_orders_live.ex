@@ -49,7 +49,7 @@ defmodule CryptorWeb.PendingOrdersLive do
     user_id = get_user_id_from_socket(socket)
     Trader.remove_order_from_pending_list(String.to_integer(id), user_id)
     pending_orders = render_pending_orders(user_id)
-
+    Process.sleep(1000)
     {:noreply, assign(socket, pending_orders: pending_orders)}
   end
 

@@ -50,7 +50,7 @@
               </div>
             </div>
             <%= if @current_user do %>
-              <button phx-click="delete_order" phx-value-order_id="<%= order.order_id %>" class="flex shadow-2xl bg-red-600 rounded-lg p-1 -mt-3 m-auto text-white font-extrabold border-4 border-gray-800" >Remover Análise</button>
+              <button phx-click="delete_order" phx-value-order_id="<%= order.order_id %>" class="flex shadow-2xl bg-red-600 rounded-lg p-1 -mt-3 m-auto text-white font-extrabold border-4 border-gray-800 hover:bg-red-500" phx-disable-with="Removing..." >Remove Analyze</button>
             <% end %>
           </div>
         <% end %>
