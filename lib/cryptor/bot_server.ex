@@ -7,7 +7,7 @@ defmodule Cryptor.BotServer do
 
   alias Cryptor.{
     Trader,
-    CurrencyServer,
+    CurrencySocket,
     Orders,
     Orders.Order,
     Orders.OrdersAgent,
@@ -87,7 +87,7 @@ defmodule Cryptor.BotServer do
         } = state
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id, currency)
-    current_price = CurrencyServer.get_current_price(currency)
+    current_price = CurrencySocket.get_current_price(currency)
 
     case OrdersAgent.get_order_list(pids[:orders_pid]) do
       [] ->

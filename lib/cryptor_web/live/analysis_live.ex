@@ -7,7 +7,7 @@ defmodule CryptorWeb.AnalysisLive do
   alias Cryptor.{
     Utils,
     BotServer,
-    CurrencyServer,
+    CurrencySocket,
     Trader,
     Server,
     ProcessRegistry,

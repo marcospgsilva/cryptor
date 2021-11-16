@@ -32,7 +32,7 @@ defmodule CryptorWeb.OrdersLive do
 
           pid ->
             %{account_info: account_info} = Analysis.get_state(pid)
-            {:ok, available_brl} = Utils.get_available_amount(account_info, "brl")
+            {:ok, available_brl} = Utils.get_available_amount(account_info, "BRL")
 
             schedule_event()
 
@@ -57,7 +57,7 @@ defmodule CryptorWeb.OrdersLive do
 
       pids ->
         %{account_info: account_info} = Analysis.get_state(pids[:analysis_pid])
-        {:ok, available_brl} = Utils.get_available_amount(account_info, "brl")
+        {:ok, available_brl} = Utils.get_available_amount(account_info, "BRL")
         schedule_event()
         {:noreply, assign(socket, orders: orders, available_brl: available_brl)}
     end
@@ -98,7 +98,7 @@ defmodule CryptorWeb.OrdersLive do
       orders ->
         orders
         |> Enum.map(fn order ->
-          current_price = Cryptor.CurrencyServer.get_current_price(order.coin)
+          current_price = Cryptor.CurrencySocket.get_current_price(order.coin)
 
           %{
             id: order.id,

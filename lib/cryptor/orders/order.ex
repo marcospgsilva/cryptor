@@ -6,8 +6,8 @@ defmodule Cryptor.Orders.Order do
   import Ecto.Changeset
 
   @orders_statuses %{
-    "4" => :filled,
-    "3" => :canceled
+    "FILLED" => :filled,
+    "CANCELED" => :canceled
   }
 
   @fields [

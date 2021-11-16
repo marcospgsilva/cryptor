@@ -78,5 +78,7 @@ config :phoenix, :plug_init_mode, :runtime
 config :cryptor, Cryptor.Requests,
   trade_api_base_url: "https://www.mercadobitcoin.net/tapi/v3/",
   data_api_base_url: "https://www.mercadobitcoin.net/api/",
+  trade_api_base_url_v2: "https://api.binance.com/api/v3",
+  data_api_base_url_v2: "wss://stream.binance.com:9443/ws",
   tapi_id: "",
   tapi_id_secret_key: ""

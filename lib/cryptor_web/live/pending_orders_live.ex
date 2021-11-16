@@ -6,7 +6,7 @@ defmodule CryptorWeb.PendingOrdersLive do
   alias Cryptor.Trader
   alias Cryptor.ProcessRegistry
   alias Cryptor.Orders.PendingOrdersAgent
-  alias Cryptor.CurrencyServer
+  alias Cryptor.CurrencySocket
 
   # SERVER
   @impl true
@@ -74,7 +74,7 @@ defmodule CryptorWeb.PendingOrdersLive do
       orders ->
         orders
         |> Enum.map(fn order ->
-          current_price = CurrencyServer.get_current_price(order.coin)
+          current_price = CurrencySocket.get_current_price(order.coin)
 
           %{
             order_id: order.order_id,

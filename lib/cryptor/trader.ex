@@ -15,7 +15,7 @@ defmodule Cryptor.Trader do
     Utils
   }
 
-  @currencies ["BTC", "LTC", "XRP", "ETH", "ADA", "DOGE", "USDC", "BCH", "PAXG", "AXS"]
+  @currencies ["BTC", "LTC", "XRP", "ETH", "USDT", "ADA"]
 
   def get_currencies, do: @currencies
 
@@ -31,41 +31,35 @@ defmodule Cryptor.Trader do
       do: place_order(:sell, current_price, order, user_id, bot)
   end
 
-  def get_currency_price(coin) do
-    with {:ok, %{"ticker" => %{"last" => last}}} <-
-           Requests.request(:get, "#{coin}/ticker/"),
-         do: {:ok, String.to_float(last)}
-  end
-
   def get_account_info(user_id) do
-    with {:ok, response} <-
-           Requests.request(:post, %{tapi_method: "get_account_info"}, user_id),
-         do: response
+    with {:ok, %{"balances" => balances}} <- Requests.request(:get, "/account", %{}, user_id) do
+      balances
+    end
   end
 
   def get_order_data(order, user_id) do
-    with {:ok, %{"response_data" => %{"order" => %{"status" => order_status, "fee" => fee}}}} <-
+    with {:ok, %{"status" => order_status}} <-
            Requests.request(
-             :post,
+             :get,
+             "/order",
              %{
-               tapi_method: "get_order",
-               coin_pair: "BRL" <> order.coin,
-               order_id: order.order_id
+               symbol: order.coin <> "BRL",
+               orderId: order.order_id
              },
              user_id
            ) do
       mapped_statuses = Order.mapped_order_statuses()
-      %{status: Map.get(mapped_statuses, to_string(order_status)), fee: fee}
+      %{status: Map.get(mapped_statuses, to_string(order_status))}
     end
   end
 
   def set_order_status_canceled(order, user_id) do
     Requests.request(
-      :post,
+      :delete,
+      "/order",
       %{
-        tapi_method: "cancel_order",
-        coin_pair: "BRL" <> order.coin,
-        order_id: order.order_id
+        symbol: order.coin <> "BRL",
+        orderId: order.order_id
       },
       user_id
     )
@@ -84,7 +78,7 @@ defmodule Cryptor.Trader do
       newer_price,
       user_id
     )
-    |> place_order(quantity, method, "BRL#{currency}", newer_price, user_id)
+    |> place_order(quantity, method, "#{currency}BRL", newer_price, user_id)
     |> process_order(order, user_id)
   end
 
@@ -94,12 +88,15 @@ defmodule Cryptor.Trader do
   def place_order(:ok, quantity, method, coin_pair, newer_price, user_id) do
     Requests.request(
       :post,
+      "/order",
       %{
-        tapi_method: Utils.get_tapi_method(method),
-        coin_pair: coin_pair,
+        side: Utils.get_tapi_method(method),
+        symbol: coin_pair,
         quantity: Utils.format_float_with_decimals(quantity),
-        limit_price: newer_price,
-        async: true
+        price: newer_price,
+        type: "LIMIT",
+        newOrderRespType: "FULL",
+        timeInForce: "GTC"
       },
       user_id
     )
@@ -130,7 +127,7 @@ defmodule Cryptor.Trader do
     {:ok, available_amount} =
       analysis_pid
       |> get_account_info_data()
-      |> Utils.get_available_amount("brl")
+      |> Utils.get_available_amount("BRL")
 
     order_value = quantity * newer_price
 
@@ -140,7 +137,7 @@ defmodule Cryptor.Trader do
   end
 
   def process_order(
-        {:ok, %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}}},
+        {:ok, %{"side" => "SELL"} = new_order},
         order,
         user_id
       ) do
@@ -152,15 +149,13 @@ defmodule Cryptor.Trader do
     )
   end
 
-  def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order, user_id) do
+  def process_order({:ok, new_order}, order, user_id) do
     add_to_pending_orders(
       Utils.build_valid_order(new_order),
       order,
       user_id
     )
   end
-
-  def process_order({:ok, _}, _, _), do: {:error, :unexpected_response}
 
   def process_order({:error, _} = error, _, _), do: error
 
@@ -220,10 +215,8 @@ defmodule Cryptor.Trader do
     state[:account_info]
   end
 
-  def process_pending_order(%{buy_order_id: nil} = order, user_id) do
-    %{fee: fee} = get_order_data(order, user_id)
-    updated_order = %{order | fee: fee}
-    create_and_add_order(updated_order)
+  def process_pending_order(%{buy_order_id: nil} = order, _user_id) do
+    create_and_add_order(order)
   end
 
   def process_pending_order(order, _),

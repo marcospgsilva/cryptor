@@ -4,91 +4,90 @@ defmodule Cryptor.Requests do
   """
   alias Cryptor.Utils
 
-  def request(method, trade_body, user_id \\ nil)
+  def request(method, endpoint, trade_body, user_id \\ nil)
 
-  def request(:post = method, trade_body, user_id) do
-    body = build_body(trade_body)
-    headers = get_headers(body, user_id)
-    url = get_trade_api_base_url()
+  def request(method, endpoint, body, user_id) do
+    {_, shared_key, api_id} = get_api_keys(user_id) |> List.first()
 
-    Task.async(__MODULE__, :http_request, [method, url, headers, body])
+    timestamp = Utils.get_date_time()
+
+    totalParams =
+      body
+      |> Map.put(:timestamp, timestamp)
+      |> Map.put(:recvWindow, 15000)
+      |> URI.encode_query()
+
+    signature =
+      :crypto.mac(:hmac, :sha256, shared_key, totalParams)
+      |> Base.encode16()
+      |> String.downcase()
+
+    body =
+      case method do
+        :get ->
+          body
+          |> Map.put(:timestamp, timestamp)
+          |> Map.put(:recvWindow, 15000)
+          |> URI.encode_query()
+
+        _ ->
+          body
+          |> Map.put(:timestamp, timestamp)
+          |> Map.put(:recvWindow, 15000)
+          |> Map.put(:signature, signature)
+          |> URI.encode_query()
+      end
+
+    url = get_url(method, endpoint, body, signature)
+
+    Task.async(__MODULE__, :http_request, [
+      method,
+      url,
+      ["X-MBX-APIKEY": api_id],
+      if(method == :get, do: "", else: body)
+    ])
     |> Task.await(Utils.get_timeout())
     |> handle_response()
   end
 
-  def request(:get = method, path, _user_id) do
-    url = get_data_api_base_url(path)
+  def get_url(:get, endpoint, body, signature),
+    do: get_trade_api_base_url(endpoint) <> "?#{body}&signature=#{signature}"
 
-    Task.async(__MODULE__, :http_request, [method, url])
-    |> Task.await(Utils.get_timeout())
-    |> handle_get_response()
+  def get_url(_, endpoint, _body, _signature), do: get_trade_api_base_url(endpoint)
+
+  def http_request(method, url, headers \\ [], body \\ "") do
+    %HTTPoison.Request{
+      method: method,
+      url: url,
+      headers: headers,
+      body: body,
+      options: get_request_options()
+    }
+    |> HTTPoison.request()
   end
-
-  def http_request(method, url, headers \\ [], body \\ ""),
-    do:
-      %HTTPoison.Request{
-        method: method,
-        url: url,
-        headers: headers,
-        body: body,
-        options: get_request_options()
-      }
-      |> HTTPoison.request()
-
-  def handle_get_response({:ok, %HTTPoison.Response{body: body}}) do
-    case Jason.decode(body) do
-      {:ok, _body} = response -> response
-      _ = error -> error
-    end
-  end
-
-  def handle_get_response(_), do: {:error, :unexpected_response}
 
   def handle_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
-      {:ok, %{"error_message" => error_message}} ->
-        {:error, error_message}
+      {:ok, %{"msg" => msg} = response} ->
+        IO.inspect(response)
+        {:error, msg}
 
-      {:ok, %{"response_data" => _}} = response ->
+      {:ok, resp} = response ->
+        IO.inspect(resp)
         response
 
-      {:error, _reason} = error ->
+      {:error, reason} = error ->
+        IO.inspect(reason)
         error
     end
   end
 
   def handle_response(_response), do: {:error, :unexpected_response}
 
-  def get_headers(body, user_id) do
-    tapi_mac = "/tapi/v3/" <> "?#{body}"
-
-    {_, shared_key, api_id} = get_api_keys(user_id) |> List.first()
-
-    crypto =
-      :crypto.mac(:hmac, :sha512, shared_key, tapi_mac)
-      |> Base.encode16(padding: false)
-      |> String.downcase()
-
-    [
-      "Content-Type": "application/x-www-form-urlencoded",
-      "TAPI-ID": api_id,
-      "TAPI-MAC": crypto
-    ]
-  end
-
-  defp build_body(trade_body),
-    do:
-      trade_body
-      |> Map.put(:tapi_nonce, Utils.get_date_time())
-      |> URI.encode_query()
-
   def get_api_keys(user_id), do: :ets.lookup(:api_keys, user_id)
 
-  def get_data_api_base_url(path),
-    do: Application.get_env(:cryptor, Cryptor.Requests)[:data_api_base_url] <> path
-
-  def get_trade_api_base_url,
-    do: Application.get_env(:cryptor, Cryptor.Requests)[:trade_api_base_url]
+  def get_trade_api_base_url(path),
+    do: Application.get_env(:cryptor, Cryptor.Requests)[:trade_api_base_url_v2] <> path
 
   def get_request_options,
     do: Application.get_env(:cryptor, Cryptor.Requests)[:options]

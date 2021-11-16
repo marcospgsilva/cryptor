@@ -6,33 +6,48 @@ defmodule Cryptor.Utils do
 
   def build_valid_order(new_order),
     do: %Order{
-      order_id: new_order["order_id"],
-      quantity: new_order["quantity"] |> String.to_float(),
-      price: new_order["limit_price"] |> String.to_float(),
-      coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
-      fee: new_order["fee"],
-      type: get_order_type(new_order["order_type"]),
+      order_id: new_order["orderId"],
+      quantity: new_order["origQty"] |> String.to_float(),
+      price: new_order["price"] |> String.to_float(),
+      coin: new_order["symbol"] |> String.split("BRL") |> List.first(),
+      fee: get_fee(new_order["fills"]),
+      type: get_order_type(new_order["side"]),
       buy_order_id: nil,
       filled: false
     }
 
-  def get_available_amount(account_info, coin) do
-    case account_info["response_data"]["balance"][String.downcase(coin)]["available"] do
-      nil ->
-        {:ok, 0.00}
+  def get_fee([]), do: nil
 
-      available ->
+  def get_fee(fills) do
+    order = fills |> List.first()
+    order["commission"]
+  end
+
+  def get_available_amount(nil, _coin), do: {:ok, 0.0}
+
+  def get_available_amount([], _coin), do: {:ok, 0.0}
+
+  def get_available_amount(balances, coin) do
+    case balances
+         |> Enum.find({:ok, 0.00}, fn balance ->
+           balance["asset"] == coin
+         end) do
+      {:ok, 0.00} = default ->
+        default
+
+      balance ->
+        available = balance["free"]
         {:ok, String.to_float(available)}
     end
   end
 
-  def get_tapi_method(:buy), do: "place_buy_order"
+  def get_tapi_method(:buy), do: "BUY"
 
-  def get_tapi_method(:sell), do: "place_sell_order"
+  def get_tapi_method(:sell), do: "SELL"
 
-  def get_order_type(2), do: "sell"
+  def get_order_type("SELL"), do: "sell"
 
-  def get_order_type(1), do: "buy"
+  def get_order_type("BUY"), do: "buy"
 
   def get_order_type(:sell), do: "sell"
 
@@ -60,7 +75,7 @@ defmodule Cryptor.Utils do
   def calculate_variation(bought_price, current_price),
     do: ((current_price / bought_price - 1) * 100) |> Float.round(4)
 
-  def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix()
+  def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix(:millisecond)
 
   def get_timeout, do: :infinity
 

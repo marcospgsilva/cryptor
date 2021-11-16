@@ -18,6 +18,7 @@ defmodule Cryptor.Application do
       {Phoenix.PubSub, name: Cryptor.PubSub},
       # Start a worker by calling: Cryptor.Worker.start_link(arg)
       # {Cryptor.Worker, arg},
+      Cryptor.CurrencyAgent,
       Cryptor.CurrencySupervisor,
       {Registry, keys: :unique, name: Cryptor.ProcessRegistry},
       Cryptor.DynamicSupervisor,

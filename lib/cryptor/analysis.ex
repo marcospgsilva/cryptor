@@ -112,7 +112,7 @@ defmodule Cryptor.Analysis do
   end
 
   def schedule_update_account_info(analysis_pid),
-    do: Process.send_after(analysis_pid, :update_account_info, 8000)
+    do: Process.send_after(analysis_pid, :update_account_info, 10000)
 
   def schedule_process_orders_status(pids) do
     Process.send_after(
