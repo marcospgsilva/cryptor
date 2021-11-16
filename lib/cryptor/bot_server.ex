@@ -9,9 +9,10 @@ defmodule Cryptor.BotServer do
     Trader,
     CurrencyServer,
     Orders,
-    Bots.Bot,
     Orders.Order,
     Orders.OrdersAgent,
+    Orders.PendingOrdersAgent,
+    Bots.Bot,
     ProcessRegistry,
     Utils
   }
@@ -126,37 +127,43 @@ defmodule Cryptor.BotServer do
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id, bot.currency)
 
-    case CurrencyServer.get_current_price(bot.currency) do
-      0.0 ->
-        nil
+    case count_pending_buy_orders(pids[:pending_orders_pid], bot) <= 3 do
+      true ->
+        case CurrencyServer.get_current_price(bot.currency) do
+          0.0 ->
+            nil
 
-      current_price ->
-        case latest_sell_order do
-          [] ->
-            case OrdersAgent.get_order_list(pids[:orders_pid]) do
+          current_price ->
+            case latest_sell_order do
               [] ->
-                place_order(current_price, user_id, bot)
-
-              orders ->
-                case orders |> Enum.filter(&(&1.coin == bot.currency)) do
+                case OrdersAgent.get_order_list(pids[:orders_pid]) do
                   [] ->
                     place_order(current_price, user_id, bot)
 
-                  filtered_orders ->
-                    latest_buy =
-                      filtered_orders |> Enum.sort(&(&1.price < &2.price)) |> List.first()
+                  orders ->
+                    case orders |> Enum.filter(&(&1.coin == bot.currency)) do
+                      [] ->
+                        place_order(current_price, user_id, bot)
 
-                    if current_price <= latest_buy.price * bot.buy_percentage_limit,
-                      do: place_order(current_price, user_id, bot),
-                      else: nil
+                      filtered_orders ->
+                        latest_buy =
+                          filtered_orders |> Enum.sort(&(&1.price < &2.price)) |> List.first()
+
+                        if current_price <= latest_buy.price * bot.buy_percentage_limit,
+                          do: place_order(current_price, user_id, bot),
+                          else: nil
+                    end
                 end
-            end
 
-          latest_order ->
-            if current_price <= latest_order.price * bot.buy_percentage_limit,
-              do: place_order(current_price, user_id, bot),
-              else: nil
+              latest_order ->
+                if current_price <= latest_order.price * bot.buy_percentage_limit,
+                  do: place_order(current_price, user_id, bot),
+                  else: nil
+            end
         end
+
+      _ ->
+        nil
     end
 
     schedule_place_orders(pids[:bot_pid])
@@ -187,5 +194,13 @@ defmodule Cryptor.BotServer do
       user_id,
       bot
     )
+  end
+
+  defp count_pending_buy_orders(pending_order_pid, bot) do
+    PendingOrdersAgent.get_pending_orders_list(pending_order_pid)
+    |> Enum.filter(fn order ->
+      order.coin == bot.currency and order.type == "buy"
+    end)
+    |> Enum.count()
   end
 end
