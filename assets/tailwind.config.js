@@ -19,8 +19,6 @@ module.exports = {
         cyan: colors.cyan,
       },
       backgroundImage: _theme => ({
-        'XRP': "url('/images/XRP.png')",
-        'LTC': "url('/images/LTC.png')",
         'cryptor': "url('/images/cryptor.jpg')",
       })
     },

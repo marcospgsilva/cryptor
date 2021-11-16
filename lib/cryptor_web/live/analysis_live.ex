@@ -106,27 +106,36 @@ defmodule CryptorWeb.AnalysisLive do
 
     case pids[:bot_pid] do
       :undefined ->
-        nil
+        {:ok, bot} = Bot.create_bot(%{user_id: user_id, currency: currency})
 
-      pid ->
-        %{bot: bot} = BotServer.get_state(pid)
+        with {:ok, _pid} <- Server.start_bot_server(bot, user_id) do
+          ProcessRegistry.get_servers_registry(user_id, currency)
+          |> build_bot_currency()
+        end
 
-        orders =
-          Cryptor.Orders.OrdersAgent.get_order_list(pids[:orders_pid])
-          |> Enum.filter(&(&1.coin == bot.currency))
-
-        current_price = CurrencyServer.get_current_price(bot.currency)
-
-        %{
-          currency: bot.currency,
-          active: bot.active,
-          orders: orders,
-          current_price: current_price,
-          sell_percentage_limit: bot.sell_percentage_limit,
-          buy_percentage_limit: bot.buy_percentage_limit,
-          buy_amount: bot.buy_amount
-        }
+      _ ->
+        build_bot_currency(pids)
     end
+  end
+
+  def build_bot_currency(pids) do
+    %{bot: bot} = BotServer.get_state(pids[:bot_pid])
+
+    orders =
+      Cryptor.Orders.OrdersAgent.get_order_list(pids[:orders_pid])
+      |> Enum.filter(&(&1.coin == bot.currency))
+
+    current_price = CurrencyServer.get_current_price(bot.currency)
+
+    %{
+      currency: bot.currency,
+      active: bot.active,
+      orders: orders,
+      current_price: current_price,
+      sell_percentage_limit: bot.sell_percentage_limit,
+      buy_percentage_limit: bot.buy_percentage_limit,
+      buy_amount: bot.buy_amount
+    }
   end
 
   defp schedule_event(), do: Process.send_after(self(), "update_state", 9000)
