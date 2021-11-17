@@ -34,35 +34,35 @@
             <div class="flex flex-col flex-1 text-right self-center">
               <div class="flex flex-1 flex-wrap mt-2 mb-2">
                 <div x-data="{running: '<%= server.active %>'}" class="flex flex-1 mr-3">
-                  <p class="text-gray-400 font-light mr-2">State</p>
-                  <p :class="[running === 'true' ? 'font-extrabold mr-2 text-green-500' : 'font-extrabold mr-2 text-red-500']"><%= if(server.active, do: "On", else: "Off") %></p>
+                  <p class="text-gray-400 font-light mr-2">Estado</p>
+                  <p :class="[running === 'true' ? 'font-extrabold mr-2 text-green-500' : 'font-extrabold mr-2 text-red-500']"><%= if(server.active, do: "Ativado", else: "Desativado") %></p>
                   <p class="text-gray-400 font-extrabold">|</p>
                 </div>
                 <div class="flex flex-1 mr-3">
-                  <p class="text-gray-400 font-light mr-2">Analyzing</p>
+                  <p class="text-gray-400 font-light mr-2">Analizando</p>
                   <p class="text-green-400 font-extrabold mr-2"><%= Enum.count(server.orders) %></p>
                   <p class="text-gray-400 font-extrabold">|</p>
                 </div>
                 <div class="flex flex-1 mr-3 text-center">
-                  <p class="text-gray-400 font-light mr-2">Price</p>
+                  <p class="text-gray-400 font-light mr-2">Preço</p>
                   <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_float_with_decimals(server.current_price) |> Cryptor.Utils.format_for_brl() %></p>
                 </div>
               </div>
               <div x-data="{running: '<%= server.active %>'}" class="flex flex-1 flex-col self-center text-center">
                 <%= if @current_user do %>
                   <form phx-submit="update_percentages" class="flex flex-1 flex-col justify-self-start">
-                    <label class="text-white font-light">Percentage to sell:</label>
+                    <label class="text-white font-light">Porcent. de venda:</label>
                     <input name="sell_percentage" class="rounded-lg text-center bg-white border-2 border-yellow-500" type="number" min=".0001" max="2.0000" value="<%= server.sell_percentage_limit %>" step=".0001">
-                    <label class="text-white font-light mt-2">Percentage to buy:</label>
+                    <label class="text-white font-light mt-2">Porcent. de compra:</label>
                     <input name="buy_percentage" class="rounded-lg text-center bg-white border-2 border-yellow-500" type="number" min=".0001" max="2.0000" value="<%= server.buy_percentage_limit %>" step=".0001">
-                    <label class="text-white font-light mt-2">Amount to buy:</label>
+                    <label class="text-white font-light mt-2">Quant. de compra:</label>
                     <input name="buy_amount" class="rounded-lg text-center bg-white border-2 border-yellow-500" type="number" min=".0001" max="100.0" value="<%= Cryptor.Utils.format_float_with_decimals(server.buy_amount) %>" step=".0001">
                     <input name="coin" class="hidden" type="text" value="<%= server.currency %>">
-                    <button type="submit" class="flex flex-1 rounded-lg bg-green-400 p-2 mt-5 m-auto hover:bg-green-300" phx-disable-with="Saving...">Save changes</button>
+                    <button type="submit" class="flex flex-1 rounded-lg bg-green-400 p-2 mt-5 m-auto hover:bg-green-300" phx-disable-with="Salvando...">Salvar mudanças</button>
                   </form>
                   <form phx-submit="change_bot_activity">
                     <input name="currency" class="hidden" type="text" value="<%= server.currency %>">
-                    <button type="submit" :class="[running === 'true' ? 'flex flex-1 rounded-lg bg-red-500 p-2 mt-5 m-auto hover:bg-red-400' : 'flex flex-1 rounded-lg bg-green-400 p-2 mt-5 m-auto hover:bg-green-300']" phx-disable-with="<%= if(server.active, do: "Turning off...", else: "Turning on...") %>"> <%= if(server.active, do: "Turn-off Cryptor", else: "Turn-on Cryptor") %> </button>
+                    <button type="submit" :class="[running === 'true' ? 'flex flex-1 rounded-lg bg-red-500 p-2 mt-5 m-auto hover:bg-red-400' : 'flex flex-1 rounded-lg bg-green-400 p-2 mt-5 m-auto hover:bg-green-300']" phx-disable-with="<%= if(server.active, do: "Desativando...", else: "Ativando...") %>"> <%= if(server.active, do: "Desativar Bot", else: "Ativar Bot") %> </button>
                   </form>
                 <% end %>
               </div>
