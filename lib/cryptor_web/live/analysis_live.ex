@@ -138,8 +138,8 @@ defmodule CryptorWeb.AnalysisLive do
       current_price: current_price,
       sell_percentage_limit: bot.sell_percentage_limit,
       buy_percentage_limit: bot.buy_percentage_limit,
-      buy_amount: bot.buy_amount
-      # max_orders_amount: bot.max_orders_amount
+      buy_amount: bot.buy_amount,
+      max_orders_amount: bot.max_orders_amount
     }
   end
 

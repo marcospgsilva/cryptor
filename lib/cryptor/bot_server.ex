@@ -74,8 +74,8 @@ defmodule Cryptor.BotServer do
       Cryptor.Bot.update_bot(bot, %{
         sell_percentage_limit: changes.sell_percentage,
         buy_percentage_limit: changes.buy_percentage,
-        buy_amount: changes.buy_amount
-        # max_orders_amount: changes.max_orders_amount
+        buy_amount: changes.buy_amount,
+        max_orders_amount: changes.max_orders_amount
       })
 
     {:noreply, %{state | bot: bot}}
@@ -132,46 +132,46 @@ defmodule Cryptor.BotServer do
          |> PendingOrdersAgent.get_pending_orders_list()
          |> count_orders(bot) < 1 do
       true ->
-        # case pids[:orders_pid]
-        #      |> OrdersAgent.get_order_list()
-        #      |> count_orders(bot) < bot.max_orders_amount do
-        #   true ->
-        case CurrencyServer.get_current_price(bot.currency) do
-          0.0 ->
-            nil
+        case pids[:orders_pid]
+             |> OrdersAgent.get_order_list()
+             |> count_orders(bot) < bot.max_orders_amount do
+          true ->
+            case CurrencyServer.get_current_price(bot.currency) do
+              0.0 ->
+                nil
 
-          current_price ->
-            case latest_sell_order do
-              [] ->
-                case OrdersAgent.get_order_list(pids[:orders_pid]) do
+              current_price ->
+                case latest_sell_order do
                   [] ->
-                    place_order(current_price, user_id, bot)
-
-                  orders ->
-                    case orders |> Enum.filter(&(&1.coin == bot.currency)) do
+                    case OrdersAgent.get_order_list(pids[:orders_pid]) do
                       [] ->
                         place_order(current_price, user_id, bot)
 
-                      filtered_orders ->
-                        latest_buy =
-                          filtered_orders |> Enum.sort(&(&1.price < &2.price)) |> List.first()
+                      orders ->
+                        case orders |> Enum.filter(&(&1.coin == bot.currency)) do
+                          [] ->
+                            place_order(current_price, user_id, bot)
 
-                        if current_price <= latest_buy.price * bot.buy_percentage_limit,
-                          do: place_order(current_price, user_id, bot),
-                          else: nil
+                          filtered_orders ->
+                            latest_buy =
+                              filtered_orders |> Enum.sort(&(&1.price < &2.price)) |> List.first()
+
+                            if current_price <= latest_buy.price * bot.buy_percentage_limit,
+                              do: place_order(current_price, user_id, bot),
+                              else: nil
+                        end
                     end
+
+                  latest_order ->
+                    if current_price <= latest_order.price * bot.buy_percentage_limit,
+                      do: place_order(current_price, user_id, bot),
+                      else: nil
                 end
-
-              latest_order ->
-                if current_price <= latest_order.price * bot.buy_percentage_limit,
-                  do: place_order(current_price, user_id, bot),
-                  else: nil
             end
-        end
 
-      # _ ->
-      #   nil
-      # end
+          _ ->
+            nil
+        end
 
       _ ->
         nil
