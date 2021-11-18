@@ -52,7 +52,8 @@ defmodule CryptorWeb.AnalysisLive do
           "coin" => coin,
           "sell_percentage" => sell_percentage,
           "buy_percentage" => buy_percentage,
-          "buy_amount" => buy_amount
+          "buy_amount" => buy_amount,
+          "max_orders_amount" => max_orders_amount
         },
         socket
       ) do
@@ -63,14 +64,16 @@ defmodule CryptorWeb.AnalysisLive do
       pids[:bot_pid],
       {
         :update_bot,
-        Utils.validate_float(sell_percentage),
-        Utils.validate_float(buy_percentage),
-        Utils.validate_float(buy_amount)
+        %{
+          sell_percentage: Utils.validate_float(sell_percentage),
+          buy_percentage: Utils.validate_float(buy_percentage),
+          buy_amount: buy_amount,
+          max_orders_amount: Utils.validate_float(max_orders_amount) |> round()
+        }
       },
       []
     )
 
-    Process.sleep(1000)
     {:noreply, socket}
   end
 
@@ -97,7 +100,6 @@ defmodule CryptorWeb.AnalysisLive do
         end
     end
 
-    Process.sleep(1000)
     {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
   end
 
@@ -136,7 +138,8 @@ defmodule CryptorWeb.AnalysisLive do
       current_price: current_price,
       sell_percentage_limit: bot.sell_percentage_limit,
       buy_percentage_limit: bot.buy_percentage_limit,
-      buy_amount: bot.buy_amount
+      buy_amount: bot.buy_amount,
+      max_orders_amount: bot.max_orders_amount
     }
   end
 
