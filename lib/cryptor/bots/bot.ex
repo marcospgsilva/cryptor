@@ -14,7 +14,8 @@ defmodule Cryptor.Bots.Bot do
             :sell_amount,
             :buy_amount,
             :user_id,
-            :active
+            :active,
+            :max_orders_amount
           ] ++ @required_fields
 
   schema "bots" do
@@ -24,6 +25,7 @@ defmodule Cryptor.Bots.Bot do
     field :sell_amount, :float, default: 1.0
     field :buy_amount, :float, default: 1.0
     field :active, :boolean, default: false
+    field :max_orders_amount, :integer, default: 1
     belongs_to :user, Cryptor.Accounts.User
 
     timestamps(type: :utc_datetime)

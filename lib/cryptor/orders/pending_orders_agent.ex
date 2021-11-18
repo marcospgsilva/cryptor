@@ -10,16 +10,13 @@ defmodule Cryptor.Orders.PendingOrdersAgent do
 
   def get_pending_orders_list(pid), do: Agent.get(pid, & &1)
 
-  def add_to_pending_orders_list(pid, new_order) do
-    Agent.get_and_update(pid, fn pending_orders ->
-      {pending_orders, [new_order | pending_orders]}
-    end)
-  end
+  def add_to_pending_orders_list(pid, new_order),
+    do: Agent.update(pid, fn pending_orders -> [new_order | pending_orders] end)
 
   def remove_from_pending_orders_list(pid, order_to_be_removed) do
-    Agent.get_and_update(pid, fn pending_orders ->
-      {pending_orders,
-       pending_orders |> Enum.reject(&(order_to_be_removed.order_id == &1.order_id))}
+    Agent.update(pid, fn pending_orders ->
+      pending_orders
+      |> Enum.reject(&(order_to_be_removed.order_id == &1.order_id))
     end)
   end
 end

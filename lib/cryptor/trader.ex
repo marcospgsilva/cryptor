@@ -15,7 +15,7 @@ defmodule Cryptor.Trader do
     Utils
   }
 
-  @currencies ["BTC", "LTC", "XRP", "ETH", "USDC", "BCH", "ADA", "PAXG", "AXS"]
+  @currencies ["BTC", "LTC", "XRP", "ETH", "ADA", "DOGE", "USDC", "BCH", "PAXG", "AXS"]
 
   def get_currencies, do: @currencies
 

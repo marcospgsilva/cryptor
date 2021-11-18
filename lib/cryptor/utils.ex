@@ -37,10 +37,21 @@ defmodule Cryptor.Utils do
 
   def get_order_type(:buy), do: "buy"
 
+  def format_for_brl(0.0 = value),
+    do:
+      value
+      |> Float.to_string()
+      |> String.replace(".", ",0")
+
   def format_for_brl(value) when is_float(value),
     do:
       value
       |> Float.to_string()
+      |> String.replace(".", ",")
+
+  def format_for_brl(value) when is_binary(value),
+    do:
+      value
       |> String.replace(".", ",")
 
   def format_for_brl(value), do: value
