@@ -2,9 +2,10 @@ defmodule Cryptor.Utils do
   @moduledoc """
    Cryptor Utils
   """
+  alias Cryptor.Orders.Order
 
   def build_valid_order(new_order),
-    do: %{
+    do: %Order{
       order_id: new_order["order_id"],
       quantity: new_order["quantity"] |> String.to_float(),
       price: new_order["limit_price"] |> String.to_float(),
