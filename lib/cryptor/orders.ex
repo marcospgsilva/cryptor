@@ -2,15 +2,13 @@ defmodule Cryptor.Orders do
   import Ecto.Query
   alias Cryptor.Repo
   alias Cryptor.Orders.Order
-  alias Cryptor.Accounts.User
 
   def get_order(id, user_id) do
     Repo.one(
       from order in Order,
-        join: user in User,
         where:
           order.order_id == ^id and
-            user.id == ^user_id
+            order.user_id == ^user_id
     )
   end
 
@@ -30,7 +28,6 @@ defmodule Cryptor.Orders do
   def get_orders(user_id) do
     Repo.all(
       from order in Order,
-        join: user in User,
         where:
           order.finished == false and
             order.filled == true and
@@ -43,7 +40,6 @@ defmodule Cryptor.Orders do
   def get_latest_sell_orders(currency, user_id) do
     Repo.all(
       from order in Order,
-        join: user in User,
         where:
           order.user_id == ^user_id and
             order.type == "sell" and
@@ -56,7 +52,6 @@ defmodule Cryptor.Orders do
   def get_pending_orders(user_id) do
     Repo.all(
       from order in Order,
-        join: user in User,
         where:
           order.filled == false and
             order.user_id == ^user_id,

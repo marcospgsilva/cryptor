@@ -177,9 +177,7 @@ defmodule Cryptor.Trader do
     loaded_order = Orders.get_order(order.order_id, order.user_id)
     {:ok, order} = Orders.update_order(loaded_order, %{filled: true, fee: order.fee})
 
-    add_to_order_list = OrdersAgent.add_to_order_list(pids[:orders_pid], order)
-    IO.inspect(add_to_order_list, label: "CREATE AND ADD ORDER")
-    add_to_order_list
+    OrdersAgent.add_to_order_list(pids[:orders_pid], order)
   end
 
   def remove_and_update_order(order) do

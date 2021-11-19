@@ -74,6 +74,7 @@ defmodule CryptorWeb.AnalysisLive do
       []
     )
 
+    Process.sleep(1000)
     {:noreply, socket}
   end
 
