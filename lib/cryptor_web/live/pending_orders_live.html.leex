@@ -28,8 +28,10 @@
           <div>
             <div class="w-full min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
               <div class="flex-1 flex-grow self-center">
-                <div class="bg-contain bg-no-repeat h-9 w-9 relative -inset-7 -mt-12 ml-2" style="background-image: url('/images/<%= pending_order.coin %>.png')"></div>
-                <p class="text-white font-black text-xl"><%= pending_order.coin %></p>
+                <div class="flex flex-1 items-center">
+                  <p class="text-white font-black text-xl"><%= pending_order.coin %></p>
+                  <div class="bg-contain bg-no-repeat h-6 w-6 ml-2" style="background-image: url('/images/<%= pending_order.coin %>.png')"></div>
+                </div>
                 <p class="text-gray-400 font-light text-sm">#<%= pending_order.order_id %></p>
               </div>
               <div class="flex-1 text-right self-center">
