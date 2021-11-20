@@ -168,8 +168,8 @@ defmodule Cryptor.Trader do
     pending_order = pending_order |> Map.put(:user_id, user_id)
     pids = ProcessRegistry.get_servers_registry(user_id)
 
+    pending_order = Orders.create_order(pending_order |> Map.from_struct())
     PendingOrdersAgent.add_to_pending_orders_list(pids[:pending_orders_pid], pending_order)
-    Orders.create_order(pending_order)
   end
 
   def create_and_add_order(order) do
