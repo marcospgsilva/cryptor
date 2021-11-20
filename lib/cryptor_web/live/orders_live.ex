@@ -59,9 +59,15 @@ defmodule CryptorWeb.OrdersLive do
   @impl true
   def handle_event("delete_order", %{"order_id" => id}, socket) do
     user_id = get_user_id_from_socket(socket)
+    pids = ProcessRegistry.get_servers_registry(user_id)
     Trader.delete_order(String.to_integer(id), user_id)
+    orders = OrdersAgent.get_order_list(pids[:orders_pid])
+
+    %{account_info: account_info} = Analysis.get_state(pids[:analysis_pid])
+    {:ok, available_brl} = Utils.get_available_amount(account_info, "brl")
+
     Process.sleep(1000)
-    {:noreply, socket}
+    {:noreply, assign(socket, orders: orders, available_brl: available_brl)}
   end
 
   defp schedule_event(), do: Process.send_after(self(), "update_state", 3000)

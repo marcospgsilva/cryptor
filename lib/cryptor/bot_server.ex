@@ -91,6 +91,7 @@ defmodule Cryptor.BotServer do
 
     case OrdersAgent.get_order_list(pids[:orders_pid]) do
       [] ->
+        analisys(pids[:bot_pid])
         {:noreply, state}
 
       orders ->
@@ -98,6 +99,7 @@ defmodule Cryptor.BotServer do
              |> Enum.filter(fn order -> order.coin == currency end) do
           [] ->
             nil
+            analisys(pids[:bot_pid])
             {:noreply, state}
 
           orders ->
