@@ -63,50 +63,50 @@
                     <div class="flex fle-1 flex-col justify-between mt-4 mb-4">
                       <div
                         class="flex items-center justify-between mb-2"
-                        x-data="{ toggle_sell: '<%= server.sell_active %>' }">
+                        x-data="{ <%= "toggle_sell_" <> server.currency %>: '<%= server.sell_active %>' }">
                         <p class="text-white mr-2">Vender</p>
                         <div
                           class="relative w-12 h-6 rounded-full transition duration-200 ease-linear"
-                          :class="[toggle_sell === 'true' ? 'bg-green-400' : 'bg-red-600']">
+                          :class="[<%= "toggle_sell_" <> server.currency %> === 'true' ? 'bg-green-400' : 'bg-red-600']">
 
                           <label
-                            for="toggle_sell"
+                            for="<%= "toggle_sell_" <> server.currency %>"
                             class="absolute left-0 w-6 h-6 mb-2 bg-white border-2 rounded-full cursor-pointer transition transform duration-100 ease-linear"
-                            :class="[toggle_sell === 'true' ? 'translate-x-full border-green-400' : 'translate-x-0 border-gray-400']"></label>
-                              <input type="hidden" name="sell_active" x-model="toggle_sell" />
-                          <input type="checkbox" id="toggle_sell" class="hidden" @click="toggle_sell === 'false' ? toggle_sell = 'true' : toggle_sell = 'false'" value="<%= server.sell_active %>">
+                            :class="[<%= "toggle_sell_" <> server.currency %> === 'true' ? 'translate-x-full border-green-400' : 'translate-x-0 border-gray-400']"></label>
+                              <input type="hidden" name="sell_active" x-model="<%= "toggle_sell_" <> server.currency %>" />
+                          <input type="checkbox" id="<%= "toggle_sell_" <> server.currency %>" class="hidden" @click="<%= "toggle_sell_" <> server.currency %> === 'false' ? <%= "toggle_sell_" <> server.currency %> = 'true' : <%= "toggle_sell_" <> server.currency %> = 'false'" value="<%= server.sell_active %>">
                         </div>
                       </div>
                       <div
                         class="flex items-center justify-between mb-2"
-                        x-data="{ toggle_buy: '<%= server.buy_active %>' }">
+                        x-data="{ <%= "toggle_buy_" <> server.currency %>: '<%= server.buy_active %>' }">
                         <p class="text-white mr-2">Comprar</p>
                         <div
                           class="relative w-12 h-6 rounded-full transition duration-200 ease-linear"
-                          :class="[toggle_buy === 'true' ? 'bg-green-400' : 'bg-red-600']">
+                          :class="[<%= "toggle_buy_" <> server.currency %> === 'true' ? 'bg-green-400' : 'bg-red-600']">
 
                           <label
-                            for="toggle_buy"
+                            for="<%= "toggle_buy_" <> server.currency %>"
                             class="absolute left-0 w-6 h-6 mb-2 bg-white border-2 rounded-full cursor-pointer transition transform duration-100 ease-linear"
-                            :class="[toggle_buy === 'true' ? 'translate-x-full border-green-400' : 'translate-x-0 border-gray-400']"></label>
-                              <input type="hidden" name="buy_active" x-model="toggle_buy" />
-                          <input type="checkbox" id="toggle_buy" class="hidden" @click="toggle_buy === 'false' ? toggle_buy = 'true' : toggle_buy = 'false'" value="<%= server.buy_active %>">
+                            :class="[<%= "toggle_buy_" <> server.currency %> === 'true' ? 'translate-x-full border-green-400' : 'translate-x-0 border-gray-400']"></label>
+                              <input type="hidden" name="buy_active" x-model="<%= "toggle_buy_" <> server.currency %>" />
+                          <input type="checkbox" id="<%= "toggle_buy_" <> server.currency %>" class="hidden" @click="<%= "toggle_buy_" <> server.currency %> === 'false' ? <%= "toggle_buy_" <> server.currency %> = 'true' : <%= "toggle_buy_" <> server.currency %> = 'false'" value="<%= server.buy_active %>">
                         </div>
                       </div>
                       <div
                         class="flex items-center justify-between mb-2"
-                        x-data="{ toggle_server: '<%= server.active %>' }">
+                        x-data="{ <%= "toggle_server_" <> server.currency %>: '<%= server.active %>' }">
                         <p class="text-white mr-2">Bot</p>
                         <div
                           class="relative w-12 h-6 rounded-full transition duration-200 ease-linear self-end"
-                          :class="[toggle_server === 'true' ? 'bg-green-400' : 'bg-red-600']">
+                          :class="[<%= "toggle_server_" <> server.currency %> === 'true' ? 'bg-green-400' : 'bg-red-600']">
 
                           <label
-                            for="toggle_server"
+                            for="<%= "toggle_server_" <> server.currency %>"
                             class="absolute left-0 w-6 h-6 mb-2 bg-white border-2 rounded-full cursor-pointer transition transform duration-100 ease-linear"
-                            :class="[toggle_server === 'true' ? 'translate-x-full border-green-400' : 'translate-x-0 border-gray-400']"></label>
-                              <input type="hidden" name="bot_active" x-model="toggle_server" />
-                          <input type="checkbox" id="toggle_server" class="hidden" @click="toggle_server === 'false' ? toggle_server = 'true' : toggle_server = 'false'" value="<%= server.active %>">
+                            :class="[<%= "toggle_server_" <> server.currency %> === 'true' ? 'translate-x-full border-green-400' : 'translate-x-0 border-gray-400']"></label>
+                              <input type="hidden" name="bot_active" x-model="<%= "toggle_server_" <> server.currency %>" />
+                          <input type="checkbox" id="<%= "toggle_server_" <> server.currency %>" class="hidden" @click="<%= "toggle_server_" <> server.currency %> === 'false' ? <%= "toggle_server_" <> server.currency %> = 'true' : <%= "toggle_server_" <> server.currency %> = 'false'" value="<%= server.active %>">
                         </div>
                       </div>
                     </div>
