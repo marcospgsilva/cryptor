@@ -7,7 +7,6 @@ defmodule Cryptor.Server do
   alias Cryptor.Analysis
   alias Cryptor.Orders.OrdersAgent
   alias Cryptor.Orders.PendingOrdersAgent
-  alias Cryptor.CurrencyServer
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, %{users: nil}, name: __MODULE__)
@@ -80,9 +79,6 @@ defmodule Cryptor.Server do
 
     {:noreply, %{state | users: [user | state.users]}}
   end
-
-  def start_currency_server(currency),
-    do: add_to_dynamic_supervisor(CurrencyServer, %{currency: currency})
 
   def start_bot_server(bot, user_id) do
     bot_name = ProcessRegistry.via_tuple({user_id, "#{bot.currency}Server"})

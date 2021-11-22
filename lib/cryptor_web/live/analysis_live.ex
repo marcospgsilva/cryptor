@@ -47,13 +47,16 @@ defmodule CryptorWeb.AnalysisLive do
 
   @impl true
   def handle_event(
-        "update_percentages",
+        "update_bot",
         %{
           "coin" => coin,
           "sell_percentage" => sell_percentage,
           "buy_percentage" => buy_percentage,
           "buy_amount" => buy_amount,
-          "max_orders_amount" => max_orders_amount
+          "max_orders_amount" => max_orders_amount,
+          "sell_active" => sell_active,
+          "buy_active" => buy_active,
+          "bot_active" => bot_active
         },
         socket
       ) do
@@ -68,39 +71,16 @@ defmodule CryptorWeb.AnalysisLive do
           sell_percentage: Utils.validate_float(sell_percentage),
           buy_percentage: Utils.validate_float(buy_percentage),
           buy_amount: buy_amount,
-          max_orders_amount: Utils.validate_float(max_orders_amount) |> round()
+          max_orders_amount: Utils.validate_float(max_orders_amount) |> round(),
+          sell_active: String.to_existing_atom(sell_active),
+          buy_active: String.to_existing_atom(buy_active),
+          bot_active: String.to_existing_atom(bot_active)
         }
       },
       []
     )
 
     Process.sleep(1000)
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("change_bot_activity", %{"currency" => currency}, socket) do
-    user_id = get_user_id_from_socket(socket)
-
-    case Bot.get_bot(user_id, currency) do
-      nil ->
-        {:ok, bot} = Bot.create_bot(%{user_id: user_id, active: true})
-        Server.start_bot_server(bot, user_id)
-
-      bot ->
-        pids = ProcessRegistry.get_servers_registry(user_id, currency)
-
-        case pids[:bot_pid] do
-          nil ->
-            with {:ok, bot} <- Bot.update_bot(bot, %{active: true}) do
-              Server.start_bot_server(bot, user_id)
-            end
-
-          pid ->
-            Process.send(pid, :change_bot_activity, [])
-        end
-    end
-
     {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
   end
 
@@ -140,7 +120,9 @@ defmodule CryptorWeb.AnalysisLive do
       sell_percentage_limit: bot.sell_percentage_limit,
       buy_percentage_limit: bot.buy_percentage_limit,
       buy_amount: bot.buy_amount,
-      max_orders_amount: bot.max_orders_amount
+      max_orders_amount: bot.max_orders_amount,
+      buy_active: bot.buy_active,
+      sell_active: bot.sell_active
     }
   end
 
