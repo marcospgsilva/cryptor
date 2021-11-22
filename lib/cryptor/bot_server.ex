@@ -61,11 +61,6 @@ defmodule Cryptor.BotServer do
     {:noreply, %{state | latest_sell_order: latest_sell_order}}
   end
 
-  def handle_info(:change_bot_activity, %State{bot: bot = %Bot{active: active}} = state) do
-    {:ok, bot} = Cryptor.Bot.update_bot(bot, %{active: !active})
-    {:noreply, %{state | bot: bot}}
-  end
-
   def handle_info(
         {:update_bot, changes},
         %State{bot: bot} = state
@@ -75,7 +70,10 @@ defmodule Cryptor.BotServer do
         sell_percentage_limit: changes.sell_percentage,
         buy_percentage_limit: changes.buy_percentage,
         buy_amount: changes.buy_amount,
-        max_orders_amount: changes.max_orders_amount
+        max_orders_amount: changes.max_orders_amount,
+        sell_active: changes.sell_active,
+        buy_active: changes.buy_active,
+        active: changes.bot_active
       })
 
     {:noreply, %{state | bot: bot}}
@@ -84,7 +82,9 @@ defmodule Cryptor.BotServer do
   @impl true
   def handle_info(
         :analyze_orders,
-        %State{bot: bot = %Bot{currency: currency, active: true, user_id: user_id}} = state
+        %State{
+          bot: bot = %Bot{currency: currency, active: true, user_id: user_id, sell_active: true}
+        } = state
       ) do
     pids = ProcessRegistry.get_servers_registry(user_id, currency)
     current_price = CurrencyServer.get_current_price(currency)
@@ -123,7 +123,7 @@ defmodule Cryptor.BotServer do
   def handle_info(
         :place_orders,
         %State{
-          bot: bot = %Bot{active: true},
+          bot: bot = %Bot{active: true, buy_active: true},
           user_id: user_id,
           latest_sell_order: latest_sell_order
         } = state
