@@ -23,27 +23,27 @@
   <%= if Enum.empty?(@analysis) do %>
     <h3 class="text-xl text-white text-center">Você não possui bots registrados.</h3>
   <% else %>
-    <div class="flex-col shadow-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5 max-w-2xl m-auto">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5">
       <%= if !Enum.empty?(@analysis) do %>
         <%= for server <- @analysis do %>
-          <div class="w-full flex-col min-h-12 shadow-lg p-3 mt-5 rounded-lg bg-secondary flex">
+          <div class="flex flex-col min-h-12 shadow-lg p-3 rounded-lg bg-secondary">
             <div class="flex flex-1 justify-center items-center self-center flex-grow">
               <div class="bg-contain bg-no-repeat h-9 w-9 relative mr-3" style="background-image: url('/images/<%= server.currency %>.png')"></div>
               <p class="text-white font-black text-xl"><%= server.currency %></p>
             </div>
             <div class="flex flex-col flex-1 text-right self-center">
-              <div class="flex flex-1 flex-wrap mt-2 mb-2">
-                <div x-data="{running: '<%= server.active %>'}" class="flex flex-1 mr-3">
+              <div class="flex flex-1 flex-col mt-2 mb-2 lg:flex-row">
+                <div x-data="{running: '<%= server.active %>'}" class="flex flex-1 justify-between lg:mr-3">
                   <p class="text-gray-400 font-light mr-2">Estado</p>
                   <p :class="[running === 'true' ? 'font-extrabold mr-2 text-green-500' : 'font-extrabold mr-2 text-red-500']"><%= if(server.active, do: "Ativado", else: "Desativado") %></p>
-                  <p class="text-gray-400 font-extrabold">|</p>
+                  <p class="hidden lg:block text-gray-400 font-extrabold">|</p>
                 </div>
-                <div class="flex flex-1 mr-3">
+                <div class="flex flex-1 justify-between lg:mr-3">
                   <p class="text-gray-400 font-light mr-2">Analizando</p>
                   <p class="text-green-400 font-extrabold mr-2"><%= Enum.count(server.orders) %></p>
-                  <p class="text-gray-400 font-extrabold">|</p>
+                  <p class="hidden lg:block text-gray-400 font-extrabold">|</p>
                 </div>
-                <div class="flex flex-1 mr-3 text-center">
+                <div class="flex flex-1 text-center justify-between lg:mr-3">
                   <p class="text-gray-400 font-light mr-2">Preço</p>
                   <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_float_with_decimals(server.current_price) |> Cryptor.Utils.format_for_brl() %></p>
                 </div>
