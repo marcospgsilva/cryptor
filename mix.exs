@@ -55,7 +55,8 @@ defmodule Cryptor.MixProject do
       {:excoveralls, "~> 0.10", only: :test},
       {:appsignal_phoenix, "~> 2.0.0"},
       {:phx_gen_auth, "~> 0.7", only: [:dev], runtime: false},
-      {:libcluster, "~> 3.3"}
+      {:libcluster, "~> 3.3"},
+      {:contex, "~> 0.4.0"}
     ]
   end
 

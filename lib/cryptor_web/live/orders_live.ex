@@ -8,11 +8,17 @@ defmodule CryptorWeb.OrdersLive do
   alias Cryptor.ProcessRegistry
   alias Cryptor.Utils
   alias Cryptor.Orders.OrdersAgent
+  alias Cryptor.Graph
+
+  @number_of_points 100
 
   # SERVER
   @impl true
   def mount(_params, session, socket) do
-    socket = assign_defaults(session, socket)
+    socket =
+      assign_defaults(session, socket)
+      |> assign(orders: [])
+
     user_id = get_user_id_from_socket(socket)
 
     case ProcessRegistry.get_servers_registry(user_id) do
@@ -33,7 +39,10 @@ defmodule CryptorWeb.OrdersLive do
             schedule_event()
 
             {:ok,
-             assign(socket, orders: render_currencies(user_id), available_brl: available_brl)}
+             assign(socket,
+               orders: render_currencies(user_id, socket),
+               available_brl: available_brl
+             )}
         end
     end
   end
@@ -41,7 +50,7 @@ defmodule CryptorWeb.OrdersLive do
   @impl true
   def handle_info("update_state", socket) do
     user_id = get_user_id_from_socket(socket)
-    orders = render_currencies(user_id)
+    orders = render_currencies(user_id, socket)
 
     case ProcessRegistry.get_servers_registry(user_id) do
       nil ->
@@ -79,9 +88,9 @@ defmodule CryptorWeb.OrdersLive do
     end
   end
 
-  def render_currencies(nil), do: []
+  def render_currencies(nil, _), do: []
 
-  def render_currencies(user_id) do
+  def render_currencies(user_id, socket) do
     pids = ProcessRegistry.get_servers_registry(user_id)
 
     case OrdersAgent.get_order_list(pids[:orders_pid]) do
@@ -100,7 +109,8 @@ defmodule CryptorWeb.OrdersLive do
             bought_value: order.price,
             quantity: order.quantity,
             current_price: current_price,
-            variation: Utils.calculate_variation(order.price, current_price)
+            variation: Utils.calculate_variation(order.price, current_price),
+            data: Graph.build_order_history(socket, order.order_id, order.price, current_price)
           }
         end)
     end
