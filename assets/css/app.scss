@@ -91,3 +91,18 @@
   display: block;
   margin: -1rem 0 2rem;
 }
+
+.bar::-webkit-scrollbar {
+  margin-top: 4px;
+  height: 12px;               /* width of the entire scrollbar */
+}
+
+.bar::-webkit-scrollbar-track {
+  background: #25262E;        /* color of the tracking area */
+}
+
+.bar::-webkit-scrollbar-thumb {
+  background-color: #3b3b3f;    /* color of the scroll thumb */
+  border-radius: 20px;       /* roundness of the scroll thumb */
+  border: 3px solid #25262E;  /* creates padding around scroll thumb */
+}

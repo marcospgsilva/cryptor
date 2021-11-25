@@ -10,8 +10,6 @@ defmodule CryptorWeb.OrdersLive do
   alias Cryptor.Orders.OrdersAgent
   alias Cryptor.Graph
 
-  @number_of_points 100
-
   # SERVER
   @impl true
   def mount(_params, session, socket) do

@@ -13,13 +13,22 @@ defmodule Cryptor.Graph do
   defp update_sparkline_style(%Contex.Sparkline{} = sparkline) do
     %{
       sparkline
-      | line_colour: "#F5B11E",
-        line_width: 3,
+      | line_colour: set_line_colour(sparkline),
+        line_width: 2,
         fill_colour: "rgba(0, 0, 0, 0.0)",
         height: 50,
-        width: 150
+        width: Enum.count(sparkline.data) * 1.5 * 10
     }
   end
+
+  defp set_line_colour(%Contex.Sparkline{data: [first_value | _] = data}) do
+    latest_value = data |> List.last()
+    if first_value <= latest_value, do: "#10B981", else: "#EF4444"
+  end
+
+  defp set_line_colour(%Contex.Sparkline{}), do: "#10B981"
+
+  def build_order_history(_socket, _order_id, _initial_value, 0.0), do: []
 
   def build_order_history(socket, order_id, initial_value, current_price) do
     case socket.assigns.orders do
