@@ -26,34 +26,37 @@
     <% else %>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gradient-to-r from-yellow-400 to-yellow-600 pl-6 pr-6 rounded-3xl p-5">
         <%= for order <- @orders do %>
-            <div x-data="{ profit: '<%=order.variation > 0%>' }" class=" flex flex-1 flex-col w-full min-h-12 shadow-lg p-3 rounded-lg bg-secondary">
-              <div class="flex flex-1 items-center">
-              <div class="flex-1 flex-grow self-center">
-                <div class="flex flex-1 items-center">
-                  <p class="text-white font-black text-xl"><%= order.coin %></p>
-                  <div class="bg-contain bg-no-repeat h-6 w-6 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
+            <div x-data="{ profit: '<%=order.variation > 0%>' }" class="flex flex-1 flex-col min-h-12 shadow-lg p-3 rounded-lg bg-secondary">
+              <div class="flex flex-1 flex-col justify-center xl:flex-row">
+                <div class="flex flex-1 flex-col text-center flex-grow self-center xl:text-left">
+                  <div class="flex flex-1 items-center">
+                    <p class="text-white font-black text-xl"><%= order.coin %></p>
+                    <div class="bg-contain bg-no-repeat h-6 w-6 ml-2" style="background-image: url('/images/<%= order.coin %>.png')"></div>
+                  </div>
+                  <p class="text-gray-400 font-light text-sm">#<%= order.order_id %></p>
+                  <p :class="[profit === 'true' ? 'font-light text-xl text-green-500' : 'font-light text-xl text-red-500']"><%= Cryptor.Utils.format_float_with_decimals(order.variation) %>%</p>
                 </div>
-                <p class="text-gray-400 font-light text-sm">#<%= order.order_id %></p>
-                <p :class="[profit === 'true' ? 'font-light text-xl text-green-500' : 'font-light text-xl text-red-500']"><%= Cryptor.Utils.format_float_with_decimals(order.variation) %>%</p>
+                <div class="flex flex-1 items-center self-center my-4 xl:my-0">
+                  <%= Cryptor.Graph.make_plot(order.data |> Enum.reverse()) %>
+                </div>
+                <div class="flex flex-1 flex-col text-center self-center xl:text-right">
+                  <div>
+                    <p class="text-gray-400 font-light">Quantidade</p>
+                    <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(order.quantity) %></p>
+                  </div>
+                  <div>
+                    <p class="text-gray-400 font-light">Valor inicial</p>
+                    <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(order.bought_value) %></p>
+                  </div>
+                  <div>
+                    <p class="text-gray-400 font-light">Valor atual</p>
+                      <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(order.current_price) %></p>
+                  </div>
+                </div>
               </div>
-              <div class="flex-1 text-right self-center">
-                <div>
-                  <p class="text-gray-400 font-light">Quantidade</p>
-                  <p class="text-green-400 font-extrabold"><%= Cryptor.Utils.format_for_brl(order.quantity) %></p>
-                </div>
-                <div>
-                  <p class="text-gray-400 font-light">Valor inicial</p>
-                  <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(order.bought_value) %></p>
-                </div>
-                <div>
-                  <p class="text-gray-400 font-light">Valor atual</p>
-                    <p class="text-green-400 font-extrabold">R$ <%= Cryptor.Utils.format_for_brl(order.current_price) %></p>
-                </div>
-              </div>
-              </div>
-            <%= if @current_user do %>
-              <button phx-click="delete_order" phx-value-order_id="<%= order.order_id %>" class="flex shadow-2xl bg-red-600 rounded-lg p-1 m-auto text-white font-extrabold border-4 border-gray-800 hover:bg-red-500" phx-disable-with="Removendo..." >Remover Análise</button>
-            <% end %>
+              <%= if @current_user do %>
+                <button phx-click="delete_order" phx-value-order_id="<%= order.order_id %>" class="flex shadow-2xl bg-red-600 rounded-lg p-1 m-auto text-white font-extrabold border-4 border-gray-800 hover:bg-red-500" phx-disable-with="Removendo..." >Remover Análise</button>
+              <% end %>
             </div>
         <% end %>
       </div>
