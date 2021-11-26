@@ -110,7 +110,7 @@ defmodule CryptorWeb.AnalysisLive do
       Cryptor.Orders.OrdersAgent.get_order_list(pids[:orders_pid])
       |> Enum.filter(&(&1.coin == bot.currency))
 
-    current_price = CurrencyServer.get_current_price(bot.currency)
+    current_price = CurrencySocket.get_current_price(bot.currency)
 
     %{
       currency: bot.currency,

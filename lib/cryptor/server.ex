@@ -7,7 +7,6 @@ defmodule Cryptor.Server do
   alias Cryptor.Analysis
   alias Cryptor.Orders.OrdersAgent
   alias Cryptor.Orders.PendingOrdersAgent
-  alias Cryptor.CurrencySocket
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, %{users: nil}, name: __MODULE__)

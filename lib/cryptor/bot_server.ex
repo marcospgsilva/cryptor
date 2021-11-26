@@ -138,7 +138,7 @@ defmodule Cryptor.BotServer do
              |> OrdersAgent.get_order_list()
              |> count_orders(bot) < bot.max_orders_amount do
           true ->
-            case CurrencyServer.get_current_price(bot.currency) do
+            case CurrencySocket.get_current_price(bot.currency) do
               0.0 ->
                 nil
 
