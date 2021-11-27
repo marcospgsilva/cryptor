@@ -9,7 +9,7 @@ defmodule Cryptor.Utils do
       order_id: new_order["orderId"],
       quantity: new_order["origQty"] |> String.to_float(),
       price: new_order["price"] |> String.to_float(),
-      coin: new_order["symbol"] |> String.split("BRL") |> List.first(),
+      coin: new_order["symbol"] |> String.split("USDT") |> List.first(),
       fee: get_fee(new_order["fills"]),
       type: get_order_type(new_order["side"]),
       buy_order_id: nil,

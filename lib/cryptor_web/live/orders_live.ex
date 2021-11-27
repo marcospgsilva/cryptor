@@ -32,7 +32,7 @@ defmodule CryptorWeb.OrdersLive do
 
           pid ->
             %{account_info: account_info} = Analysis.get_state(pid)
-            {:ok, available_brl} = Utils.get_available_amount(account_info, "BRL")
+            {:ok, available_brl} = Utils.get_available_amount(account_info, "USDT")
 
             schedule_event()
 
@@ -57,7 +57,7 @@ defmodule CryptorWeb.OrdersLive do
 
       pids ->
         %{account_info: account_info} = Analysis.get_state(pids[:analysis_pid])
-        {:ok, available_brl} = Utils.get_available_amount(account_info, "BRL")
+        {:ok, available_brl} = Utils.get_available_amount(account_info, "USDT")
         schedule_event()
         {:noreply, assign(socket, orders: orders, available_brl: available_brl)}
     end

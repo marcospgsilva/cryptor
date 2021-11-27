@@ -5,7 +5,7 @@ defmodule Cryptor.CurrencySocket do
     downcase_currency = String.downcase(currency)
 
     WebSockex.start_link(
-      get_data_api_base_url("/#{downcase_currency}brl@ticker"),
+      get_data_api_base_url("/#{downcase_currency}usdt@ticker"),
       __MODULE__,
       %{currency: currency},
       name: String.to_atom(currency <> "Server")

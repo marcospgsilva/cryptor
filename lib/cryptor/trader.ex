@@ -15,7 +15,25 @@ defmodule Cryptor.Trader do
     Utils
   }
 
-  @currencies ["BTC", "LTC", "XRP", "ETH", "USDT", "ADA"]
+  @currencies [
+    "BTC",
+    "LTC",
+    "XRP",
+    "ETH",
+    "ADA",
+    "USDC",
+    "SHIB",
+    "BNB",
+    "MATIC",
+    "ENJ",
+    "SAND",
+    "MANA",
+    "ILV",
+    "HNT",
+    "EGLD",
+    "GALA",
+    "FLOW"
+  ]
 
   def get_currencies, do: @currencies
 
@@ -43,7 +61,7 @@ defmodule Cryptor.Trader do
              :get,
              "/order",
              %{
-               symbol: order.coin <> "BRL",
+               symbol: order.coin <> "USDT",
                orderId: order.order_id
              },
              user_id
@@ -58,7 +76,7 @@ defmodule Cryptor.Trader do
       :delete,
       "/order",
       %{
-        symbol: order.coin <> "BRL",
+        symbol: order.coin <> "USDT",
         orderId: order.order_id
       },
       user_id
@@ -78,7 +96,7 @@ defmodule Cryptor.Trader do
       newer_price,
       user_id
     )
-    |> place_order(quantity, method, "#{currency}BRL", newer_price, user_id)
+    |> place_order(quantity, method, "#{currency}USDT", newer_price, user_id)
     |> process_order(order, user_id)
   end
 
@@ -127,7 +145,7 @@ defmodule Cryptor.Trader do
     {:ok, available_amount} =
       analysis_pid
       |> get_account_info_data()
-      |> Utils.get_available_amount("BRL")
+      |> Utils.get_available_amount("USDT")
 
     order_value = quantity * newer_price
 
