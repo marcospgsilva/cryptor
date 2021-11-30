@@ -36,8 +36,13 @@ defmodule Cryptor.Graph do
         [initial_value]
 
       orders ->
-        order = Enum.find(orders, &(&1.order_id == order_id))
-        [current_price | order.data]
+        case Enum.find(orders, &(&1.order_id == order_id)) do
+          nil ->
+            [initial_value]
+
+          order ->
+            [current_price | order.data]
+        end
     end
   end
 end
