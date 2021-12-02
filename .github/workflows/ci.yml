@@ -54,7 +54,7 @@ jobs:
       - name: Npm install and format
         run: |
           npm install
-          npm run deploy --prefix ./assets
+          npm run deploy --prefix
 
       - name: Run Format
         run: mix format --check-formatted
