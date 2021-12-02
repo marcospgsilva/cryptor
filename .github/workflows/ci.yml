@@ -46,14 +46,14 @@ jobs:
           mix deps.get
           mix compile
           mix ecto.migrate
-
-      - name: Install NPM
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
         with:
           node-version: 12.16.2
-          run: npm install
           working-directory: ./assets
-
-      - run: npm run deploy --prefix ./assets
+      - name: Npm install and format
+        run: |
+          npm run deploy --prefix ./assets
 
       - name: Run Format
         run: mix format --check-formatted
