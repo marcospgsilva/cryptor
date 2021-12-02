@@ -43,17 +43,16 @@ jobs:
           restore-keys: ${{ runner.os }}-mix-
 
       - name: Install dependencies
-        run: mix deps.get
-
-      - run: mix compile
-
-      - run: mix ecto.migrate
+        run: |
+        mix deps.get
+        mix compile
+        mix ecto.migrate
 
       - name: Setup Node.js
         with:
           node-version: 12.16.2
       - name: Npm install and format
-      - run: |
+        run: |
           cd assets
           npm install
           npm run deploy --prefix ./assets
