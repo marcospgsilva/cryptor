@@ -53,6 +53,7 @@ jobs:
           working-directory: ./assets
       - name: Npm install and format
         run: |
+          npm install
           npm run deploy --prefix ./assets
 
       - name: Run Format
