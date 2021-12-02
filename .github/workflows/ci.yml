@@ -50,10 +50,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12.16.2
+          working-directory: ./assets
       - name: Npm install and format
         run: |
-          cd assets
-          npm install
           npm run deploy --prefix ./assets
 
       - name: Run Format
