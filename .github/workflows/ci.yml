@@ -52,7 +52,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12.16.2
-      - name: npm install and format
+
+      - name: Npm install and format
           working-directory: ./assets
 
       - run: npm install
