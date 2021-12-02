@@ -53,7 +53,8 @@ jobs:
         with:
           node-version: 12.16.2
       - name: npm install and format
-        working-directory: ./assets
+          working-directory: ./assets
+
       - run: npm install
       - run: npm run deploy --prefix ./assets
 
