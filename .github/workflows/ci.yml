@@ -50,10 +50,10 @@ jobs:
       - name: Install NPM
         with:
           node-version: 12.16.2
-        run: npm install
-        working-directory: ./assets
+          run: npm install
+          working-directory: ./assets
 
-        run: npm run deploy --prefix ./assets
+      - run: npm run deploy --prefix ./assets
 
       - name: Run Format
         run: mix format --check-formatted
