@@ -55,9 +55,8 @@ jobs:
 
       - name: Npm install and format
           working-directory: ./assets
-
-      - run: npm install
-      - run: npm run deploy --prefix ./assets
+        - run: npm install
+        - run: npm run deploy --prefix ./assets
 
       - name: Run Format
         run: mix format --check-formatted
