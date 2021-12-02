@@ -28,7 +28,7 @@ jobs:
             --health-retries 5
       steps:
       - uses: actions/checkout@v2
-        uses: actions/setup-node@v1
+      - uses: actions/setup-node@v1
         with:
           node-version: 12.16.2
       - name: Set up Elixir
