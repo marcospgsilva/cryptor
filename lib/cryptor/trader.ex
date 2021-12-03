@@ -23,7 +23,7 @@ defmodule Cryptor.Trader do
     "ADA",
     "SOL",
     "DOT",
-    "SHIBA",
+    "SHIB",
     "SAND",
     "MATIC",
     "AXS",
