@@ -96,8 +96,7 @@ defmodule CryptorWeb.OrdersLive do
         []
 
       orders ->
-        orders
-        |> Enum.map(fn order ->
+        Enum.map(orders, fn order ->
           current_price = Cryptor.CurrencyServer.get_current_price(order.coin)
 
           %{
