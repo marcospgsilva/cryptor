@@ -12,7 +12,8 @@ defmodule Cryptor.CurrencyServer do
 
   def get_current_price(currency) do
     %{current_price: current_price} =
-      String.to_existing_atom(currency <> "Server")
+      (currency <> "Server")
+      |> String.to_existing_atom()
       |> GenServer.call(:get_state, 40_000)
 
     current_price

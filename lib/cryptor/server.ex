@@ -73,9 +73,7 @@ defmodule Cryptor.Server do
     start_analysis_server(user.id)
     start_orders_agent(user.id)
     start_pending_orders_agent(user.id)
-
-    user.bots
-    |> Enum.each(&start_bot_server(&1, user.id))
+    Enum.each(user.bots, &start_bot_server(&1, user.id))
 
     {:noreply, %{state | users: [user | state.users]}}
   end

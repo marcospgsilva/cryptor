@@ -8,32 +8,32 @@ defmodule Cryptor.Requests do
 
   def request(:post = method, trade_body, user_id) do
     body = build_body(trade_body)
-    headers = get_headers(body, user_id)
-    url = get_trade_api_base_url()
-
-    Task.async(__MODULE__, :http_request, [method, url, headers, body])
-    |> Task.await(Utils.get_timeout())
-    |> handle_response()
+    do_request(method, get_trade_api_base_url(), get_headers(body, user_id), body)
   end
 
   def request(:get = method, path, _user_id) do
     url = get_data_api_base_url(path)
-
-    Task.async(__MODULE__, :http_request, [method, url])
-    |> Task.await(Utils.get_timeout())
-    |> handle_get_response()
+    do_request(method, url)
   end
 
-  def http_request(method, url, headers \\ [], body \\ ""),
-    do:
-      %HTTPoison.Request{
-        method: method,
-        url: url,
-        headers: headers,
-        body: body,
-        options: get_request_options()
-      }
-      |> HTTPoison.request()
+  def do_request(method, url, headers \\ [], body \\ "")
+
+  def do_request(method, url, headers, body) do
+    __MODULE__
+    |> Task.async(:http_request, [method, url, headers, body])
+    |> Task.await(Utils.get_timeout())
+    |> handle_response()
+  end
+
+  def http_request(method, url, headers, body) do
+    HTTPoison.request(%HTTPoison.Request{
+      method: method,
+      url: url,
+      headers: headers,
+      body: body,
+      options: get_request_options()
+    })
+  end
 
   def handle_get_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
@@ -60,12 +60,16 @@ defmodule Cryptor.Requests do
   def handle_response(_response), do: {:error, :unexpected_response}
 
   def get_headers(body, user_id) do
-    tapi_mac = "/tapi/v3/" <> "?#{body}"
+    tapi_mac = "/tapi/v3/?#{body}"
 
-    {_, shared_key, api_id} = get_api_keys(user_id) |> List.first()
+    {_, shared_key, api_id} =
+      user_id
+      |> get_api_keys()
+      |> List.first()
 
     crypto =
-      :crypto.mac(:hmac, :sha512, shared_key, tapi_mac)
+      :hmac
+      |> :crypto.mac(:sha512, shared_key, tapi_mac)
       |> Base.encode16(padding: false)
       |> String.downcase()
 

@@ -21,9 +21,7 @@ defmodule Cryptor.Bot do
       |> Repo.insert()
 
   def build_bots(currencies),
-    do:
-      currencies
-      |> Enum.map(&%{currency: &1})
+    do: Enum.map(currencies, &%{currency: &1})
 
   def update_bot(bot, attrs),
     do:

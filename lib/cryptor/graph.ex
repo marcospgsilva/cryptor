@@ -4,9 +4,13 @@ defmodule Cryptor.Graph do
   """
   alias Contex.Sparkline
 
+  @positive_graph_color "#10B981"
+  @negative_graph_color "#EF4444"
+
   def make_plot(data),
     do:
-      Sparkline.new(data)
+      data
+      |> Sparkline.new()
       |> update_sparkline_style()
       |> Sparkline.draw()
 
@@ -22,11 +26,10 @@ defmodule Cryptor.Graph do
   end
 
   defp set_line_colour(%Contex.Sparkline{data: [first_value | _] = data}) do
-    latest_value = data |> List.last()
-    if first_value <= latest_value, do: "#10B981", else: "#EF4444"
+    if first_value <= List.last(data), do: @positive_graph_color, else: @negative_graph_color
   end
 
-  defp set_line_colour(%Contex.Sparkline{}), do: "#10B981"
+  defp set_line_colour(%Contex.Sparkline{}), do: @positive_graph_color
 
   def build_order_history(_socket, _order_id, _initial_value, 0.0), do: []
 

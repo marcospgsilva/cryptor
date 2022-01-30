@@ -27,15 +27,11 @@ defmodule Cryptor.Utils do
   end
 
   def get_tapi_method(:buy), do: "place_buy_order"
-
   def get_tapi_method(:sell), do: "place_sell_order"
 
   def get_order_type(2), do: "sell"
-
   def get_order_type(1), do: "buy"
-
   def get_order_type(:sell), do: "sell"
-
   def get_order_type(:buy), do: "buy"
 
   def format_for_brl(0.0 = value),
@@ -51,16 +47,14 @@ defmodule Cryptor.Utils do
       |> String.replace(".", ",")
 
   def format_for_brl(value) when is_binary(value),
-    do:
-      value
-      |> String.replace(".", ",")
+    do: String.replace(value, ".", ",")
 
   def format_for_brl(value), do: value
 
   def calculate_variation(bought_price, current_price),
     do: ((current_price / bought_price - 1) * 100) |> Float.round(4)
 
-  def get_date_time, do: DateTime.utc_now() |> DateTime.to_unix()
+  def get_date_time, do: DateTime.to_unix(DateTime.utc_now())
 
   def get_timeout, do: :infinity
 
