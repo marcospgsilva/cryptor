@@ -35,21 +35,15 @@ defmodule Cryptor.Requests do
     })
   end
 
-  def handle_get_response({:ok, %HTTPoison.Response{body: body}}) do
-    case Jason.decode(body) do
-      {:ok, _body} = response -> response
-      _ = error -> error
-    end
-  end
-
-  def handle_get_response(_), do: {:error, :unexpected_response}
-
   def handle_response({:ok, %HTTPoison.Response{body: body}}) do
     case Jason.decode(body) do
       {:ok, %{"error_message" => error_message}} ->
         {:error, error_message}
 
       {:ok, %{"response_data" => _}} = response ->
+        response
+
+      {:ok, _} = response ->
         response
 
       {:error, _reason} = error ->
