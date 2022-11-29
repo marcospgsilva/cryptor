@@ -1,13 +1,15 @@
-defmodule Cryptor.BotServer do
+defmodule Cryptor.Bots.Server do
   @moduledoc """
    Each currency has your own Bot GenServer for trigger buy or sell orders based on the current currency price
   """
 
   use GenServer
 
+  alias Cryptor.Currencies.Server, as: CurrencyServer
+  alias Cryptor.Bots
+
   alias Cryptor.{
     Trader,
-    CurrencyServer,
     Orders,
     Orders.Order,
     Orders.OrdersAgent,
@@ -66,7 +68,7 @@ defmodule Cryptor.BotServer do
         %State{bot: bot} = state
       ) do
     {:ok, bot} =
-      Cryptor.Bot.update_bot(bot, %{
+      Bots.update_bot(bot, %{
         sell_percentage_limit: changes.sell_percentage,
         buy_percentage_limit: changes.buy_percentage,
         buy_amount: changes.buy_amount,

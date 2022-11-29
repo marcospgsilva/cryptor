@@ -38,7 +38,7 @@
                 </div>
                 <div class="flex flex-1 items-center self-center p-3 xl:my-0">
                   <div class="bar w-40 my-4 overflow-x-auto xl:w-60">
-                    <%= Cryptor.Graph.make_plot(order.data |> Enum.reverse()) %>
+                    <%= Cryptor.Graphs.Chart.make_plot(order.data |> Enum.reverse()) %>
                   </div>
                 </div>
                 <div class="flex flex-1 flex-col text-center self-center xl:text-right">

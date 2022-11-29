@@ -1,18 +1,18 @@
-defmodule Cryptor.Graph do
+defmodule Cryptor.Graphs.Chart do
   @moduledoc """
-   Cryptor Graph
+   Cryptor Chart
   """
   alias Contex.Sparkline
 
   @positive_graph_color "#10B981"
   @negative_graph_color "#EF4444"
 
-  def make_plot(data),
-    do:
-      data
-      |> Sparkline.new()
-      |> update_sparkline_style()
-      |> Sparkline.draw()
+  def make_plot(data) do
+    data
+    |> Sparkline.new()
+    |> update_sparkline_style()
+    |> Sparkline.draw()
+  end
 
   defp update_sparkline_style(%Contex.Sparkline{} = sparkline) do
     %{
@@ -26,7 +26,9 @@ defmodule Cryptor.Graph do
   end
 
   defp set_line_colour(%Contex.Sparkline{data: [first_value | _] = data}) do
-    if first_value <= List.last(data), do: @positive_graph_color, else: @negative_graph_color
+    if first_value <= List.last(data),
+      do: @positive_graph_color,
+      else: @negative_graph_color
   end
 
   defp set_line_colour(%Contex.Sparkline{}), do: @positive_graph_color

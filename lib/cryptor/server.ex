@@ -1,8 +1,9 @@
 defmodule Cryptor.Server do
   use GenServer
+
   alias Cryptor.Accounts
   alias Cryptor.Accounts.User
-  alias Cryptor.BotServer
+  alias Cryptor.Bots.Server
   alias Cryptor.ProcessRegistry
   alias Cryptor.Analysis
   alias Cryptor.Orders.OrdersAgent
@@ -81,8 +82,8 @@ defmodule Cryptor.Server do
   def start_bot_server(bot, user_id) do
     bot_name = ProcessRegistry.via_tuple({user_id, "#{bot.currency}Server"})
 
-    add_to_dynamic_supervisor(BotServer, %{
-      state: %BotServer.State{user_id: user_id, bot: bot},
+    add_to_dynamic_supervisor(Server, %{
+      state: %Server.State{user_id: user_id, bot: bot},
       name: bot_name
     })
   end

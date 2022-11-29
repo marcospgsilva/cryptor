@@ -3,8 +3,9 @@ defmodule Cryptor.Trader do
    Trader
   """
 
+  alias Cryptor.Engine.Server, as: EngineServer
+
   alias Cryptor.{
-    Analysis,
     AmountControl,
     Orders,
     Orders.PendingOrdersAgent,
@@ -232,7 +233,7 @@ defmodule Cryptor.Trader do
   end
 
   def get_account_info_data(analysis_pid) do
-    state = Analysis.get_state(analysis_pid)
+    state = EngineServer.get_state(analysis_pid)
     state[:account_info]
   end
 

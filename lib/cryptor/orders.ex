@@ -12,18 +12,18 @@ defmodule Cryptor.Orders do
     )
   end
 
-  def create_order(attrs),
-    do:
-      %Order{}
-      |> Order.changeset(attrs)
-      |> Repo.insert()
-      |> elem(1)
+  def create_order(attrs) do
+    %Order{}
+    |> Order.changeset(attrs)
+    |> Repo.insert()
+    |> elem(1)
+  end
 
-  def update_order(order, attrs),
-    do:
-      order
-      |> Order.changeset(attrs)
-      |> Repo.update()
+  def update_order(order, attrs) do
+    order
+    |> Order.changeset(attrs)
+    |> Repo.update()
+  end
 
   def get_orders(user_id) do
     Repo.all(

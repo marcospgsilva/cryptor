@@ -1,6 +1,6 @@
-defmodule Cryptor.Analysis do
+defmodule Cryptor.Engine.Server do
   @moduledoc """
-   Analysis Server
+   Engine Server
   """
 
   use GenServer

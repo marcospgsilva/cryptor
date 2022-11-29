@@ -74,11 +74,11 @@ defmodule Cryptor.Requests do
     ]
   end
 
-  defp build_body(trade_body),
-    do:
-      trade_body
-      |> Map.put(:tapi_nonce, Utils.get_date_time())
-      |> URI.encode_query()
+  defp build_body(trade_body) do
+    trade_body
+    |> Map.put(:tapi_nonce, Utils.get_date_time())
+    |> URI.encode_query()
+  end
 
   def get_api_keys(user_id), do: :ets.lookup(:api_keys, user_id)
 

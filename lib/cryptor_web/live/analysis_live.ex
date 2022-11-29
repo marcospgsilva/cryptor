@@ -4,14 +4,15 @@ defmodule CryptorWeb.AnalysisLive do
   """
   use CryptorWeb, :live_view
 
+  alias Cryptor.Bots.Server, as: BotServer
+  alias Cryptor.Currencies.Server, as: CurrencyServer
+
   alias Cryptor.{
     Utils,
-    BotServer,
-    CurrencyServer,
     Trader,
     Server,
     ProcessRegistry,
-    Bot
+    Bots
   }
 
   # CLIENT
@@ -91,7 +92,7 @@ defmodule CryptorWeb.AnalysisLive do
 
     case pids[:bot_pid] do
       :undefined ->
-        {:ok, bot} = Bot.create_bot(%{user_id: user_id, currency: currency})
+        {:ok, bot} = Bots.create_bot(%{user_id: user_id, currency: currency})
 
         with {:ok, _pid} <- Server.start_bot_server(bot, user_id) do
           ProcessRegistry.get_servers_registry(user_id, currency)
