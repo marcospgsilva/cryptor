@@ -11,7 +11,9 @@ defmodule Cryptor.CurrencySupervisor do
       Cryptor.Trader.get_currencies()
       |> Enum.with_index()
       |> Enum.map(fn {currency, index} ->
-        Supervisor.child_spec({Cryptor.CurrencyServer, %{currency: currency}}, id: index)
+        Supervisor.child_spec({Cryptor.Currencies.CurrencyServer, %{currency: currency}},
+          id: index
+        )
       end)
 
     Supervisor.init(children, strategy: :one_for_one)

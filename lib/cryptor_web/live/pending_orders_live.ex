@@ -4,7 +4,7 @@ defmodule CryptorWeb.PendingOrdersLive do
   """
   use CryptorWeb, :live_view
 
-  alias Cryptor.Currencies.Server, as: CurrencyServer
+  alias Cryptor.Currencies.CurrencyServer
 
   alias Cryptor.Trader
   alias Cryptor.ProcessRegistry

@@ -23,10 +23,12 @@ defmodule Cryptor.Orders.Order do
     :user_id
   ]
 
+  @default_orders_quantity 0.0
+
   schema "orders" do
     field :order_id, :integer
     field :coin, :string
-    field :quantity, :float, default: 0.0
+    field :quantity, :float, default: @default_orders_quantity
     field :price, :float
     field :type, :string
     field :fee, :string

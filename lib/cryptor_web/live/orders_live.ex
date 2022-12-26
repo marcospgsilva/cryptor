@@ -4,9 +4,9 @@ defmodule CryptorWeb.OrdersLive do
   """
   use CryptorWeb, :live_view
 
-  alias Cryptor.Currencies.Server, as: CurrencyServer
+  alias Cryptor.Currencies.CurrencyServer
   alias Cryptor.Trader
-  alias Cryptor.Engine.Server, as: EngineServer
+  alias Cryptor.Engine.EngineServer
   alias Cryptor.ProcessRegistry
   alias Cryptor.Utils
   alias Cryptor.Orders.OrdersAgent

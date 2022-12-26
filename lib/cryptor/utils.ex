@@ -4,6 +4,8 @@ defmodule Cryptor.Utils do
   """
   alias Cryptor.Orders.Order
 
+  @default_available_amount 0.00
+
   def build_valid_order(new_order) do
     %Order{}
     |> Map.put(:order_id, new_order["order_id"])
@@ -22,9 +24,11 @@ defmodule Cryptor.Utils do
   end
 
   def get_available_amount(account_info, coin) do
-    case account_info["response_data"]["balance"][String.downcase(coin)]["available"] do
+    coin = String.downcase(coin)
+
+    case account_info["response_data"]["balance"][coin]["available"] do
       nil ->
-        {:ok, 0.00}
+        {:ok, @default_available_amount}
 
       available ->
         {:ok, String.to_float(available)}

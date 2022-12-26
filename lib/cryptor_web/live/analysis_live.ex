@@ -4,8 +4,8 @@ defmodule CryptorWeb.AnalysisLive do
   """
   use CryptorWeb, :live_view
 
-  alias Cryptor.Bots.Server, as: BotServer
-  alias Cryptor.Currencies.Server, as: CurrencyServer
+  alias Cryptor.Bots.BotServer
+  alias Cryptor.Currencies.CurrencyServer
 
   alias Cryptor.{
     Utils,

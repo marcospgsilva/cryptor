@@ -1,4 +1,4 @@
-defmodule Cryptor.Currencies.Server do
+defmodule Cryptor.Currencies.CurrencyServer do
   use GenServer
 
   alias Cryptor.Trader
