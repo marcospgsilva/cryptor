@@ -4,22 +4,31 @@ defmodule Cryptor.Utils do
   """
   alias Cryptor.Orders.Order
 
-  def build_valid_order(new_order),
-    do: %Order{
-      order_id: new_order["order_id"],
-      quantity: new_order["quantity"] |> String.to_float(),
-      price: new_order["limit_price"] |> String.to_float(),
-      coin: new_order["coin_pair"] |> String.split("BRL") |> List.last(),
-      fee: new_order["fee"],
-      type: get_order_type(new_order["order_type"]),
-      buy_order_id: nil,
-      filled: false
-    }
+  @default_available_amount 0.00
+
+  def build_valid_order(new_order) do
+    %Order{}
+    |> Map.put(:order_id, new_order["order_id"])
+    |> Map.put(:quantity, String.to_float(new_order["quantity"]))
+    |> Map.put(:price, String.to_float(new_order["limit_price"]))
+    |> Map.put(
+      :coin,
+      new_order["coin_pair"]
+      |> String.split("BRL")
+      |> List.last()
+    )
+    |> Map.put(:fee, new_order["fee"])
+    |> Map.put(:type, get_order_type(new_order["order_type"]))
+    |> Map.put(:buy_order_id, nil)
+    |> Map.put(:filled, false)
+  end
 
   def get_available_amount(account_info, coin) do
-    case account_info["response_data"]["balance"][String.downcase(coin)]["available"] do
+    coin = String.downcase(coin)
+
+    case account_info["response_data"]["balance"][coin]["available"] do
       nil ->
-        {:ok, 0.00}
+        {:ok, @default_available_amount}
 
       available ->
         {:ok, String.to_float(available)}
@@ -34,32 +43,40 @@ defmodule Cryptor.Utils do
   def get_order_type(:sell), do: "sell"
   def get_order_type(:buy), do: "buy"
 
-  def format_for_brl(0.0 = value),
-    do:
-      value
-      |> Float.to_string()
-      |> String.replace(".", ",0")
+  def format_for_brl(0.0 = value) do
+    value
+    |> Float.to_string()
+    |> String.replace(".", ",0")
+  end
 
-  def format_for_brl(value) when is_float(value),
-    do:
-      value
-      |> Float.to_string()
-      |> String.replace(".", ",")
+  def format_for_brl(value) when is_float(value) do
+    value
+    |> Float.to_string()
+    |> String.replace(".", ",")
+  end
 
-  def format_for_brl(value) when is_binary(value),
-    do: String.replace(value, ".", ",")
+  def format_for_brl(value) when is_binary(value) do
+    String.replace(value, ".", ",")
+  end
 
   def format_for_brl(value), do: value
 
-  def calculate_variation(bought_price, current_price),
-    do: ((current_price / bought_price - 1) * 100) |> Float.round(4)
+  def calculate_variation(bought_price, current_price) do
+    current_price
+    |> Kernel./(bought_price - 1)
+    |> Kernel.*(100)
+    |> Float.round(4)
+  end
 
-  def get_date_time, do: DateTime.to_unix(DateTime.utc_now())
+  def get_date_time do
+    DateTime.to_unix(DateTime.utc_now())
+  end
 
   def get_timeout, do: :infinity
 
-  def format_float_with_decimals(value),
-    do: :erlang.float_to_binary(value, [:compact, {:decimals, 8}])
+  def format_float_with_decimals(value) do
+    :erlang.float_to_binary(value, [:compact, {:decimals, 8}])
+  end
 
   def validate_float(value) do
     try do

@@ -4,7 +4,6 @@ defmodule Cryptor.Trader do
   """
 
   alias Cryptor.{
-    Analysis,
     AmountControl,
     Orders,
     Orders.PendingOrdersAgent,
@@ -15,48 +14,29 @@ defmodule Cryptor.Trader do
     Utils
   }
 
-  @currencies [
-    "BTC",
-    "LTC",
-    "XRP",
-    "ETH",
-    "ADA",
-    "SOL",
-    "DOT",
-    "SHIB",
-    "SAND",
-    "MATIC",
-    "AXS",
-    "DOGE",
-    "USDC",
-    "BCH",
-    "PAXG"
-  ]
+  @currencies Application.get_env(:cryptor, :currencies)
 
   def get_currencies, do: @currencies
 
-  def analyze_transaction(0.0, _, _, _), do: nil
-
-  def analyze_transaction(
-        current_price,
-        %Order{price: price} = order,
-        user_id,
-        bot
-      ) do
-    if current_price >= price * bot.sell_percentage_limit,
-      do: place_order(:sell, current_price, order, user_id, bot)
+  def trade(current_price, %Order{coin: currency} = order, user_id, bot) do
+    with quantity <- AmountControl.get_quantity(:sell, current_price, order, bot.buy_amount),
+         :ok <- Cryptor.Engine.Transaction.analyze(quantity, current_price, order, user_id, bot) do
+      place_order(:sell, "BRL#{currency}", current_price, user_id, bot)
+    end
   end
 
   def get_currency_price(coin) do
     with {:ok, %{"ticker" => %{"last" => last}}} <-
-           Requests.request(:get, "#{coin}/ticker/"),
-         do: {:ok, String.to_float(last)}
+           Requests.request(:get, "#{coin}/ticker/") do
+      {:ok, String.to_float(last)}
+    end
   end
 
   def get_account_info(user_id) do
     with {:ok, response} <-
-           Requests.request(:post, %{tapi_method: "get_account_info"}, user_id),
-         do: response
+           Requests.request(:post, %{tapi_method: "get_account_info"}, user_id) do
+      response
+    end
   end
 
   def get_order_data(order, user_id) do
@@ -65,7 +45,7 @@ defmodule Cryptor.Trader do
              :post,
              %{
                tapi_method: "get_order",
-               coin_pair: "BRL" <> order.coin,
+               coin_pair: "BRL#{order.coin}",
                order_id: order.order_id
              },
              user_id
@@ -80,7 +60,7 @@ defmodule Cryptor.Trader do
       :post,
       %{
         tapi_method: "cancel_order",
-        coin_pair: "BRL" <> order.coin,
+        coin_pair: "BRL#{order.coin}",
         order_id: order.order_id
       },
       user_id
@@ -90,24 +70,13 @@ defmodule Cryptor.Trader do
   def place_order(:sell, _, %Order{quantity: 0.0}, _user_id, _bot), do: nil
 
   def place_order(method, newer_price, %Order{coin: currency} = order, user_id, bot) do
-    quantity = AmountControl.get_quantity(method, newer_price, order, bot.buy_amount)
-
-    method
-    |> validate_pending_sell_order(currency, user_id)
-    |> validate_available_money(
-      method,
-      quantity,
-      newer_price,
-      user_id
-    )
-    |> place_order(quantity, method, "BRL#{currency}", newer_price, user_id)
-    |> process_order(order, user_id)
+    with quantity <- AmountControl.get_quantity(method, newer_price, order, bot.buy_amount),
+         {:ok, response} <- place_order(quantity, method, "BRL#{currency}", newer_price, user_id) do
+      process_order(response, order, user_id)
+    end
   end
 
-  def place_order({:error, _} = error, _, _, _, _, _),
-    do: error
-
-  def place_order(:ok, quantity, method, coin_pair, newer_price, user_id) do
+  def place_order(quantity, method, coin_pair, newer_price, user_id) do
     Requests.request(
       :post,
       %{
@@ -121,54 +90,21 @@ defmodule Cryptor.Trader do
     )
   end
 
-  def validate_pending_sell_order(:sell = method, currency, user_id) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
-
-    case PendingOrdersAgent.get_pending_orders_list(pids[:pending_orders_pid])
-         |> Enum.find(fn %{type: type, coin: coin} ->
-           type == Utils.get_order_type(method) && coin == currency
-         end) do
-      nil -> :ok
-      _ -> :error
-    end
-  end
-
-  def validate_pending_sell_order(_, _, _), do: :ok
-
-  def validate_available_money(:error, _, _, _, _), do: {:error, :pending_sell_order}
-
-  def validate_available_money(:ok, :sell, _, _, _), do: :ok
-
-  def validate_available_money(:ok, :buy, quantity, newer_price, user_id) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
-    analysis_pid = pids[:analysis_pid]
-
-    {:ok, available_amount} =
-      analysis_pid
-      |> get_account_info_data()
-      |> Utils.get_available_amount("brl")
-
-    order_value = quantity * newer_price
-
-    if available_amount > order_value,
-      do: :ok,
-      else: {:error, :no_enough_money}
-  end
-
   def process_order(
-        {:ok, %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}}},
+        %{"response_data" => %{"order" => %{"order_type" => 2} = new_order}},
         order,
         user_id
       ) do
     add_to_pending_orders(
-      Utils.build_valid_order(new_order)
+      new_order
+      |> Utils.build_valid_order()
       |> Map.put(:buy_order_id, order.order_id),
       order,
       user_id
     )
   end
 
-  def process_order({:ok, %{"response_data" => %{"order" => new_order}}}, order, user_id) do
+  def process_order(%{"response_data" => %{"order" => new_order}}, order, user_id) do
     add_to_pending_orders(
       Utils.build_valid_order(new_order),
       order,
@@ -176,64 +112,57 @@ defmodule Cryptor.Trader do
     )
   end
 
-  def process_order({:ok, _}, _, _), do: {:error, :unexpected_response}
-
-  def process_order({:error, _} = error, _, _), do: error
-
   def add_to_pending_orders(pending_order, _order, user_id) do
-    pending_order = pending_order |> Map.put(:user_id, user_id)
-    pids = ProcessRegistry.get_servers_registry(user_id)
-
-    pending_order = Orders.create_order(pending_order |> Map.from_struct())
-    PendingOrdersAgent.add_to_pending_orders_list(pids[:pending_orders_pid], pending_order)
-  end
-
-  def create_and_add_order(order) do
-    pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
-    loaded_order = Orders.get_order(order.order_id, order.user_id)
-    {:ok, order} = Orders.update_order(loaded_order, %{filled: true, fee: order.fee})
-
-    OrdersAgent.add_to_order_list(pids[:orders_pid], order)
-  end
-
-  def remove_and_update_order(order) do
-    pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
-    buy_order = Orders.get_order(order.buy_order_id, order.user_id)
-    order = Orders.get_order(order.order_id, order.user_id)
-
-    OrdersAgent.remove_from_order_list(pids[:orders_pid], buy_order)
-    Orders.update_order(buy_order, %{finished: true})
-
-    {:ok, order} = Orders.update_order(order, %{finished: true, filled: true})
-
-    Process.send(pids[:bot_pid], {:update_latest_sell_order, order}, [])
-  end
-
-  def delete_order(id, user_id) do
-    order = Orders.get_order(id, user_id)
-    pids = ProcessRegistry.get_servers_registry(order.user_id, order.coin)
-
-    OrdersAgent.remove_from_order_list(pids[:orders_pid], order)
-    Orders.update_order(order, %{finished: true})
-  end
-
-  def remove_order_from_pending_list(id, user_id) do
-    pids = ProcessRegistry.get_servers_registry(user_id)
-    order = Orders.get_order(id, user_id)
-
-    case set_order_status_canceled(order, user_id) do
-      {:ok, _} ->
-        PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order)
-        Orders.update_order(order, %{finished: true, filled: true})
-
-      _ ->
-        nil
+    with pids <- ProcessRegistry.get_servers_registry(user_id),
+         order <-
+           pending_order
+           |> Map.put(:user_id, user_id)
+           |> Map.from_struct(),
+         pending_order <- Orders.create_order(order) do
+      PendingOrdersAgent.add_to_pending_orders_list(pids[:pending_orders_pid], pending_order)
     end
   end
 
-  def get_account_info_data(analysis_pid) do
-    state = Analysis.get_state(analysis_pid)
-    state[:account_info]
+  def create_and_add_order(%{user_id: user_id, coin: coin, order_id: order_id, fee: fee}) do
+    with pids <- ProcessRegistry.get_servers_registry(user_id, coin),
+         loaded_order <- Orders.get_order(order_id, user_id),
+         {:ok, order} <- Orders.update_order(loaded_order, %{filled: true, fee: fee}) do
+      OrdersAgent.add_to_order_list(pids[:orders_pid], order)
+    end
+  end
+
+  def remove_and_update_order(%{
+        user_id: user_id,
+        coin: coin,
+        order_id: order_id,
+        buy_order_id: buy_order_id
+      }) do
+    with pids <- ProcessRegistry.get_servers_registry(user_id, coin),
+         buy_order <- Orders.get_order(buy_order_id, user_id),
+         order <- Orders.get_order(order_id, user_id),
+         :ok <- OrdersAgent.remove_from_order_list(pids[:orders_pid], buy_order),
+         {:ok, _} <- Orders.update_order(buy_order, %{finished: true}),
+         {:ok, order} <- Orders.update_order(order, %{finished: true, filled: true}) do
+      Process.send(pids[:bot_pid], {:update_latest_sell_order, order}, [])
+    end
+  end
+
+  def delete_order(id, user_id) do
+    with %{user_id: user_id, coin: coin} = order <- Orders.get_order(id, user_id),
+         pids <- ProcessRegistry.get_servers_registry(user_id, coin),
+         :ok <- OrdersAgent.remove_from_order_list(pids[:orders_pid], order) do
+      Orders.update_order(order, %{finished: true})
+    end
+  end
+
+  def remove_order_from_pending_list(id, user_id) do
+    with pids <- ProcessRegistry.get_servers_registry(user_id),
+         order <- Orders.get_order(id, user_id),
+         {:ok, _} <- set_order_status_canceled(order, user_id),
+         :ok <-
+           PendingOrdersAgent.remove_from_pending_orders_list(pids[:pending_orders_pid], order) do
+      Orders.update_order(order, %{finished: true, filled: true})
+    end
   end
 
   def process_pending_order(%{buy_order_id: nil} = order, user_id) do
@@ -242,6 +171,7 @@ defmodule Cryptor.Trader do
     create_and_add_order(updated_order)
   end
 
-  def process_pending_order(order, _),
-    do: remove_and_update_order(order)
+  def process_pending_order(order, _) do
+    remove_and_update_order(order)
+  end
 end

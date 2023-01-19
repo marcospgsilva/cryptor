@@ -12,11 +12,3 @@ config :cryptor, Cryptor.Requests,
   tapi_id: System.get_env("TAPI_ID"),
   tapi_id_secret_key: System.get_env("TAPI_ID_SECRET_KEY"),
   options: [timeout: 40_000, recv_timeout: 40_000]
-
-config :appsignal, :config,
-  active: true,
-  otp_app: :cryptor,
-  name: System.get_env("APPSIGNAL_APP_NAME"),
-  push_api_key: System.get_env("APPSIGNAL_PUSH_API_KEY"),
-  env: System.get_env("APPSIGNAL_APP_ENV"),
-  debug: System.get_env("APPSIGNAL_DEBUG")

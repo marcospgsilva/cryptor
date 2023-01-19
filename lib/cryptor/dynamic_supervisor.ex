@@ -4,10 +4,12 @@ defmodule Cryptor.DynamicSupervisor do
   """
   use DynamicSupervisor
 
-  def start_link(attrs),
-    do: DynamicSupervisor.start_link(__MODULE__, attrs, name: ServersSupervisor)
+  def start_link(attrs) do
+    DynamicSupervisor.start_link(__MODULE__, attrs, name: ServersSupervisor)
+  end
 
   @impl true
-  def init(_init_arg),
-    do: DynamicSupervisor.init(strategy: :one_for_one, max_restarts: 30, max_seconds: 40)
+  def init(_init_arg) do
+    DynamicSupervisor.init(strategy: :one_for_one, max_restarts: 30, max_seconds: 40)
+  end
 end

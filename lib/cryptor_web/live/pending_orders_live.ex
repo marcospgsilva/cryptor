@@ -3,10 +3,12 @@ defmodule CryptorWeb.PendingOrdersLive do
    PendingOrders Live
   """
   use CryptorWeb, :live_view
+
+  alias Cryptor.Currencies.CurrencyServer
+
   alias Cryptor.Trader
   alias Cryptor.ProcessRegistry
   alias Cryptor.Orders.PendingOrdersAgent
-  alias Cryptor.CurrencyServer
 
   # SERVER
   @impl true
@@ -72,8 +74,7 @@ defmodule CryptorWeb.PendingOrdersLive do
         []
 
       orders ->
-        orders
-        |> Enum.map(fn order ->
+        Enum.map(orders, fn order ->
           current_price = CurrencyServer.get_current_price(order.coin)
 
           %{

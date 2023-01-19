@@ -40,18 +40,14 @@ defmodule Cryptor.Requests do
       {:ok, %{"error_message" => error_message}} ->
         {:error, error_message}
 
-      {:ok, %{"response_data" => _}} = response ->
+      response ->
         response
-
-      {:ok, _} = response ->
-        response
-
-      {:error, _reason} = error ->
-        error
     end
   end
 
-  def handle_response(_response), do: {:error, :unexpected_response}
+  def handle_response(_response) do
+    {:error, :unexpected_response}
+  end
 
   def get_headers(body, user_id) do
     tapi_mac = "/tapi/v3/?#{body}"
@@ -74,11 +70,11 @@ defmodule Cryptor.Requests do
     ]
   end
 
-  defp build_body(trade_body),
-    do:
-      trade_body
-      |> Map.put(:tapi_nonce, Utils.get_date_time())
-      |> URI.encode_query()
+  defp build_body(trade_body) do
+    trade_body
+    |> Map.put(:tapi_nonce, Utils.get_date_time())
+    |> URI.encode_query()
+  end
 
   def get_api_keys(user_id), do: :ets.lookup(:api_keys, user_id)
 

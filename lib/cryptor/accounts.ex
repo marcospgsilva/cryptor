@@ -6,7 +6,7 @@ defmodule Cryptor.Accounts do
   import Ecto.Query, warn: false
   alias Cryptor.Repo
   alias Cryptor.Trader
-  alias Cryptor.Bot
+  alias Cryptor.Bots
   alias Cryptor.Accounts.{User, UserToken, UserNotifier}
 
   ## Database getters
@@ -92,7 +92,7 @@ defmodule Cryptor.Accounts do
   def register_user(attrs) do
     full_attrs =
       attrs
-      |> Map.put("bots", Trader.get_currencies() |> Bot.build_bots())
+      |> Map.put("bots", Trader.get_currencies() |> Bots.build_bots())
 
     with {:ok, user} = result <-
            %User{}
