@@ -40,18 +40,14 @@ defmodule Cryptor.Requests do
       {:ok, %{"error_message" => error_message}} ->
         {:error, error_message}
 
-      {:ok, %{"response_data" => _}} = response ->
+      response ->
         response
-
-      {:ok, _} = response ->
-        response
-
-      {:error, _reason} = error ->
-        error
     end
   end
 
-  def handle_response(_response), do: {:error, :unexpected_response}
+  def handle_response(_response) do
+    {:error, :unexpected_response}
+  end
 
   def get_headers(body, user_id) do
     tapi_mac = "/tapi/v3/?#{body}"

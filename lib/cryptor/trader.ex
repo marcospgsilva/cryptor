@@ -14,23 +14,7 @@ defmodule Cryptor.Trader do
     Utils
   }
 
-  @currencies [
-    "BTC",
-    "LTC",
-    "XRP",
-    "ETH",
-    "ADA",
-    "SOL",
-    "DOT",
-    "SHIB",
-    "SAND",
-    "MATIC",
-    "AXS",
-    "DOGE",
-    "USDC",
-    "BCH",
-    "PAXG"
-  ]
+  @currencies Application.get_env(:cryptor, :currencies)
 
   def get_currencies, do: @currencies
 

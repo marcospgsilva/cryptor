@@ -30,6 +30,33 @@ defmodule Cryptor.Bots.BotServer do
     GenServer.start_link(__MODULE__, state, name: name)
   end
 
+  def update_bot(pid, %{
+    "sell_percentage" => sell_percentage,
+    "buy_percentage" => buy_percentage,
+    "buy_amount" => buy_amount,
+    "max_orders_amount" => max_orders_amount,
+    "sell_active" => sell_active,
+    "buy_active" => buy_active,
+    "bot_active" => bot_active
+  }) do
+    Process.send(
+      pid,
+      {
+        :update_bot,
+        %{
+          sell_percentage: Utils.validate_float(sell_percentage),
+          buy_percentage: Utils.validate_float(buy_percentage),
+          buy_amount: buy_amount,
+          max_orders_amount: Utils.validate_float(max_orders_amount) |> round(),
+          sell_active: String.to_existing_atom(sell_active),
+          buy_active: String.to_existing_atom(buy_active),
+          bot_active: String.to_existing_atom(bot_active)
+        }
+      },
+      []
+    )
+  end
+
   def get_state(pid) do
     GenServer.call(pid, :get_state, Utils.get_timeout())
   end

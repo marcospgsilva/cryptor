@@ -8,11 +8,11 @@ defmodule CryptorWeb.AnalysisLive do
   alias Cryptor.Currencies.CurrencyServer
 
   alias Cryptor.{
-    Utils,
-    Trader,
-    Server,
+    Bots,
+    Bots.BotServer,
     ProcessRegistry,
-    Bots
+    Server,
+    Trader
   }
 
   # CLIENT
@@ -25,9 +25,7 @@ defmodule CryptorWeb.AnalysisLive do
 
       id ->
         Trader.get_currencies()
-        |> Enum.map(fn currency ->
-          build_server_analysis_data(id, currency)
-        end)
+        |> Enum.map(&build_server_analysis_data(id, &1))
         |> Enum.reject(&(&1 == nil))
     end
   end
@@ -49,37 +47,14 @@ defmodule CryptorWeb.AnalysisLive do
   @impl true
   def handle_event(
         "update_bot",
-        %{
-          "coin" => coin,
-          "sell_percentage" => sell_percentage,
-          "buy_percentage" => buy_percentage,
-          "buy_amount" => buy_amount,
-          "max_orders_amount" => max_orders_amount,
-          "sell_active" => sell_active,
-          "buy_active" => buy_active,
-          "bot_active" => bot_active
-        },
+        %{"coin" => coin} = attrs,
         socket
       ) do
-    user_id = get_user_id_from_socket(socket)
-    pids = ProcessRegistry.get_servers_registry(user_id, coin)
-
-    Process.send(
-      pids[:bot_pid],
-      {
-        :update_bot,
-        %{
-          sell_percentage: Utils.validate_float(sell_percentage),
-          buy_percentage: Utils.validate_float(buy_percentage),
-          buy_amount: buy_amount,
-          max_orders_amount: Utils.validate_float(max_orders_amount) |> round(),
-          sell_active: String.to_existing_atom(sell_active),
-          buy_active: String.to_existing_atom(buy_active),
-          bot_active: String.to_existing_atom(bot_active)
-        }
-      },
-      []
-    )
+    socket
+    |> get_user_id_from_socket()
+    |> ProcessRegistry.get_servers_registry(coin)
+    |> then(& &1[:bot_pid])
+    |> BotServer.update_bot(attrs)
 
     Process.sleep(1000)
     {:noreply, assign(socket, analysis: get_analysis_server_data(socket))}
@@ -95,7 +70,8 @@ defmodule CryptorWeb.AnalysisLive do
         {:ok, bot} = Bots.create_bot(%{user_id: user_id, currency: currency})
 
         with {:ok, _pid} <- Server.start_bot_server(bot, user_id) do
-          ProcessRegistry.get_servers_registry(user_id, currency)
+          user_id
+          |> ProcessRegistry.get_servers_registry(currency)
           |> build_bot_currency()
         end
 
@@ -108,7 +84,8 @@ defmodule CryptorWeb.AnalysisLive do
     %{bot: bot} = BotServer.get_state(pids[:bot_pid])
 
     orders =
-      Cryptor.Orders.OrdersAgent.get_order_list(pids[:orders_pid])
+      pids[:orders_pid]
+      |> Cryptor.Orders.OrdersAgent.get_order_list()
       |> Enum.filter(&(&1.coin == bot.currency))
 
     current_price = CurrencyServer.get_current_price(bot.currency)

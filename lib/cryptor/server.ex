@@ -6,7 +6,7 @@ defmodule Cryptor.Server do
   alias Cryptor.Accounts
   alias Cryptor.Bots.BotServer
   alias Cryptor.ProcessRegistry
-  alias Cryptor.Analysis
+  alias Cryptor.Engine.EngineServer
   alias Cryptor.Orders.{OrdersAgent, PendingOrdersAgent}
 
   def start_link(_args) do
@@ -76,7 +76,7 @@ defmodule Cryptor.Server do
   def start_bot_server(bot, user_id) do
     bot_name = ProcessRegistry.via_tuple({user_id, "#{bot.currency}Server"})
 
-    add_to_dynamic_supervisor(Server, %{
+    add_to_dynamic_supervisor(BotServer, %{
       state: %BotServer.State{user_id: user_id, bot: bot},
       name: bot_name
     })
@@ -84,7 +84,7 @@ defmodule Cryptor.Server do
 
   def start_analysis_server(user_id) do
     analysis_name = ProcessRegistry.via_tuple({user_id, "AnalysisServer"})
-    add_to_dynamic_supervisor(Analysis, %{name: analysis_name, user_id: user_id})
+    add_to_dynamic_supervisor(EngineServer, %{name: analysis_name, user_id: user_id})
   end
 
   def start_orders_agent(user_id) do
